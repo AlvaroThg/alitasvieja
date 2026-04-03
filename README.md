@@ -1,4 +1,4 @@
-# Alitas Vega — Sistema POS
+# Alitas Vieja — Sistema POS
 
 > Sistema de Punto de Venta (POS) interno para el restaurante **Alitas Vega**,
 > con soporte para dos sucursales: **Cochabamba** y **Tarija**.
@@ -148,4 +148,4 @@ App\Modules\{Modulo}\Http\Middleware\{Middleware}
 
 ## 📄 Licencia
 
-Uso interno — Alitas Vega © 2025
+Uso interno — Alitas Vieja © 2025
