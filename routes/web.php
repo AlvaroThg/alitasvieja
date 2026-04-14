@@ -13,21 +13,21 @@ Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
 
-// ─── POS — Cajeros y Mozos ────────────────────────────────────────────────────
+// ─── POS — Cajeros y Mozos (Fase 1) ──────────────────────────────────────────
 Route::middleware(['auth', 'role:owner,cashier,waiter', 'branch'])->prefix('pos')->name('pos.')->group(function () {
     Route::get('/', fn() => view('pos.index'))->name('index');
 
-    // ─── Orders ───────────────────────────────────────────────
+    // Pedidos
     Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
-    Route::post('/orders/{order}/items', [OrderController::class, 'addItem'])->name('orders.items.store');
-    Route::delete('/orders/{order}/items/{item}', [OrderController::class, 'removeItem'])->name('orders.items.destroy');
+    Route::post('/orders/{order}/items', [OrderController::class, 'addItem'])->name('orders.addItem');
+    Route::delete('/orders/{order}/items/{item}', [OrderController::class, 'removeItem'])->name('orders.removeItem');
 
-    // ─── Checkout ─────────────────────────────────────────────
+    // Checkout
     Route::get('/checkout/{order}', [CheckoutController::class, 'show'])->name('checkout.show');
     Route::post('/checkout/{order}/pay', [CheckoutController::class, 'process'])->name('checkout.process');
 
-    // ─── Tickets ──────────────────────────────────────────────
+    // Tickets
     Route::get('/tickets/{order}/kitchen', [TicketController::class, 'kitchen'])->name('tickets.kitchen');
 });
 

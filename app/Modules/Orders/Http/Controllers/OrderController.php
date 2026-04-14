@@ -2,6 +2,7 @@
 
 namespace App\Modules\Orders\Http\Controllers;
 
+use App\Http\Controllers\Controller;
 use App\Modules\Orders\Models\Order;
 use App\Modules\Orders\Models\OrderItem;
 use App\Modules\Orders\Services\OrderService;
@@ -9,11 +10,14 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
-class OrderController
+class OrderController extends Controller
 {
-    public function __construct(
-        private OrderService $orderService
-    ) {}
+    protected OrderService $orderService;
+
+    public function __construct(OrderService $orderService)
+    {
+        $this->orderService = $orderService;
+    }
 
     /**
      * POST /pos/orders
@@ -29,10 +33,10 @@ class OrderController
 
         try {
             $order = $this->orderService->createOrder(
-                branchId: $validated['branch_id'],
-                tableId:  $validated['table_id'] ?? null,
-                userId:   $request->user()->id,
-                notes:    $validated['notes'] ?? null,
+                $validated['branch_id'],
+                $validated['table_id'] ?? null,
+                $request->user()->id,
+                $validated['notes'] ?? null
             );
 
             return response()->json([
@@ -47,28 +51,31 @@ class OrderController
 
     /**
      * POST /pos/orders/{order}/items
-     * Añade un ítem al pedido.
+     * Agrega un ítem al pedido.
      */
     public function addItem(Request $request, Order $order): JsonResponse
     {
         $validated = $request->validate([
-            'product_variant_id' => 'required|integer|exists:product_variants,id',
-            'quantity'           => 'required|integer|min:1',
-            'notes'              => 'nullable|string|max:500',
-            'sauces'             => 'nullable|array',
-            'sauces.*.sauce_id'  => 'required_with:sauces|integer|exists:sauces,id',
-            'sauces.*.quantity'  => 'required_with:sauces|integer|min:0',
-            'sauces.*.is_coated' => 'required_with:sauces|boolean',
+            'product_variant_id'   => 'required|integer|exists:product_variants,id',
+            'quantity'             => 'required|integer|min:1',
+            'notes'                => 'nullable|string|max:500',
+            'sauces'               => 'nullable|array',
+            'sauces.*.sauce_id'    => 'required_with:sauces|integer|exists:sauces,id',
+            'sauces.*.quantity'    => 'required_with:sauces|integer|min:0',
+            'sauces.*.is_coated'   => 'required_with:sauces|boolean',
         ]);
 
         try {
-            $item = $this->orderService->addItem($order, $validated);
+            $orderItem = $this->orderService->addItem($order, $validated);
+
+            // Refrescar el pedido para obtener el total actualizado
+            $order->refresh();
 
             return response()->json([
-                'item_id'            => $item->id,
-                'subtotal'           => $item->subtotal,
-                'order_total'        => $order->fresh()->total,
-                'extra_sauce_charge' => $item->extra_sauce_charge,
+                'item_id'            => $orderItem->id,
+                'subtotal'           => $orderItem->subtotal,
+                'order_total'        => $order->total,
+                'extra_sauce_charge' => $orderItem->extra_sauce_charge,
             ]);
         } catch (ValidationException $e) {
             return response()->json(['errors' => $e->errors()], 422);
@@ -83,14 +90,16 @@ class OrderController
     {
         // Verificar que el ítem pertenece al pedido
         if ($item->order_id !== $order->id) {
-            return response()->json(['error' => 'El ítem no pertenece a este pedido.'], 403);
+            abort(404, 'El ítem no pertenece a este pedido.');
         }
 
         try {
             $this->orderService->removeItem($item);
 
+            $order->refresh();
+
             return response()->json([
-                'order_total' => $order->fresh()->total,
+                'order_total' => $order->total,
             ]);
         } catch (ValidationException $e) {
             return response()->json(['errors' => $e->errors()], 422);
@@ -99,7 +108,7 @@ class OrderController
 
     /**
      * GET /pos/orders/{order}
-     * Muestra el detalle de un pedido con ítems, salsas y totales.
+     * Muestra el detalle completo del pedido.
      */
     public function show(Order $order): JsonResponse
     {
@@ -112,8 +121,6 @@ class OrderController
             'payments',
         ]);
 
-        return response()->json([
-            'order' => $order,
-        ]);
+        return response()->json($order);
     }
 }
