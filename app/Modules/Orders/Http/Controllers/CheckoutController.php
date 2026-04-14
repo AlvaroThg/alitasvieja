@@ -2,22 +2,26 @@
 
 namespace App\Modules\Orders\Http\Controllers;
 
+use App\Http\Controllers\Controller;
 use App\Modules\Orders\Models\Order;
 use App\Modules\Orders\Services\CheckoutService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
 use Illuminate\Validation\ValidationException;
+use Illuminate\View\View;
 
-class CheckoutController
+class CheckoutController extends Controller
 {
-    public function __construct(
-        private CheckoutService $checkoutService
-    ) {}
+    protected CheckoutService $checkoutService;
+
+    public function __construct(CheckoutService $checkoutService)
+    {
+        $this->checkoutService = $checkoutService;
+    }
 
     /**
      * GET /pos/checkout/{order}
-     * Muestra la vista de checkout (frontend Livewire).
+     * Muestra la vista de checkout (el frontend es Livewire).
      */
     public function show(Order $order): View
     {
@@ -35,7 +39,7 @@ class CheckoutController
         $validated = $request->validate([
             'payments'              => 'required|array|min:1',
             'payments.*.method'     => 'required|in:cash,card,qr,transfer',
-            'payments.*.amount'     => 'required|numeric|gt:0',
+            'payments.*.amount'     => 'required|numeric|min:0.01',
             'payments.*.reference'  => 'nullable|string|max:100',
         ]);
 

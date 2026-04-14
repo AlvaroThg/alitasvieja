@@ -10,9 +10,14 @@ use Illuminate\Validation\ValidationException;
 
 class OrderService
 {
-    public function __construct(
-        private WingSauceValidator $sauceValidator
-    ) {}
+    protected WingSauceValidator $sauceValidator;
+
+    public function __construct(WingSauceValidator $sauceValidator)
+    {
+        $this->sauceValidator = $sauceValidator;
+    }
+
+    // ─── Crear Pedido ─────────────────────────────────────────
 
     /**
      * Crea un nuevo pedido en estado 'open'.
@@ -34,11 +39,18 @@ class OrderService
         });
     }
 
+    // ─── Agregar Ítem ─────────────────────────────────────────
+
     /**
-     * Añade un ítem al pedido con su precio snapshot y salsas opcionales.
+     * Agrega un ítem al pedido.
      *
      * @param  Order  $order
-     * @param  array  $itemData  [product_variant_id, quantity, notes?, sauces?]
+     * @param  array  $itemData  [
+     *     'product_variant_id' => int,
+     *     'quantity'           => int,
+     *     'notes'              => ?string,
+     *     'sauces'             => [['sauce_id'=>int, 'quantity'=>int, 'is_coated'=>bool], ...]
+     * ]
      * @return OrderItem
      *
      * @throws ValidationException
@@ -55,61 +67,40 @@ class OrderService
             $variantId = $itemData['product_variant_id'];
             $quantity  = $itemData['quantity'] ?? 1;
             $notes     = $itemData['notes'] ?? null;
-            $sauces    = $itemData['sauces'] ?? [];
+            $saucesData = $itemData['sauces'] ?? [];
 
-            // Obtener el variant con su producto para verificar is_wings
-            $variant = DB::table('product_variants')
-                ->join('products', 'products.id', '=', 'product_variants.product_id')
-                ->where('product_variants.id', $variantId)
-                ->select(
-                    'product_variants.id',
-                    'product_variants.wings_count',
-                    'product_variants.max_sauces',
-                    'products.is_wings'
-                )
-                ->first();
+            // Obtener el variant con su producto (para verificar is_wings)
+            $variant = \App\Modules\Menu\Models\ProductVariant::with('product')->findOrFail($variantId);
 
-            if (!$variant) {
-                throw ValidationException::withMessages([
-                    'product_variant_id' => 'La variante de producto no existe.',
-                ]);
-            }
-
-            // Obtener unit_price desde product_prices
-            $priceRecord = DB::table('product_prices')
+            // Obtener precio desde product_prices para esta sucursal
+            $productPrice = DB::table('product_prices')
                 ->where('product_variant_id', $variantId)
                 ->where('branch_id', $order->branch_id)
                 ->first();
 
-            if (!$priceRecord) {
+            if (!$productPrice) {
                 throw ValidationException::withMessages([
-                    'product_variant_id' => 'No se encontró precio para esta variante en la sucursal.',
+                    'product_variant_id' => "No se encontró un precio configurado para este producto en esta sucursal.",
                 ]);
             }
 
-            $unitPrice = (float) $priceRecord->price;
+            $unitPrice = (float) $productPrice->price;
             $extraSauceCharge = 0.0;
 
-            // Si es producto de alitas, validar salsas
-            if ($variant->is_wings && !empty($sauces)) {
-                // Crear un objeto anónimo compatible con el validador
-                $variantObj = (object) [
-                    'wings_count' => $variant->wings_count,
-                    'max_sauces'  => $variant->max_sauces,
-                ];
-
+            // Si el producto es de alitas, validar y calcular cargo de salsas
+            if ($variant->product->is_wings && !empty($saucesData)) {
                 $extraSauceCharge = $this->sauceValidator->validate(
-                    $variantObj,
+                    $variant,
                     $order->branch_id,
-                    $sauces
+                    $saucesData
                 );
             }
 
-            // Calcular subtotal del ítem
+            // Calcular subtotal del ítem: (unit_price × quantity) + extra_sauce_charge
             $subtotal = ($unitPrice * $quantity) + $extraSauceCharge;
 
             // Crear el OrderItem
-            $item = OrderItem::create([
+            $orderItem = OrderItem::create([
                 'order_id'           => $order->id,
                 'product_variant_id' => $variantId,
                 'quantity'           => $quantity,
@@ -119,14 +110,14 @@ class OrderService
                 'notes'              => $notes,
             ]);
 
-            // Crear las salsas si es producto de alitas
-            if ($variant->is_wings && !empty($sauces)) {
-                foreach ($sauces as $sauceData) {
+            // Crear registros de salsas si el producto es de alitas
+            if ($variant->product->is_wings && !empty($saucesData)) {
+                foreach ($saucesData as $sauceEntry) {
                     OrderItemSauce::create([
-                        'order_item_id' => $item->id,
-                        'sauce_id'      => $sauceData['sauce_id'],
-                        'quantity'      => $sauceData['quantity'] ?? 0,
-                        'is_coated'     => $sauceData['is_coated'] ?? true,
+                        'order_item_id' => $orderItem->id,
+                        'sauce_id'      => $sauceEntry['sauce_id'],
+                        'quantity'      => $sauceEntry['quantity'] ?? 0,
+                        'is_coated'     => $sauceEntry['is_coated'] ?? true,
                     ]);
                 }
             }
@@ -134,26 +125,32 @@ class OrderService
             // Recalcular totales del pedido
             $this->recalculateOrder($order);
 
-            return $item->load('sauces');
+            return $orderItem->fresh(['sauces']);
         });
     }
+
+    // ─── Recalcular Totales ───────────────────────────────────
 
     /**
      * Recalcula subtotal y total del pedido a partir de sus ítems.
      */
     public function recalculateOrder(Order $order): void
     {
-        $subtotal = OrderItem::where('order_id', $order->id)->sum('subtotal');
+        $subtotal = $order->items()->sum('subtotal');
+        $total    = $subtotal - (float) $order->discount;
 
         $order->update([
             'subtotal' => $subtotal,
-            'total'    => $subtotal - $order->discount,
+            'total'    => max(0, $total), // Decisión defensiva: el total nunca es negativo
         ]);
     }
 
+    // ─── Eliminar Ítem ────────────────────────────────────────
+
     /**
-     * Elimina un ítem del pedido (cascade elimina las salsas)
-     * y recalcula los totales.
+     * Elimina un ítem del pedido (cascade elimina las salsas).
+     *
+     * @throws ValidationException
      */
     public function removeItem(OrderItem $item): void
     {
@@ -165,9 +162,8 @@ class OrderService
             ]);
         }
 
-        DB::transaction(function () use ($item, $order) {
-            $item->delete(); // cascade elimina order_item_sauces
-            $this->recalculateOrder($order);
-        });
+        $item->delete(); // cascade elimina order_item_sauces
+
+        $this->recalculateOrder($order);
     }
 }

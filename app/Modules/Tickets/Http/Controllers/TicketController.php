@@ -2,22 +2,25 @@
 
 namespace App\Modules\Tickets\Http\Controllers;
 
+use App\Http\Controllers\Controller;
 use App\Modules\Orders\Models\Order;
 use App\Modules\Tickets\Services\TicketService;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
 
-class TicketController
+class TicketController extends Controller
 {
-    public function __construct(
-        private TicketService $ticketService
-    ) {}
+    protected TicketService $ticketService;
+
+    public function __construct(TicketService $ticketService)
+    {
+        $this->ticketService = $ticketService;
+    }
 
     /**
      * GET /pos/tickets/{order}/kitchen
-     * Genera y retorna el ticket de cocina como PDF inline.
+     * Genera y retorna el PDF del ticket de cocina inline (previsualización en navegador).
      */
-    public function kitchen(Order $order): Response
+    public function kitchen(Order $order)
     {
         $path = $this->ticketService->generateKitchenTicket($order);
 

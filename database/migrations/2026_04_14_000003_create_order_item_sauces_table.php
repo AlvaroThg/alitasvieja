@@ -4,7 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
         Schema::create('order_item_sauces', function (Blueprint $table) {
@@ -12,8 +13,9 @@ return new class extends Migration {
             $table->foreignId('order_item_id')->constrained('order_items')->onDelete('cascade');
             $table->foreignId('sauce_id')->constrained('sauces');
             $table->integer('quantity')->default(0);
-            // is_coated: true = alitas bañadas en esta salsa; false = salsa servida aparte
+            // quantity = piezas bañadas en esta salsa; 0 = salsa pedida aparte sin bañar
             $table->boolean('is_coated')->default(true);
+            // true = alitas bañadas en esta salsa; false = salsa servida aparte
             $table->timestamps();
         });
     }

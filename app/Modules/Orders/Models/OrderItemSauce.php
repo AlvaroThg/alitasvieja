@@ -17,8 +17,8 @@ class OrderItemSauce extends Model
     protected function casts(): array
     {
         return [
-            'quantity'  => 'integer',
-            'is_coated' => 'boolean',
+            'quantity'   => 'integer',
+            'is_coated'  => 'boolean',
         ];
     }
 
@@ -30,11 +30,10 @@ class OrderItemSauce extends Model
     }
 
     /**
-     * Relación con sauces. Se usa FQCN como string
-     * porque la migración la genera Marcelo en otra rama.
+     * Relación con sauces (migración de Marcelo).
      */
     public function sauce(): BelongsTo
     {
-        return $this->belongsTo('App\Modules\Menu\Models\Sauce');
+        return $this->belongsTo(\App\Modules\Menu\Models\Sauce::class, 'sauce_id');
     }
 }

@@ -10,10 +10,10 @@ use Illuminate\Validation\ValidationException;
 class CheckoutService
 {
     /**
-     * Procesa el pago de un pedido, soportando pagos simples y mixtos.
+     * Procesa el pago de un pedido.
      *
      * @param  Order  $order
-     * @param  array  $payments  [['method'=>string, 'amount'=>float, 'reference'=>?string], ...]
+     * @param  array  $payments  [['method'=>'cash'|'card'|'qr'|'transfer', 'amount'=>float, 'reference'=>?string], ...]
      *
      * @throws ValidationException
      */
@@ -23,38 +23,38 @@ class CheckoutService
 
         if ($order->status !== 'open') {
             throw ValidationException::withMessages([
-                'order' => 'Solo se pueden cobrar pedidos con estado "abierto".',
+                'order' => 'Solo se pueden cobrar pedidos en estado abierto.',
             ]);
         }
 
         if (empty($payments)) {
             throw ValidationException::withMessages([
-                'payments' => 'Debe proporcionar al menos un pago.',
+                'payments' => 'Debe especificar al menos un método de pago.',
             ]);
         }
 
         $totalPaid = 0.0;
+        $validMethods = ['cash', 'card', 'qr', 'transfer'];
 
         foreach ($payments as $index => $payment) {
-            $amount = (float) ($payment['amount'] ?? 0);
+            $position = $index + 1;
 
-            if ($amount <= 0) {
+            if (!isset($payment['method']) || !in_array($payment['method'], $validMethods)) {
                 throw ValidationException::withMessages([
-                    "payments.{$index}.amount" => 'El monto de cada pago debe ser mayor a 0.',
+                    "payments.{$index}.method" => "El método de pago #{$position} no es válido. Use: cash, card, qr o transfer.",
                 ]);
             }
 
-            $validMethods = ['cash', 'card', 'qr', 'transfer'];
-            if (!in_array($payment['method'] ?? '', $validMethods, true)) {
+            if (!isset($payment['amount']) || $payment['amount'] <= 0) {
                 throw ValidationException::withMessages([
-                    "payments.{$index}.method" => 'El método de pago no es válido.',
+                    "payments.{$index}.amount" => "El monto del pago #{$position} debe ser mayor a 0.",
                 ]);
             }
 
-            $totalPaid += $amount;
+            $totalPaid += (float) $payment['amount'];
         }
 
-        // Margen de tolerancia para errores de punto flotante
+        // Validar que la suma de pagos cubra el total (margen de flotante ±0.01)
         if (abs($totalPaid - (float) $order->total) > 0.01) {
             throw ValidationException::withMessages([
                 'payments' => 'El monto no cubre el total del pedido.',
@@ -64,7 +64,14 @@ class CheckoutService
         // ─── Proceso de pago ──────────────────────────────────────
 
         DB::transaction(function () use ($order, $payments) {
-            // Crear un registro de pago por cada entrada
+            // Determinar payment_method del pedido
+            if (count($payments) > 1) {
+                $paymentMethod = 'mixed';
+            } else {
+                $paymentMethod = $payments[0]['method'];
+            }
+
+            // Crear cada registro de pago
             foreach ($payments as $payment) {
                 OrderPayment::create([
                     'order_id'  => $order->id,
@@ -73,11 +80,6 @@ class CheckoutService
                     'reference' => $payment['reference'] ?? null,
                 ]);
             }
-
-            // Determinar el método de pago del pedido
-            $paymentMethod = count($payments) > 1
-                ? 'mixed'
-                : $payments[0]['method'];
 
             // Actualizar el pedido
             $order->update([
