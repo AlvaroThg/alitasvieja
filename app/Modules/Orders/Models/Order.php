@@ -29,11 +29,11 @@ class Order extends Model
     protected function casts(): array
     {
         return [
-            'subtotal'    => 'decimal:2',
-            'discount'    => 'decimal:2',
-            'total'       => 'decimal:2',
-            'opened_at'   => 'datetime',
-            'closed_at'   => 'datetime',
+            'subtotal'       => 'decimal:2',
+            'discount'       => 'decimal:2',
+            'total'          => 'decimal:2',
+            'opened_at'      => 'datetime',
+            'closed_at'      => 'datetime',
         ];
     }
 
@@ -45,12 +45,12 @@ class Order extends Model
     }
 
     /**
-     * Relación con la mesa. Se usa el FQCN como string para evitar
-     * dependencia circular; la migración de tables la genera Marcelo.
+     * Relación con la tabla "tables" (mesas).
+     * Se usa el modelo genérico porque la migración la genera Marcelo.
      */
     public function table(): BelongsTo
     {
-        return $this->belongsTo('App\Modules\Tables\Models\Table');
+        return $this->belongsTo(\App\Modules\Tables\Models\Table::class, 'table_id');
     }
 
     public function user(): BelongsTo
@@ -88,35 +88,28 @@ class Order extends Model
     // ─── Accessors ────────────────────────────────────────────
 
     /**
-     * El pedido solo es editable mientras esté abierto.
+     * Solo se puede editar un pedido si su estado es 'open'.
      */
     public function getIsEditableAttribute(): bool
     {
         return $this->status === 'open';
     }
 
-    // ─── Generador de número de orden ─────────────────────────
+    // ─── Métodos estáticos ────────────────────────────────────
 
     /**
-     * Genera un número de orden secuencial por sucursal.
+     * Genera un número de pedido correlativo por sucursal.
      * Formato: CBB-0001, TJA-0001, etc.
-     * Usa lockForUpdate() dentro de una transacción para evitar colisiones.
-     *
-     * NOTA: El slug de branch se mapea a un prefijo de 3 letras.
-     *   cbba → CBB | tja → TJA
+     * Usa lockForUpdate() dentro de transacción para evitar colisiones.
      */
     public static function generateOrderNumber(int $branchId): string
     {
         return DB::transaction(function () use ($branchId) {
             $branch = Branch::findOrFail($branchId);
-            $slug   = $branch->slug; // "cbba" o "tja"
 
-            // Mapeo de slug a prefijo de 3 caracteres para el correlativo
-            $prefixMap = [
-                'cbba' => 'CBB',
-                'tja'  => 'TJA',
-            ];
-            $prefix = $prefixMap[$slug] ?? strtoupper(substr($slug, 0, 3));
+            // Prefijo: slug en mayúsculas, cortado a 3 caracteres
+            // cbba → CBB, tja → TJA
+            $prefix = strtoupper(substr($branch->slug, 0, 3));
 
             // Obtener el último pedido de esta sucursal con lock
             $lastOrder = static::where('branch_id', $branchId)
@@ -124,11 +117,12 @@ class Order extends Model
                 ->orderByDesc('id')
                 ->first();
 
-            $nextNumber = 1;
             if ($lastOrder) {
-                // Extraer la parte numérica del order_number: "CBB-0042" → 42
-                $parts = explode('-', $lastOrder->order_number);
-                $nextNumber = ((int) end($parts)) + 1;
+                // Extraer el número del último order_number (ej: "CBB-0042" → 42)
+                $lastNumber = (int) substr($lastOrder->order_number, strlen($prefix) + 1);
+                $nextNumber = $lastNumber + 1;
+            } else {
+                $nextNumber = 1;
             }
 
             return $prefix . '-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);

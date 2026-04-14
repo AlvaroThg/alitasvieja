@@ -36,12 +36,11 @@ class OrderItem extends Model
     }
 
     /**
-     * Relación con product_variants. Se usa FQCN como string
-     * porque la migración la genera Marcelo en otra rama.
+     * Relación con product_variants (migración de Marcelo).
      */
     public function productVariant(): BelongsTo
     {
-        return $this->belongsTo('App\Modules\Menu\Models\ProductVariant');
+        return $this->belongsTo(\App\Modules\Menu\Models\ProductVariant::class, 'product_variant_id');
     }
 
     public function sauces(): HasMany
