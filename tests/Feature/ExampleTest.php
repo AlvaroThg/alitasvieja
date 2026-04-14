@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-// use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class ExampleTest extends TestCase
@@ -22,7 +21,8 @@ class ExampleTest extends TestCase
      */
     public function test_login_page_is_accessible(): void
     {
-        $response = $this->get('/login');
+        // withoutVite() evita errores por ausencia del manifest en CI
+        $response = $this->withoutVite()->get('/login');
 
         $response->assertStatus(200);
     }
