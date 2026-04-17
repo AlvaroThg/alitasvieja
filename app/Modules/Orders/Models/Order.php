@@ -50,7 +50,7 @@ class Order extends Model
      */
     public function table(): BelongsTo
     {
-        return $this->belongsTo(\App\Modules\Tables\Models\Table::class, 'table_id');
+        return $this->belongsTo(\App\Models\Table::class, 'table_id');
     }
 
     public function user(): BelongsTo

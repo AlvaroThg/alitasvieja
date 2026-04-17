@@ -12,11 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tables', function (Blueprint $table) {
-            $table->id();
-            $table->integer('number')->unique();
-            $table->integer('capacity');
-            $table->string('status')->default('available'); // available, occupied
-            $table->timestamps();
+        $table->id();
+        $table->string('name');
+        $table->string('status')->default('available'); 
+        $table->foreignId('branch_id'); 
+        $table->timestamps();
         });
     }
 

@@ -29,6 +29,7 @@ Route::middleware(['auth', 'role:owner,cashier,waiter', 'branch'])->prefix('pos'
 
     // Tickets
     Route::get('/tickets/{order}/kitchen', [TicketController::class, 'kitchen'])->name('tickets.kitchen');
+    Route::get('/tickets/{order}/cashier', [TicketController::class, 'cashier'])->name('tickets.cashier');
 });
 
 // ─── Caja — Cajero, Branch Admin, Owner ───────────────────────────────────────
