@@ -4,6 +4,8 @@
 use App\Http\Controllers\Auth\AuthController;
 use App\Modules\Orders\Http\Controllers\OrderController;
 use App\Modules\Orders\Http\Controllers\CheckoutController;
+use App\Modules\Orders\Http\Controllers\KitchenController;
+use App\Modules\Reports\Http\Controllers\AdminReportController;
 use App\Modules\Tickets\Http\Controllers\TicketController;
 use Illuminate\Support\Facades\Route;
 
@@ -32,17 +34,28 @@ Route::middleware(['auth', 'role:owner,cashier,waiter', 'branch'])->prefix('pos'
     Route::get('/tickets/{order}/cashier', [TicketController::class, 'cashier'])->name('tickets.cashier');
 });
 
+// ─── Cocina — Vista de pedidos activos (OBS 3) ───────────────────────────────
+Route::middleware(['auth', 'role:owner,cashier,waiter', 'branch'])->prefix('kitchen')->name('kitchen.')->group(function () {
+    Route::get('/orders', [KitchenController::class, 'index'])->name('orders.index');
+    Route::patch('/orders/{order}/ready', [KitchenController::class, 'markReady'])->name('orders.ready');
+});
+
 // ─── Caja — Cajero, Branch Admin, Owner ───────────────────────────────────────
 Route::middleware(['auth', 'role:owner,branch_admin,cashier', 'branch'])->prefix('caja')->name('cash.')->group(function () {
     // Las rutas de caja se agregarán en la Fase 2
     Route::get('/', fn() => view('cash.index'))->name('index');
 });
 
-// ─── Admin — Solo Owner ───────────────────────────────────────────────────────
+// ─── Admin — Solo Owner (+ branch_admin para orders) ─────────────────────────
 Route::middleware(['auth', 'role:owner'])->prefix('admin')->name('admin.')->group(function () {
-    // Las rutas de administración se agregarán en fases posteriores
-    Route::get('/dashboard', fn() => view('admin.dashboard'))->name('dashboard');
+    // Dashboard con KPIs (OBS 2 / OBS 3)
+    Route::get('/dashboard', [AdminReportController::class, 'dashboard'])->name('dashboard');
 
     // Selector de sucursal activa (para el owner)
     Route::post('/branch/switch', [AuthController::class, 'switchBranch'])->name('branch.switch');
+});
+
+// Rutas admin accesibles por owner Y branch_admin (OBS 2)
+Route::middleware(['auth', 'role:owner,branch_admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/orders', [AdminReportController::class, 'orders'])->name('orders.index');
 });

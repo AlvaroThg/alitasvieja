@@ -63,9 +63,14 @@
     </div>
     <div class="separator">--------------------------------</div>
 
-    <div>
-        <span class="bold">Pedido:</span> {{ $order->order_number }}
+    {{-- MODIFICADO: daily_number prominente para cocina (OBS 1) --}}
+    <div class="center bold" style="font-size: 14px; margin: 2px 0;">
+        Pedido #{{ $order->daily_number }}
     </div>
+    <div style="font-size: 9px; text-align: center; color: #666;">
+        Ref: {{ $order->order_number }}
+    </div>
+    {{-- FIN MODIFICADO --}}
     <div>
         <span class="bold">Mesa:</span> {{ $order->table->number ?? 'Sin mesa' }}
     </div>

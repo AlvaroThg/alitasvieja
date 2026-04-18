@@ -17,27 +17,25 @@ class OrderService
         $this->sauceValidator = $sauceValidator;
     }
 
-    // ─── Crear Pedido ─────────────────────────────────────────
-
-    /**
-     * Crea un nuevo pedido en estado 'open'.
-     */
+    // MODIFICADO: asignar daily_number del generador (OBS 1)
     public function createOrder(int $branchId, ?int $tableId, int $userId, ?string $notes = null): Order
     {
         return DB::transaction(function () use ($branchId, $tableId, $userId, $notes) {
-            $orderNumber = Order::generateOrderNumber($branchId);
+            $numbers = Order::generateOrderNumber($branchId);
 
             return Order::create([
                 'branch_id'    => $branchId,
                 'table_id'     => $tableId,
                 'user_id'      => $userId,
-                'order_number' => $orderNumber,
+                'order_number' => $numbers['order_number'],
+                'daily_number' => $numbers['daily_number'],
                 'status'       => 'open',
                 'notes'        => $notes,
                 'opened_at'    => now(),
             ]);
         });
     }
+    // FIN MODIFICADO
 
     // ─── Agregar Ítem ─────────────────────────────────────────
 
