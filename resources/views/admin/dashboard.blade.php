@@ -253,16 +253,16 @@
 
         <div class="stats-row">
             <div class="stat-card">
-                <div class="stat-value">12</div>
+                <div class="stat-value">{{ \App\Models\Table::count() }}</div>
                 <div class="stat-label">Mesas</div>
             </div>
             <div class="stat-card">
-                <div class="stat-value">--</div>
-                <div class="stat-label">Órdenes</div>
+                <div class="stat-value">{{ number_format($global['total_orders'] ?? 0) }}</div>
+                <div class="stat-label">Órdenes Pagadas (Hoy)</div>
             </div>
             <div class="stat-card">
-                <div class="stat-value">$0</div>
-                <div class="stat-label">Ventas</div>
+                <div class="stat-value">${{ number_format($global['total_revenue'] ?? 0, 2) }}</div>
+                <div class="stat-label">Ventas (Hoy)</div>
             </div>
         </div>
 

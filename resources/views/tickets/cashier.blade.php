@@ -19,13 +19,20 @@
     <div class="text-center mb-2">
         <h2 class="font-bold" style="margin: 0; font-size: 18px;">Alitas Vega</h2>
         <p class="text-xs" style="margin: 2px 0;">Ticket de Venta</p>
-        <p class="font-bold">Orden #{{ $order->order_number }}</p>
+        <p class="font-bold" style="font-size: 16px;">Turno: #{{ $order->daily_number }}</p>
+        <p class="text-xs">Orden {{ $order->order_number }}</p>
     </div>
 
     <div class="divider"></div>
 
     <p>Fecha: {{ $order->opened_at }}</p>
     <p>Mesa: {{ $order->table ? $order->table->name : 'N/A' }}</p>
+
+    @if($order->notes)
+        <div class="divider"></div>
+        <p class="font-bold">Observaciones Generales:</p>
+        <p class="text-xs" style="font-style: italic;">{{ $order->notes }}</p>
+    @endif
 
     <div class="divider"></div>
 
@@ -36,6 +43,9 @@
             <td style="width: 55%">
                 {{ $item->productVariant->product->name ?? 'Item' }}<br>
                 <span class="text-xs">{{ $item->productVariant->name ?? '' }}</span>
+                @if($item->notes)
+                    <br><span class="text-xs" style="font-style: italic;">* {{ $item->notes }}</span>
+                @endif
             </td>
             <td class="text-right" style="width: 30%">${{ number_format($item->subtotal, 2) }}</td>
         </tr>

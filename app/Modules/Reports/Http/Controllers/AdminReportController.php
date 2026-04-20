@@ -21,7 +21,7 @@ class AdminReportController extends Controller
      * GET /admin/dashboard
      * Dashboard con KPIs del día actual.
      */
-    public function dashboard(Request $request): JsonResponse
+    public function dashboard(Request $request)
     {
         $today = Carbon::today();
 
@@ -35,11 +35,15 @@ class AdminReportController extends Controller
             return array_merge(['branch_id' => $branch->id, 'branch_name' => $branch->name], $summary);
         });
 
-        return response()->json([
-            'date'       => $today->toDateString(),
-            'global'     => $global,
-            'per_branch' => $perBranch,
-        ]);
+        if ($request->wantsJson()) {
+            return response()->json([
+                'date'       => $today->toDateString(),
+                'global'     => $global,
+                'per_branch' => $perBranch,
+            ]);
+        }
+
+        return view('admin.dashboard', compact('today', 'global', 'perBranch'));
     }
 
     /**

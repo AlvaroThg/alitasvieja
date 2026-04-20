@@ -70,19 +70,8 @@ class OrderService
             // Obtener el variant con su producto (para verificar is_wings)
             $variant = \App\Modules\Menu\Models\ProductVariant::with('product')->findOrFail($variantId);
 
-            // Obtener precio desde product_prices para esta sucursal
-            $productPrice = DB::table('product_prices')
-                ->where('product_variant_id', $variantId)
-                ->where('branch_id', $order->branch_id)
-                ->first();
-
-            if (!$productPrice) {
-                throw ValidationException::withMessages([
-                    'product_variant_id' => "No se encontró un precio configurado para este producto en esta sucursal.",
-                ]);
-            }
-
-            $unitPrice = (float) $productPrice->price;
+            // Usar el precio base de la variante (ya que la tabla product_prices no existe en el esquema base)
+            $unitPrice = (float) $variant->price;
             $extraSauceCharge = 0.0;
 
             // Si el producto es de alitas, validar y calcular cargo de salsas

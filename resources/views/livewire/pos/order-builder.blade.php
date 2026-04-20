@@ -664,8 +664,6 @@
         </div>
 
         <div class="ticket-footer">
-            <textarea wire:model.live.debounce.500ms="orderNotes" rows="2" class="ticket-notes-area" placeholder="Observaciones generales para cocina..."></textarea>
-            
             <div class="ticket-total-row">
                 <span class="ticket-total-label">Total a Pagar</span>
                 <span class="ticket-total-value">${{ number_format($this->subtotal, 2) }}</span>

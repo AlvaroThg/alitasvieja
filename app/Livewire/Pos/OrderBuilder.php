@@ -214,56 +214,45 @@ class OrderBuilder extends Component
         if (empty($this->cart)) return;
 
         $user = auth()->user();
+        $branchId = $user->activeBranchId() ?? 1;
 
-        // 1. Guardar Maestro Order
-        $orderId = \Illuminate\Support\Facades\DB::table('orders')->insertGetId([
-            'branch_id' => $user->branch_id ?? 1,
-            'table_id' => $this->tableId,
-            'user_id' => $user->id,
-            'order_number' => 'ORD-' . strtoupper(uniqid()),
-            'status' => 'open',
-            'subtotal' => $this->subtotal,
-            'total' => $this->subtotal,
-            'notes' => $this->orderNotes,
-            'opened_at' => now(),
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        $orderService = app(\App\Modules\Orders\Services\OrderService::class);
 
-        // 2. Guardar Items y Salsas
+        // Crear la orden
+        $order = $orderService->createOrder(
+            $branchId,
+            $this->tableId,
+            $user->id,
+            $this->orderNotes
+        );
+
+        // Añadir items
         foreach ($this->cart as $item) {
-            $itemId = \Illuminate\Support\Facades\DB::table('order_items')->insertGetId([
-                'order_id' => $orderId,
-                'product_variant_id' => $item['variant_id'],
-                'quantity' => $item['quantity'],
-                'unit_price' => $item['price'],
-                'subtotal' => $item['price'] * $item['quantity'],
-                'notes' => $item['notes'] ?? null,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-
+            $saucesData = [];
             if (!empty($item['sauces'])) {
-                $saucesToInsert = [];
                 foreach ($item['sauces'] as $sauce) {
-                    $saucesToInsert[] = [
-                        'order_item_id' => $itemId,
+                    $saucesData[] = [
                         'sauce_id' => $sauce['id'],
                         'quantity' => $sauce['qty'],
-                        'created_at' => now(),
-                        'updated_at' => now(),
+                        'is_coated' => true,
                     ];
                 }
-                \Illuminate\Support\Facades\DB::table('order_item_sauces')->insert($saucesToInsert);
             }
+
+            $orderService->addItem($order, [
+                'product_variant_id' => $item['variant_id'],
+                'quantity' => $item['quantity'],
+                'notes' => $item['notes'] ?? null,
+                'sauces' => $saucesData
+            ]);
         }
 
-        // 3. Update Table Status if needed
+        // Cambiar estado a mesa
         if ($this->tableId) {
-            \Illuminate\Support\Facades\DB::table('tables')
-                ->where('id', $this->tableId)
-                ->update(['status' => 'occupied']);
+            \App\Models\Table::where('id', $this->tableId)->update(['status' => 'occupied']);
         }
+
+        $orderId = $order->id;
 
         // 4. Limpiar sesión y notificar a la vista
         $this->cart = [];
@@ -271,7 +260,9 @@ class OrderBuilder extends Component
         $this->saveCartToSession();
 
         $ticketUrl = route('pos.tickets.cashier', ['order' => $orderId]);
-        $this->dispatch('order-saved', url: $ticketUrl);
+        $kitchenUrl = route('kitchen.orders.index'); // O abrir el PDF de cocina, pero de momento usa caja
+        
+        $this->dispatch('order-saved', url: $ticketUrl); // Opcional: pasar kitchenUrl si se desea imprimir dos veces
     }
 
     // --- Persistencia Sesión ---
