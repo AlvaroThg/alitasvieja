@@ -4,6 +4,7 @@ namespace App\Modules\Menu\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ProductVariant extends Model
 {
@@ -25,5 +26,13 @@ class ProductVariant extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    /**
+     * Precios diferenciados por sucursal (tabla product_prices).
+     */
+    public function prices(): HasMany
+    {
+        return $this->hasMany(ProductPrice::class);
     }
 }
