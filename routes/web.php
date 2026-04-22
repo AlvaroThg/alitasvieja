@@ -2,6 +2,9 @@
 // routes/web.php — estructura base de rutas con roles
 
 use App\Http\Controllers\Auth\AuthController;
+use App\Modules\Auth\Http\Controllers\Admin\UserController;
+use App\Modules\Cash\Http\Controllers\CashController;
+use App\Modules\Menu\Http\Controllers\Admin\PriceController;
 use App\Modules\Orders\Http\Controllers\OrderController;
 use App\Modules\Orders\Http\Controllers\CheckoutController;
 use App\Modules\Orders\Http\Controllers\KitchenController;
@@ -34,28 +37,43 @@ Route::middleware(['auth', 'role:owner,cashier,waiter', 'branch'])->prefix('pos'
     Route::get('/tickets/{order}/cashier', [TicketController::class, 'cashier'])->name('tickets.cashier');
 });
 
-// ─── Cocina — Vista de pedidos activos (OBS 3) ───────────────────────────────
+// ─── Cocina — Vista de pedidos activos ────────────────────────────────────────
 Route::middleware(['auth', 'role:owner,cashier,waiter', 'branch'])->prefix('kitchen')->name('kitchen.')->group(function () {
     Route::get('/orders', [KitchenController::class, 'index'])->name('orders.index');
     Route::patch('/orders/{order}/ready', [KitchenController::class, 'markReady'])->name('orders.ready');
 });
 
-// ─── Caja — Cajero, Branch Admin, Owner ───────────────────────────────────────
-Route::middleware(['auth', 'role:owner,branch_admin,cashier', 'branch'])->prefix('caja')->name('cash.')->group(function () {
-    // Las rutas de caja se agregarán en la Fase 2
-    Route::get('/', fn() => view('cash.index'))->name('index');
+// ─── Caja — Cajero, Branch Admin, Owner (Fase 2) ─────────────────────────────
+Route::middleware(['auth', 'role:owner,branch_admin,cashier', 'branch'])->prefix('cash')->name('cash.')->group(function () {
+    Route::get('/sessions/active', [CashController::class, 'active'])->name('sessions.active');
+    Route::post('/sessions/open', [CashController::class, 'open'])->name('sessions.open');
+    Route::get('/sessions/{session}', [CashController::class, 'show'])->name('sessions.show');
+    Route::post('/sessions/{session}/movements', [CashController::class, 'addMovement'])->name('sessions.addMovement');
+    Route::post('/sessions/{session}/close', [CashController::class, 'close'])->name('sessions.close');
 });
 
-// ─── Admin — Solo Owner (+ branch_admin para orders) ─────────────────────────
+// ─── Admin — Solo Owner ──────────────────────────────────────────────────────
 Route::middleware(['auth', 'role:owner'])->prefix('admin')->name('admin.')->group(function () {
-    // Dashboard con KPIs (OBS 2 / OBS 3)
+    // Dashboard con KPIs
     Route::get('/dashboard', [AdminReportController::class, 'dashboard'])->name('dashboard');
 
-    // Selector de sucursal activa (para el owner)
+    // Selector de sucursal activa
     Route::post('/branch/switch', [AuthController::class, 'switchBranch'])->name('branch.switch');
+
+    // Precios por sucursal (Fase 2)
+    Route::get('/prices', [PriceController::class, 'index'])->name('prices.index');
+    Route::put('/prices/bulk', [PriceController::class, 'bulkUpdate'])->name('prices.bulkUpdate');
+    Route::put('/prices/{variant}/branch/{branch}', [PriceController::class, 'update'])->name('prices.update');
+
+    // Usuarios y roles (Fase 2)
+    Route::get('/users', [UserController::class, 'index'])->name('users.index');
+    Route::post('/users', [UserController::class, 'store'])->name('users.store');
+    Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
+    Route::patch('/users/{user}/toggle-active', [UserController::class, 'toggleActive'])->name('users.toggleActive');
+    Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
 });
 
-// Rutas admin accesibles por owner Y branch_admin (OBS 2)
+// Rutas admin accesibles por owner Y branch_admin
 Route::middleware(['auth', 'role:owner,branch_admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/orders', [AdminReportController::class, 'orders'])->name('orders.index');
 });
