@@ -584,7 +584,7 @@
                             </div>
                             <h3 class="prod-name">{{ $product->name }}</h3>
                             @if($product->has_sauces)
-                                <span class="prod-sauce-badge">Salsas: {{ $product->max_sauces }}</span>
+                                <span class="prod-sauce-badge">Personaliza tus salsas</span>
                             @endif
                         </div>
                     @endforeach

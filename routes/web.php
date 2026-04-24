@@ -50,6 +50,7 @@ Route::middleware(['auth', 'role:owner,branch_admin,cashier', 'branch'])->prefix
     Route::get('/sessions/{session}', [CashController::class, 'show'])->name('sessions.show');
     Route::post('/sessions/{session}/movements', [CashController::class, 'addMovement'])->name('sessions.addMovement');
     Route::post('/sessions/{session}/close', [CashController::class, 'close'])->name('sessions.close');
+    Route::get('/movements', function () { return view('cash.index'); })->name('movements');
 });
 
 // ─── Admin — Solo Owner ──────────────────────────────────────────────────────
@@ -59,6 +60,9 @@ Route::middleware(['auth', 'role:owner'])->prefix('admin')->name('admin.')->grou
 
     // Selector de sucursal activa
     Route::post('/branch/switch', [AuthController::class, 'switchBranch'])->name('branch.switch');
+
+    // Gestión de Productos
+    Route::get('/products', function () { return view('admin.products'); })->name('products.index');
 
     // Precios por sucursal (Fase 2)
     Route::get('/prices', [PriceController::class, 'index'])->name('prices.index');

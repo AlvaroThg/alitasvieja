@@ -11,6 +11,8 @@ class ProductVariant extends Model
     protected $fillable = [
         'product_id',
         'name',
+        'wings_count',
+        'max_sauces',
         'price',
         'is_active'
     ];
@@ -18,6 +20,8 @@ class ProductVariant extends Model
     protected function casts(): array
     {
         return [
+            'wings_count' => 'integer',
+            'max_sauces' => 'integer',
             'price' => 'decimal:2',
             'is_active' => 'boolean',
         ];

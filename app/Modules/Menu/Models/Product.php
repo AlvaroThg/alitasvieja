@@ -13,6 +13,8 @@ class Product extends Model
         'name',
         'description',
         'image',
+        'is_wings',
+        'tracks_stock',
         'has_sauces',
         'max_sauces',
         'is_active'
@@ -21,6 +23,8 @@ class Product extends Model
     protected function casts(): array
     {
         return [
+            'is_wings' => 'boolean',
+            'tracks_stock' => 'boolean',
             'has_sauces' => 'boolean',
             'max_sauces' => 'integer',
             'is_active' => 'boolean',

@@ -251,6 +251,23 @@
         
         <div class="badge-online">Sistema en línea</div>
 
+        @if(auth()->user()->isOwner())
+        <div style="margin-bottom: 2rem; background: #111; padding: 1rem; border-radius: 12px; border: 1px solid #222;">
+            <form action="{{ route('admin.branch.switch') }}" method="POST" style="display: flex; gap: 0.5rem; align-items: center;">
+                @csrf
+                <label style="color: #888; font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">Sucursal Activa:</label>
+                <select name="branch_id" onchange="this.form.submit()" style="flex: 1; background: #0a0a0a; color: #fff; border: 1px solid #333; padding: 0.5rem; border-radius: 8px; font-size: 0.9rem;">
+                    <option value="">Seleccione una sucursal...</option>
+                    @foreach(\App\Models\Branch::where('is_active', true)->get() as $b)
+                        <option value="{{ $b->id }}" {{ session('active_branch_id') == $b->id ? 'selected' : '' }}>
+                            {{ $b->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </form>
+        </div>
+        @endif
+
         <div class="stats-row">
             <div class="stat-card">
                 <div class="stat-value">{{ \App\Models\Table::count() }}</div>
@@ -270,6 +287,16 @@
             <a href="{{ route('pos.index') }}" class="btn-primary">
                 <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                 Entrar a Punto de Venta
+            </a>
+
+            <a href="{{ route('cash.movements') }}" class="btn-secondary" style="margin-top: 0.5rem;">
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Control de Caja
+            </a>
+
+            <a href="{{ route('admin.products.index') }}" class="btn-secondary" style="margin-top: 0.5rem;">
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                Gestión de Productos
             </a>
 
             <div class="divider"></div>

@@ -89,7 +89,7 @@ class OrderBuilder extends Component
             'quantity' => 1,
             'notes' => '',
             'has_sauces' => $variant->product->has_sauces,
-            'max_sauces' => $variant->product->max_sauces,
+            'max_sauces' => $variant->max_sauces,
             'sauces' => [], // [ ['id' => 1, 'name' => 'BBQ', 'qty' => 2] ]
         ];
 
