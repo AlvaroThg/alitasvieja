@@ -87,6 +87,15 @@ class CheckoutService
                 'status'         => 'paid',
                 'closed_at'      => now(),
             ]);
+
+            // MODIFICADO: Descontar inventario
+            try {
+                $inventoryService = app(\App\Modules\Inventory\Services\InventoryService::class);
+                $inventoryService->decrementOnSale($order);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error("Error descontando inventario para el pedido {$order->order_number}: " . $e->getMessage());
+            }
+            // FIN MODIFICADO
         });
     }
 }
