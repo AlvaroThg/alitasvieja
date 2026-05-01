@@ -75,9 +75,28 @@ Route::middleware(['auth', 'role:owner'])->prefix('admin')->name('admin.')->grou
     Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
     Route::patch('/users/{user}/toggle-active', [UserController::class, 'toggleActive'])->name('users.toggleActive');
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+
+    // Gestión de Promociones (Fase 3)
+    Route::get('/promotions', [\App\Modules\Promotions\Http\Controllers\PromotionController::class, 'index'])->name('promotions.index');
+    Route::post('/promotions', [\App\Modules\Promotions\Http\Controllers\PromotionController::class, 'store'])->name('promotions.store');
+    Route::put('/promotions/{promotion}', [\App\Modules\Promotions\Http\Controllers\PromotionController::class, 'update'])->name('promotions.update');
+    Route::patch('/promotions/{promotion}/toggle-active', [\App\Modules\Promotions\Http\Controllers\PromotionController::class, 'toggleActive'])->name('promotions.toggleActive');
 });
 
 // Rutas admin accesibles por owner Y branch_admin
 Route::middleware(['auth', 'role:owner,branch_admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/orders', [AdminReportController::class, 'orders'])->name('orders.index');
+
+    // Gestión de Inventario (Fase 3)
+    Route::get('/inventory', [\App\Modules\Inventory\Http\Controllers\InventoryController::class, 'index'])->name('inventory.index');
+    Route::get('/inventory/alerts', [\App\Modules\Inventory\Http\Controllers\InventoryController::class, 'alerts'])->name('inventory.alerts');
+    Route::post('/inventory/add', [\App\Modules\Inventory\Http\Controllers\InventoryController::class, 'addStock'])->name('inventory.addStock');
+    Route::put('/inventory/adjust', [\App\Modules\Inventory\Http\Controllers\InventoryController::class, 'adjust'])->name('inventory.adjust');
+});
+
+// ─── POS — Aplicar Promociones en Pedidos (Fase 3) ─────────────────────────
+Route::middleware(['auth', 'role:owner,cashier', 'branch'])->prefix('pos')->name('pos.')->group(function () {
+    Route::get('/orders/{order}/promotions', [\App\Modules\Promotions\Http\Controllers\PromotionController::class, 'available'])->name('orders.promotions.available');
+    Route::post('/orders/{order}/promotions', [\App\Modules\Promotions\Http\Controllers\PromotionController::class, 'applyToOrder'])->name('orders.promotions.apply');
+    Route::delete('/orders/{order}/promotions', [\App\Modules\Promotions\Http\Controllers\PromotionController::class, 'removeFromOrder'])->name('orders.promotions.remove');
 });
