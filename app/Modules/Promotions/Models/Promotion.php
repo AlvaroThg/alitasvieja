@@ -66,10 +66,10 @@ class Promotion extends Model
                 $today = Carbon::today()->toDateString();
                 $q->where(function ($sub) use ($today) {
                     $sub->whereNull('starts_at')
-                        ->orWhere('starts_at', '<=', $today);
+                        ->orWhereDate('starts_at', '<=', $today);
                 })->where(function ($sub) use ($today) {
                     $sub->whereNull('ends_at')
-                        ->orWhere('ends_at', '>=', $today);
+                        ->orWhereDate('ends_at', '>=', $today);
                 });
             });
     }

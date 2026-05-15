@@ -70,6 +70,11 @@ class Order extends Model
         return $this->hasMany(OrderPayment::class);
     }
 
+    public function appliedPromotion()
+    {
+        return $this->hasOne(\App\Modules\Promotions\Models\OrderPromotion::class);
+    }
+
     // ─── Scopes ───────────────────────────────────────────────
 
     public function scopeOpen($query)

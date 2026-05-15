@@ -35,6 +35,14 @@ class TicketController extends Controller
      */
     public function cashier(Order $order)
     {
+        $order->load([
+            'items.productVariant.product',
+            'items.sauces.sauce',
+            'table',
+            'branch',
+            'appliedPromotion.promotion'
+        ]);
+
         // Setup dinámico de hoja 80mm (226.77 pt) con longitud auto-expandible (1000 pt de margen)
         $customPaper = array(0, 0, 226.77, 1000); 
         

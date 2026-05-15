@@ -8,6 +8,7 @@ use App\Modules\Menu\Models\Category;
 use App\Modules\Menu\Models\Product;
 use App\Modules\Menu\Models\ProductVariant;
 use App\Modules\Menu\Models\Sauce;
+use App\Modules\Promotions\Models\Promotion;
 use Illuminate\Support\Facades\Log;
 
 class OrderBuilder extends Component
@@ -37,6 +38,13 @@ class OrderBuilder extends Component
     public $cart = []; // Array of items
     public $orderNotes = '';
 
+    // Promociones
+    public \Illuminate\Database\Eloquent\Collection $availablePromotions;
+    public $selectedPromotionId = null;
+    public $selectedPromotionName = '';
+    public $discountAmount = 0;
+    public $showPromoModal = false;
+
     // Modal de Salsas
     public $showSauceModal = false;
     public $tempCartIndex = null;
@@ -53,6 +61,69 @@ class OrderBuilder extends Component
         }
         
         $this->loadCartFromSession();
+        $this->loadPromotions();
+    }
+
+    public function loadPromotions()
+    {
+        $user = auth()->user();
+        $branchId = $user ? $user->activeBranchId() : null;
+
+        $query = Promotion::active();
+        if ($branchId) {
+            $query->forBranch($branchId);
+        }
+        $this->availablePromotions = $query->get();
+    }
+
+    public function openPromoModal()
+    {
+        $this->loadPromotions();
+        $this->showPromoModal = true;
+    }
+
+    public function selectPromotion($promoId)
+    {
+        $promo = $this->availablePromotions->firstWhere('id', $promoId);
+        if (!$promo) return;
+
+        $this->selectedPromotionId = $promo->id;
+        $this->selectedPromotionName = $promo->name;
+        $this->recalculateDiscount();
+        $this->showPromoModal = false;
+        $this->saveCartToSession();
+    }
+
+    public function removePromotion()
+    {
+        $this->selectedPromotionId = null;
+        $this->selectedPromotionName = '';
+        $this->discountAmount = 0;
+        $this->saveCartToSession();
+    }
+
+    public function recalculateDiscount()
+    {
+        if (!$this->selectedPromotionId) {
+            $this->discountAmount = 0;
+            return;
+        }
+
+        $promo = Promotion::find($this->selectedPromotionId);
+        if (!$promo) {
+            $this->discountAmount = 0;
+            return;
+        }
+
+        $subtotal = collect($this->cart)->sum(fn($item) => $item['price'] * $item['quantity']);
+
+        if ($promo->discount_type === 'percentage') {
+            $this->discountAmount = round($subtotal * ($promo->discount_value / 100), 2);
+        } elseif ($promo->discount_type === 'fixed') {
+            $this->discountAmount = min($promo->discount_value, $subtotal);
+        } else {
+            $this->discountAmount = 0;
+        }
     }
 
     public function selectCategory($categoryId)
@@ -203,9 +274,18 @@ class OrderBuilder extends Component
     // --- Totales ---
     public function getSubtotalProperty()
     {
-        return collect($this->cart)->sum(function($item) {
+        $subtotal = collect($this->cart)->sum(function($item) {
             return $item['price'] * $item['quantity'];
         });
+
+        $this->recalculateDiscount();
+
+        return $subtotal;
+    }
+
+    public function getTotalProperty()
+    {
+        return max(0, $this->subtotal - $this->discountAmount);
     }
 
     // --- Persistencia DB ---
@@ -252,17 +332,30 @@ class OrderBuilder extends Component
             \App\Models\Table::where('id', $this->tableId)->update(['status' => 'occupied']);
         }
 
+        // Aplicar promoción si fue seleccionada
+        if ($this->selectedPromotionId) {
+            try {
+                $promotionEngine = app(\App\Modules\Promotions\Services\PromotionEngine::class);
+                $promotionEngine->apply($order, $this->selectedPromotionId);
+                $order->refresh();
+            } catch (\Exception $e) {
+                Log::warning('Promoción no aplicada: ' . $e->getMessage());
+            }
+        }
+
         $orderId = $order->id;
 
         // 4. Limpiar sesión y notificar a la vista
         $this->cart = [];
         $this->orderNotes = '';
+        $this->selectedPromotionId = null;
+        $this->selectedPromotionName = '';
+        $this->discountAmount = 0;
         $this->saveCartToSession();
 
         $ticketUrl = route('pos.tickets.cashier', ['order' => $orderId]);
-        $kitchenUrl = route('kitchen.orders.index'); // O abrir el PDF de cocina, pero de momento usa caja
         
-        $this->dispatch('order-saved', url: $ticketUrl); // Opcional: pasar kitchenUrl si se desea imprimir dos veces
+        $this->dispatch('order-saved', url: $ticketUrl);
     }
 
     // --- Persistencia Sesión ---
@@ -270,12 +363,16 @@ class OrderBuilder extends Component
     {
         session()->put('pos_cart', $this->cart);
         session()->put('pos_notes', $this->orderNotes);
+        session()->put('pos_promo_id', $this->selectedPromotionId);
+        session()->put('pos_promo_name', $this->selectedPromotionName);
     }
 
     protected function loadCartFromSession()
     {
         $this->cart = session()->get('pos_cart', []);
         $this->orderNotes = session()->get('pos_notes', '');
+        $this->selectedPromotionId = session()->get('pos_promo_id');
+        $this->selectedPromotionName = session()->get('pos_promo_name', '');
     }
 
     public function render()

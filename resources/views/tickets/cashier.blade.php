@@ -59,10 +59,17 @@
             <td class="font-bold">Subtotal:</td>
             <td class="text-right">${{ number_format($order->subtotal, 2) }}</td>
         </tr>
+        @if($order->discount > 0)
         <tr>
-            <td class="font-bold">Descuento:</td>
-            <td class="text-right">${{ number_format($order->discount, 2) }}</td>
+            <td class="font-bold">
+                Descuento
+                @if($order->appliedPromotion && $order->appliedPromotion->promotion)
+                    <br><span class="text-xs" style="font-weight: normal; font-style: italic;">({{ $order->appliedPromotion->promotion->name }})</span>
+                @endif
+            </td>
+            <td class="text-right">-${{ number_format($order->discount, 2) }}</td>
         </tr>
+        @endif
         <tr>
             <td class="font-bold" style="font-size: 14px;">TOTAL:</td>
             <td class="text-right font-bold" style="font-size: 14px;">${{ number_format($order->total, 2) }}</td>
@@ -71,10 +78,66 @@
 
     <div class="divider"></div>
 
-    <div class="text-center mt-2">
+    <div class="text-center mt-2" style="margin-bottom: 20px;">
         <p class="font-bold">¡Gracias por su compra!</p>
         <p class="text-xs">Vuelva pronto</p>
     </div>
+
+    <!-- SEPARADOR PARA CORTAR -->
+    <div style="border-top: 1px dashed #000; margin: 20px 0;"></div>
+    <div class="text-center">
+        <p class="text-xs" style="margin: -10px 0 15px 0; background: #fff; display: inline-block; padding: 0 10px;">--- CORTAR AQUI ---</p>
+    </div>
+
+    <!-- TICKET DE COCINA -->
+    <div class="text-center mb-2">
+        <h2 class="font-bold" style="margin: 0; font-size: 18px;">*** COCINA ***</h2>
+        <p class="font-bold" style="font-size: 16px;">Pedido: #{{ $order->daily_number }}</p>
+        <p class="text-xs">Mesa: {{ $order->table ? $order->table->name : 'N/A' }} | Hora: {{ $order->opened_at ? $order->opened_at->format('H:i') : '' }}</p>
+    </div>
+
+    <div class="divider"></div>
+
+    @foreach($order->items ?? [] as $index => $item)
+        <div style="margin-bottom: 6px;">
+            <div class="font-bold" style="font-size: 14px;">
+                {{ $item->quantity }}x {{ $item->productVariant->product->name ?? 'Producto' }} ({{ $item->productVariant->name ?? '' }})
+            </div>
+
+            {{-- Salsas del ítem (solo si tiene) --}}
+            @if($item->sauces && $item->sauces->isNotEmpty())
+                @foreach($item->sauces as $sauce)
+                    @if($sauce->is_coated && $sauce->quantity > 0)
+                        <div style="padding-left: 10px; font-size: 12px;">
+                            - {{ $sauce->quantity }}pz {{ $sauce->sauce->name ?? 'Salsa' }} [bañada]
+                        </div>
+                    @elseif(!$sauce->is_coated)
+                        <div style="padding-left: 10px; font-size: 12px;">
+                            - {{ $sauce->sauce->name ?? 'Salsa' }} [aparte]
+                        </div>
+                    @endif
+                @endforeach
+            @endif
+
+            {{-- Notas del ítem --}}
+            @if($item->notes)
+                <div style="padding-left: 10px; font-size: 12px; font-style: italic;">
+                    * Nota: {{ $item->notes }}
+                </div>
+            @endif
+        </div>
+        @if(!$loop->last)
+            <div class="divider" style="border-top: 1px dotted #999;"></div>
+        @endif
+    @endforeach
+
+    @if($order->notes)
+        <div class="divider"></div>
+        <p class="font-bold">Observaciones Generales de Orden:</p>
+        <p class="text-xs" style="font-style: italic;">{{ $order->notes }}</p>
+    @endif
+
+    <div class="divider"></div>
 
     <script>
         // Si el POS necesita imprimir dinámicamente:

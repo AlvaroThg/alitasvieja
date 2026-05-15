@@ -390,6 +390,73 @@
         .btn-send-kitchen:active {
             transform: scale(0.97);
         }
+        /* ─── Promo Section ──────────────────────────────────── */
+        .promo-section {
+            margin-bottom: 0.75rem;
+        }
+        .btn-add-promo {
+            width: 100%; padding: 0.6rem; background: rgba(139, 92, 246, 0.08);
+            border: 1px dashed rgba(139, 92, 246, 0.3); border-radius: 12px;
+            color: #a78bfa; font-weight: 700; font-size: 0.8rem; cursor: pointer;
+            transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+        }
+        .btn-add-promo:hover {
+            background: rgba(139, 92, 246, 0.12); border-color: #a78bfa;
+        }
+        .promo-applied {
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 12px; padding: 0.6rem 0.85rem;
+        }
+        .promo-applied-info { display: flex; align-items: center; gap: 0.4rem; }
+        .promo-applied-name { font-size: 0.75rem; font-weight: 700; color: #a78bfa; }
+        .promo-applied-remove {
+            background: transparent; border: 1px solid rgba(220, 38, 38, 0.3); color: #f87171;
+            width: 24px; height: 24px; border-radius: 6px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; font-size: 0.7rem;
+            transition: all 0.2s;
+        }
+        .promo-applied-remove:hover { background: rgba(220, 38, 38, 0.1); border-color: #dc2626; }
+        .promo-discount-row {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 0.4rem; padding: 0 0.15rem;
+        }
+        .promo-discount-label { color: #a78bfa; font-size: 0.75rem; font-weight: 600; }
+        .promo-discount-value { color: #a78bfa; font-size: 0.9rem; font-weight: 800; }
+
+        /* Promo Modal */
+        .promo-modal-overlay {
+            position: fixed; inset: 0; z-index: 50; display: flex; align-items: center;
+            justify-content: center; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+        }
+        .promo-modal {
+            background: #111; border: 1px solid #222; width: 100%; max-width: 440px;
+            border-radius: 20px; overflow: hidden; max-height: 80vh; display: flex; flex-direction: column;
+        }
+        .promo-modal-header {
+            padding: 1.25rem 1.5rem; background: #0a0a0a; border-bottom: 1px solid #222;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .promo-modal-header h3 { font-weight: 800; color: #fff; font-size: 1.1rem; }
+        .promo-modal-body { padding: 1rem 1.25rem; overflow-y: auto; flex: 1; }
+        .promo-option {
+            background: #0d0d0d; border: 1px solid #1e1e1e; border-radius: 14px;
+            padding: 1rem; margin-bottom: 0.65rem; cursor: pointer; transition: all 0.2s;
+        }
+        .promo-option:hover { border-color: #a78bfa; background: rgba(139, 92, 246, 0.03); transform: translateY(-1px); }
+        .promo-option-name { font-weight: 800; color: #e5e5e5; font-size: 0.9rem; margin-bottom: 0.3rem; }
+        .promo-option-desc { font-size: 0.75rem; color: #666; margin-bottom: 0.4rem; }
+        .promo-option-tags { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+        .promo-option-tag {
+            font-size: 0.6rem; font-weight: 700; padding: 0.15rem 0.45rem;
+            border-radius: 50px; text-transform: uppercase;
+        }
+        .promo-option-tag-type { background: rgba(139, 92, 246, 0.1); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.2); }
+        .promo-option-tag-value { background: rgba(249, 115, 22, 0.1); color: #f97316; border: 1px solid rgba(249, 115, 22, 0.2); }
+        .promo-option-tag-branch { background: rgba(59, 130, 246, 0.1); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.2); }
+        .promo-empty-list { text-align: center; padding: 2rem; color: #444; }
+        .promo-empty-list span { font-size: 2rem; display: block; margin-bottom: 0.5rem; opacity: 0.3; }
+
         /* ─── Sauce Modal ───────────────────────────────────── */
         .sauce-modal-overlay {
             position: fixed;
@@ -664,9 +731,38 @@
         </div>
 
         <div class="ticket-footer">
+            {{-- Sección de Promociones --}}
+            <div class="promo-section">
+                @if($selectedPromotionId)
+                    <div class="promo-applied">
+                        <div class="promo-applied-info">
+                            <span>🎉</span>
+                            <span class="promo-applied-name">{{ $selectedPromotionName }}</span>
+                        </div>
+                        <button wire:click="removePromotion" class="promo-applied-remove" title="Quitar promoción">✕</button>
+                    </div>
+                @else
+                    <button wire:click="openPromoModal" class="btn-add-promo">
+                        🎉 Aplicar Promoción
+                    </button>
+                @endif
+            </div>
+
+            {{-- Subtotal --}}
+            @if($discountAmount > 0)
+                <div class="promo-discount-row">
+                    <span class="ticket-total-label">Subtotal</span>
+                    <span style="font-size: 0.9rem; font-weight: 700; color: #888;">${{ number_format($this->subtotal, 2) }}</span>
+                </div>
+                <div class="promo-discount-row">
+                    <span class="promo-discount-label">🎉 Descuento</span>
+                    <span class="promo-discount-value">-${{ number_format($discountAmount, 2) }}</span>
+                </div>
+            @endif
+
             <div class="ticket-total-row">
                 <span class="ticket-total-label">Total a Pagar</span>
-                <span class="ticket-total-value">${{ number_format($this->subtotal, 2) }}</span>
+                <span class="ticket-total-value">${{ number_format($this->total, 2) }}</span>
             </div>
             
             <button wire:click="submitOrder" class="btn-send-kitchen">
@@ -741,4 +837,59 @@
         </div>
     </div>
     @endif
+
+    {{-- Modal de Selección de Promociones --}}
+    @if($showPromoModal)
+    <div class="promo-modal-overlay">
+        <div class="promo-modal">
+            <div class="promo-modal-header">
+                <h3>🎉 Seleccionar Promoción</h3>
+                <button wire:click="$set('showPromoModal', false)" style="background:transparent;border:1px solid #222;color:#666;width:36px;height:36px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                    ✕
+                </button>
+            </div>
+            <div class="promo-modal-body">
+                @if(count($availablePromotions) > 0)
+                    @foreach($availablePromotions as $promo)
+                        <div wire:click="selectPromotion({{ data_get($promo, 'id') }})" class="promo-option">
+                            <div class="promo-option-name">{{ data_get($promo, 'name') }}</div>
+                            @if(data_get($promo, 'description'))
+                                <div class="promo-option-desc">{{ data_get($promo, 'description') }}</div>
+                            @endif
+                            <div class="promo-option-tags">
+                                <span class="promo-option-tag promo-option-tag-type">
+                                    @switch(data_get($promo, 'type'))
+                                        @case('discount') 💰 Descuento @break
+                                        @case('combo') 📦 Combo @break
+                                        @case('birthday') 🎂 Cumpleaños @break
+                                        @case('free_item') 🎁 Gratis @break
+                                        @case('custom') ⚙️ Especial @break
+                                    @endswitch
+                                </span>
+                                <span class="promo-option-tag promo-option-tag-value">
+                                    @if(data_get($promo, 'discount_type') === 'percentage')
+                                        {{ data_get($promo, 'discount_value') }}% OFF
+                                    @elseif(data_get($promo, 'discount_type') === 'fixed')
+                                        -${{ number_format(data_get($promo, 'discount_value'), 2) }}
+                                    @else
+                                        Gratis x{{ data_get($promo, 'free_quantity') }}
+                                    @endif
+                                </span>
+                                <span class="promo-option-tag promo-option-tag-branch">
+                                    {{ data_get($promo, 'branch.name', '🌐 Todas') }}
+                                </span>
+                            </div>
+                        </div>
+                    @endforeach
+                @else
+                    <div class="promo-empty-list">
+                        <span>🎉</span>
+                        <p>No hay promociones activas disponibles.</p>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+    @endif
+
 </div>

@@ -134,7 +134,19 @@
         </div>
     </nav>
 
-    <main class="pos-main" x-data="{ view: 'tables', printTicket(url) { let w = window.open(url, 'PrintTicket', 'width=400,height=600'); if(w) w.focus(); } }" @table-selected.window="view = 'order'" @order-saved.window="view = 'tables'; printTicket($event.detail[0]?.url || $event.detail.url)">
+    <main class="pos-main" x-data="{ 
+        view: 'tables', 
+        printTickets(payload) { 
+            let urls = payload.urls || payload;
+            if(Array.isArray(urls)) {
+                urls.forEach((url, i) => window.open(url, 'PrintTicket' + i, 'width=400,height=600'));
+            } else if (typeof urls === 'string') {
+                window.open(urls, 'PrintTicket', 'width=400,height=600');
+            } else if (payload.url) {
+                window.open(payload.url, 'PrintTicket', 'width=400,height=600');
+            }
+        } 
+    }" @table-selected.window="view = 'order'" @order-saved.window="view = 'tables'; printTickets($event.detail[0] || $event.detail)">
         
         <div x-show="view === 'tables'" x-transition>
             <livewire:pos.table-grid />

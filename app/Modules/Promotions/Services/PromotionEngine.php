@@ -83,7 +83,7 @@ class PromotionEngine
             $freeItemQuantity = $promotion->free_quantity;
         }
 
-        return DB::transaction(function () use ($order, $promotion, $discountApplied, $freeItemVariantId, $freeItemQuantity, $notes) {
+        return DB::transaction(function () use ($order, $promotion, $discountApplied, $freeItemVariantId, $freeItemQuantity, $notes, $subtotal) {
             $orderPromotion = OrderPromotion::create([
                 'order_id'             => $order->id,
                 'promotion_id'         => $promotion->id,
