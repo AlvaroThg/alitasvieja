@@ -4,6 +4,7 @@
 use App\Http\Controllers\Auth\AuthController;
 use App\Modules\Auth\Http\Controllers\Admin\UserController;
 use App\Modules\Cash\Http\Controllers\CashController;
+use App\Modules\Cash\Http\Controllers\CashReportController;
 use App\Modules\Menu\Http\Controllers\Admin\PriceController;
 use App\Modules\Orders\Http\Controllers\OrderController;
 use App\Modules\Orders\Http\Controllers\CheckoutController;
@@ -58,6 +59,9 @@ Route::middleware(['auth', 'role:owner'])->prefix('admin')->name('admin.')->grou
     // Dashboard con KPIs
     Route::get('/dashboard', [AdminReportController::class, 'dashboard'])->name('dashboard');
 
+    // NUEVO — Fase 4: Dashboard API con períodos
+    Route::get('/dashboard/data', [AdminReportController::class, 'dashboardData'])->name('dashboard.data');
+
     // Selector de sucursal activa
     Route::post('/branch/switch', [AuthController::class, 'switchBranch'])->name('branch.switch');
 
@@ -78,6 +82,10 @@ Route::middleware(['auth', 'role:owner'])->prefix('admin')->name('admin.')->grou
 
     // Gestión de Promociones (Fase 3)
     Route::get('/promotions', function () { return view('admin.promotions'); })->name('promotions.index');
+
+    // NUEVO — Fase 4: Reportes solo owner
+    Route::get('/reports/sales', [AdminReportController::class, 'salesByPeriod'])->name('reports.sales');
+    Route::get('/reports/promotions', [AdminReportController::class, 'promotionStats'])->name('reports.promotions');
 });
 
 // Rutas admin accesibles por owner Y branch_admin
@@ -86,6 +94,16 @@ Route::middleware(['auth', 'role:owner,branch_admin'])->prefix('admin')->name('a
 
     // Gestión de Inventario (Fase 3)
     Route::get('/inventory', function () { return view('admin.inventory'); })->name('inventory.index');
+
+    // NUEVO — Fase 4: Reportes owner + branch_admin
+    Route::get('/reports/payments', [AdminReportController::class, 'paymentMethods'])->name('reports.payments');
+    Route::get('/reports/wings', [AdminReportController::class, 'wingStats'])->name('reports.wings');
+
+    // NOTA: /export se define ANTES de /{session} para que Laravel no
+    // interprete "export" como un ID de CashSession (route model binding).
+    Route::get('/reports/cash', [CashReportController::class, 'index'])->name('reports.cash.index');
+    Route::get('/reports/cash/export', [CashReportController::class, 'export'])->name('reports.cash.export');
+    Route::get('/reports/cash/{session}', [CashReportController::class, 'show'])->name('reports.cash.show');
 });
 
 // ─── POS — Aplicar Promociones en Pedidos (Fase 3) ─────────────────────────
