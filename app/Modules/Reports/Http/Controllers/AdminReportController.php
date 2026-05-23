@@ -19,31 +19,11 @@ class AdminReportController extends Controller
 
     /**
      * GET /admin/dashboard
-     * Dashboard con KPIs del día actual.
+     * Dashboard con KPIs — datos cargados por Livewire (AdminDashboard).
      */
     public function dashboard(Request $request)
     {
-        $today = Carbon::today();
-
-        // Resumen global (todas las sucursales)
-        $global = $this->reportService->getSalesSummary(null, $today, $today);
-
-        // Resumen por sucursal
-        $branches = \App\Models\Branch::active()->get();
-        $perBranch = $branches->map(function ($branch) use ($today) {
-            $summary = $this->reportService->getSalesSummary($branch->id, $today, $today);
-            return array_merge(['branch_id' => $branch->id, 'branch_name' => $branch->name], $summary);
-        });
-
-        if ($request->wantsJson()) {
-            return response()->json([
-                'date'       => $today->toDateString(),
-                'global'     => $global,
-                'per_branch' => $perBranch,
-            ]);
-        }
-
-        return view('admin.dashboard', compact('today', 'global', 'perBranch'));
+        return view('admin.dashboard');
     }
 
     /**
