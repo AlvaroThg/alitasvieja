@@ -670,6 +670,14 @@
         // Initialize charts on mount
         initCharts();
 
+        // Load initial data since mount() dispatch doesn't trigger JS
+        const initialData = {
+            revenueByBranch: $wire.get('revenueByBranch'),
+            paymentBreakdown: $wire.get('paymentBreakdown'),
+            salesSeries: $wire.get('salesSeries')
+        };
+        setTimeout(() => updateCharts(initialData), 50);
+
         // Listen for Livewire updates
         $wire.on('chartsUpdated', (eventData) => {
             const data = eventData[0] || eventData;
