@@ -291,9 +291,9 @@
                 @endif
                 
                 @if($selectedTableForAction->status === 'occupied')
-                    <button wire:click="changeStatus('available')" class="btn-action btn-secondary">
+                    <button wire:click="openCheckout" class="btn-action btn-secondary">
                         <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                        Liberar Mesa (Pago Realizado)
+                        Liberar Mesa (Realizar Pago)
                     </button>
                     <!-- Opcional si permites añadir a orden existente -->
                     <!-- <button wire:click="createOrder" class="btn-action btn-primary">Añadir al Pedido Actual</button> -->
@@ -309,6 +309,41 @@
                 @if($selectedTableForAction->status === 'reserved')
                     <button wire:click="changeStatus('available')" class="btn-action btn-secondary">Quitar Reserva</button>
                 @endif
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <!-- Modal de Checkout Rápid -->
+    @if($showCheckoutModal && $selectedTableForAction)
+    <div class="table-modal-overlay">
+        <div class="table-modal" style="max-width: 400px;">
+            <div class="table-modal-header">
+                <h3>Cobrar Mesa {{ $selectedTableForAction->name }}</h3>
+                <button wire:click="$set('showCheckoutModal', false)" class="table-modal-close">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="table-modal-body">
+                <div style="background: #1a1a1a; padding: 1rem; border-radius: 10px; text-align: center; margin-bottom: 1rem;">
+                    <span style="color: #888; font-size: 0.9rem;">Total a Pagar</span>
+                    <div style="font-size: 2rem; font-weight: 800; color: #fff;">Bs {{ number_format($checkoutOrderTotal, 2) }}</div>
+                </div>
+
+                <div style="margin-bottom: 1rem;">
+                    <label style="color: #aaa; font-size: 0.85rem; margin-bottom: 0.5rem; display: block;">Método de Pago</label>
+                    <select wire:model="checkoutPaymentMethod" style="width: 100%; padding: 0.75rem; border-radius: 8px; background: #222; border: 1px solid #333; color: #fff; outline: none;">
+                        <option value="cash">Efectivo</option>
+                        <option value="card">Tarjeta / POS</option>
+                        <option value="qr">Pago QR</option>
+                        <option value="transfer">Transferencia</option>
+                    </select>
+                </div>
+
+                <button wire:click="processCheckout" class="btn-action btn-primary" style="margin-top: 0.5rem;">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Confirmar y Liberar Mesa
+                </button>
             </div>
         </div>
     </div>

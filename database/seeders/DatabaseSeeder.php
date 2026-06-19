@@ -10,6 +10,10 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        $this->call([\Database\Seeders\PosStagingSeeder::class]);
+        if (app()->environment('production')) {
+            $this->call([\Database\Seeders\ProductionSeeder::class]);
+        } else {
+            $this->call([\Database\Seeders\PosStagingSeeder::class]);
+        }
     }
 }

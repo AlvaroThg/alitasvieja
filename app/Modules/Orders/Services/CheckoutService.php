@@ -88,13 +88,9 @@ class CheckoutService
                 'closed_at'      => now(),
             ]);
 
-            // MODIFICADO: Descontar inventario
-            try {
-                $inventoryService = app(\App\Modules\Inventory\Services\InventoryService::class);
-                $inventoryService->decrementOnSale($order);
-            } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error("Error descontando inventario para el pedido {$order->order_number}: " . $e->getMessage());
-            }
+            // MODIFICADO: Descontar inventario (sin try-catch para garantizar rollback atómico si falla)
+            $inventoryService = app(\App\Modules\Inventory\Services\InventoryService::class);
+            $inventoryService->decrementOnSale($order);
             // FIN MODIFICADO
         });
     }

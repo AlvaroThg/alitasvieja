@@ -73,12 +73,11 @@ Route::middleware(['auth', 'role:owner'])->prefix('admin')->name('admin.')->grou
     Route::put('/prices/bulk', [PriceController::class, 'bulkUpdate'])->name('prices.bulkUpdate');
     Route::put('/prices/{variant}/branch/{branch}', [PriceController::class, 'update'])->name('prices.update');
 
-    // Usuarios y roles (Fase 2)
-    Route::get('/users', [UserController::class, 'index'])->name('users.index');
-    Route::post('/users', [UserController::class, 'store'])->name('users.store');
-    Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
-    Route::patch('/users/{user}/toggle-active', [UserController::class, 'toggleActive'])->name('users.toggleActive');
-    Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+    // Gestión de Categorías
+    Route::get('/categories', function () { return view('admin.categories'); })->name('categories.index');
+
+    // Usuarios y roles (Migrado a Livewire)
+    Route::get('/users', function () { return view('admin.users'); })->name('users.index');
 
     // Gestión de Promociones (Fase 3)
     Route::get('/promotions', function () { return view('admin.promotions'); })->name('promotions.index');

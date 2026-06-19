@@ -129,6 +129,10 @@
             <div class="nav-brand-text">Alitas <span>Vega</span> — POS</div>
         </div>
         <div class="nav-info">
+            <a href="{{ route('admin.dashboard') }}" class="btn-back" style="margin-bottom: 0; padding: 0.4rem 0.8rem; font-size: 0.75rem;">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                Dashboard
+            </a>
             <div class="nav-badge">Sucursal Principal</div>
             <div class="nav-time" id="pos-clock"></div>
         </div>

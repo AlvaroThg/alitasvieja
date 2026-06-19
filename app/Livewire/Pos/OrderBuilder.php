@@ -148,15 +148,21 @@ class OrderBuilder extends Component
 
     public function addVariant($variantId)
     {
-        $variant = ProductVariant::with('product')->find($variantId);
+        $variant = ProductVariant::with(['product', 'prices'])->find($variantId);
         if (!$variant) return;
+
+        // Determinar precio por sucursal
+        $user = auth()->user();
+        $branchId = $user ? $user->activeBranchId() : 1;
+        $branchPriceRecord = $variant->prices->firstWhere('branch_id', $branchId);
+        $finalPrice = $branchPriceRecord ? $branchPriceRecord->price : $variant->price;
 
         $cartItem = [
             'id' => uniqid(),
             'variant_id' => $variant->id,
             'variant_name' => $variant->name,
             'product_name' => $variant->product->name,
-            'price' => $variant->price,
+            'price' => $finalPrice,
             'quantity' => 1,
             'notes' => '',
             'has_sauces' => $variant->product->has_sauces,

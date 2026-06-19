@@ -114,29 +114,39 @@
 
             <div class="variants-section">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <h4 style="color: #fff;">Variantes</h4>
+                    <h4 style="color: #fff;">Variantes y Precios por Sucursal</h4>
                     <button wire:click="addVariant" class="btn-add-variant">+ Agregar Variante</button>
                 </div>
                 
-                @if(count($variants) > 0)
-                <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 0.5rem; margin-bottom: 0.5rem;">
-                    <span class="form-label">Nombre</span>
-                    <span class="form-label">Piezas (Wings)</span>
-                    <span class="form-label">Max Salsas</span>
-                    <span class="form-label">Precio</span>
-                    <span></span>
-                </div>
-                @endif
+                <div style="overflow-x: auto;">
+                    @if(count($variants) > 0)
+                    <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr @foreach($branches as $b) 1fr @endforeach auto; gap: 0.5rem; margin-bottom: 0.5rem;">
+                        <span class="form-label">Nombre</span>
+                        <span class="form-label">Piezas</span>
+                        <span class="form-label">Max Salsas</span>
+                        <span class="form-label" style="color: #f97316;">Precio Base</span>
+                        @foreach($branches as $b)
+                            <span class="form-label" style="color: #38bdf8;">{{ $b->name }}</span>
+                        @endforeach
+                        <span></span>
+                    </div>
+                    @endif
 
-                @foreach($variants as $index => $variant)
-                <div class="variant-row">
-                    <input type="text" wire:model="variants.{{ $index }}.name" class="form-input" placeholder="Ej. 10 Piezas">
-                    <input type="number" wire:model="variants.{{ $index }}.wings_count" class="form-input" placeholder="0">
-                    <input type="number" wire:model="variants.{{ $index }}.max_sauces" class="form-input" placeholder="0">
-                    <input type="number" step="0.01" wire:model="variants.{{ $index }}.price" class="form-input" placeholder="0.00">
-                    <button wire:click="removeVariant({{ $index }})" class="btn-remove">X</button>
+                    @foreach($variants as $index => $variant)
+                    <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr @foreach($branches as $b) 1fr @endforeach auto; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem; background: #1a1a1a; padding: 0.5rem; border-radius: 10px;">
+                        <input type="text" wire:model="variants.{{ $index }}.name" class="form-input" placeholder="Ej. 10 Piezas">
+                        <input type="number" wire:model="variants.{{ $index }}.wings_count" class="form-input" placeholder="0">
+                        <input type="number" wire:model="variants.{{ $index }}.max_sauces" class="form-input" placeholder="0">
+                        <input type="number" step="0.01" wire:model="variants.{{ $index }}.price" class="form-input" placeholder="0.00" style="border-color: #f97316;">
+                        
+                        @foreach($branches as $b)
+                            <input type="number" step="0.01" wire:model="variants.{{ $index }}.branch_prices.{{ $b->id }}" class="form-input" placeholder="0.00" style="border-color: #38bdf8;">
+                        @endforeach
+                        
+                        <button wire:click="removeVariant({{ $index }})" class="btn-remove">X</button>
+                    </div>
+                    @endforeach
                 </div>
-                @endforeach
             </div>
 
             <div class="modal-actions">

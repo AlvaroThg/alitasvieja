@@ -28,15 +28,18 @@ class ProductManager extends Component
     // Variants
     public $variants = [];
 
+    public $branches = [];
+
     public function mount()
     {
         $this->loadData();
         $this->categories = Category::where('is_active', true)->get();
+        $this->branches = \App\Models\Branch::all();
     }
 
     public function loadData()
     {
-        $this->products = Product::with(['category', 'variants'])->get();
+        $this->products = Product::with(['category', 'variants.prices'])->get();
     }
 
     public function create()
@@ -50,7 +53,7 @@ class ProductManager extends Component
     {
         $this->resetFields();
         $this->isEdit = true;
-        $product = Product::with('variants')->find($id);
+        $product = Product::with('variants.prices')->find($id);
         
         $this->productId = $product->id;
         $this->category_id = $product->category_id;
@@ -62,12 +65,18 @@ class ProductManager extends Component
         $this->is_active = (bool)$product->is_active;
 
         foreach ($product->variants as $variant) {
+            $prices = [];
+            foreach ($variant->prices as $p) {
+                $prices[$p->branch_id] = $p->price;
+            }
+
             $this->variants[] = [
                 'id' => $variant->id,
                 'name' => $variant->name,
                 'wings_count' => $variant->wings_count,
                 'max_sauces' => $variant->max_sauces,
                 'price' => $variant->price,
+                'branch_prices' => $prices,
             ];
         }
 
@@ -82,6 +91,7 @@ class ProductManager extends Component
             'wings_count' => 0,
             'max_sauces' => 0,
             'price' => 0,
+            'branch_prices' => [],
         ];
     }
 
@@ -120,20 +130,39 @@ class ProductManager extends Component
             
             foreach ($this->variants as $variantData) {
                 if ($variantData['id']) {
-                    $product->variants()->find($variantData['id'])->update($variantData);
+                    $variant = $product->variants()->find($variantData['id']);
+                    $variant->update($variantData);
                 } else {
-                    $product->variants()->create($variantData);
+                    $variant = $product->variants()->create($variantData);
                 }
+                $this->saveBranchPrices($variant, $variantData['branch_prices'] ?? []);
             }
         } else {
             $product = Product::create($productData);
             foreach ($this->variants as $variantData) {
-                $product->variants()->create($variantData);
+                $variant = $product->variants()->create($variantData);
+                $this->saveBranchPrices($variant, $variantData['branch_prices'] ?? []);
             }
         }
 
         $this->showModal = false;
         $this->loadData();
+    }
+
+    private function saveBranchPrices($variant, $branchPrices)
+    {
+        foreach ($branchPrices as $branchId => $price) {
+            if ($price !== null && $price !== '') {
+                \App\Models\ProductPrice::updateOrCreate(
+                    ['product_variant_id' => $variant->id, 'branch_id' => $branchId],
+                    ['price' => $price]
+                );
+            } else {
+                \App\Models\ProductPrice::where('product_variant_id', $variant->id)
+                    ->where('branch_id', $branchId)
+                    ->delete();
+            }
+        }
     }
 
     public function resetFields()
