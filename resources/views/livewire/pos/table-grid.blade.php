@@ -10,13 +10,13 @@
             color: #dc2626;
         }
         .table-grid-header h2 {
-            color: #fff;
+            color: var(--text-strong);
             font-size: 1.5rem;
             font-weight: 800;
             letter-spacing: -0.02em;
         }
         .table-grid-header h2 span {
-            color: #666;
+            color: var(--text-muted);
             font-weight: 500;
             font-size: 1rem;
             margin-left: 0.5rem;
@@ -60,7 +60,7 @@
             box-shadow: 0 8px 30px rgba(220, 38, 38, 0.3);
         }
         .table-available .table-number {
-            color: #fff;
+            color: var(--text-strong);
         }
         .table-available .table-status-badge {
             background: rgba(0,0,0,0.2);
@@ -68,8 +68,8 @@
         }
         /* Occupied */
         .table-occupied {
-            background: #111;
-            border-color: #2a2a2a;
+            background: var(--bg-surface);
+            border-color: var(--border);
             box-shadow: 0 4px 20px rgba(0,0,0,0.3);
         }
         .table-occupied:hover {
@@ -101,18 +101,18 @@
         }
         /* Default / other */
         .table-default {
-            background: #111;
-            border-color: #1e1e1e;
+            background: var(--bg-surface);
+            border-color: var(--border);
         }
         .table-default:hover {
-            border-color: #333;
+            border-color: var(--border-strong);
         }
         .table-default .table-number {
-            color: #666;
+            color: var(--text-muted);
         }
         .table-default .table-status-badge {
-            background: #1a1a1a;
-            color: #555;
+            background: var(--bg-elevated);
+            color: var(--text-faint);
         }
 
         .table-number {
@@ -158,8 +158,8 @@
             backdrop-filter: blur(8px);
         }
         .table-modal {
-            background: #111;
-            border: 1px solid #222;
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
             width: 100%;
             max-width: 380px;
             border-radius: 20px;
@@ -169,8 +169,8 @@
         }
         .table-modal-header {
             padding: 1.25rem 1.5rem;
-            background: #0a0a0a;
-            border-bottom: 1px solid #222;
+            background: var(--bg-base);
+            border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -178,7 +178,7 @@
         .table-modal-header h3 {
             font-size: 1.15rem;
             font-weight: 800;
-            color: #fff;
+            color: var(--text-strong);
         }
         .table-modal-close {
             width: 36px;
@@ -187,9 +187,9 @@
             align-items: center;
             justify-content: center;
             background: transparent;
-            border: 1px solid #222;
+            border: 1px solid var(--border);
             border-radius: 10px;
-            color: #666;
+            color: var(--text-muted);
             cursor: pointer;
             transition: all 0.2s ease;
         }
@@ -219,7 +219,7 @@
         }
         .btn-primary {
             background: linear-gradient(135deg, #f97316, #dc2626);
-            color: #fff;
+            color: var(--text-strong);
             box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
         }
         .btn-primary:hover {
@@ -228,13 +228,13 @@
             box-shadow: 0 6px 16px rgba(220, 38, 38, 0.3);
         }
         .btn-secondary {
-            background: #1a1a1a;
-            color: #fff;
-            border: 1px solid #333;
+            background: var(--bg-elevated);
+            color: var(--text-strong);
+            border: 1px solid var(--border-strong);
         }
         .btn-secondary:hover {
-            background: #252525;
-            border-color: #444;
+            background: var(--border);
+            border-color: var(--text-faint);
         }
         .btn-warning {
             background: transparent;
@@ -249,7 +249,7 @@
     <div class="table-grid-header">
         <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
         <h2>Mapa de Mesas <span>· Selecciona una mesa</span></h2>
-        <button wire:click="openCreateTableModal" style="margin-left: auto; background: linear-gradient(135deg, #10b981, #047857); color: #fff; border: none; padding: 0.6rem 1.25rem; border-radius: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem;">
+        <button wire:click="openCreateTableModal" style="margin-left: auto; background: linear-gradient(135deg, #10b981, #047857); color: var(--text-strong); border: none; padding: 0.6rem 1.25rem; border-radius: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem;">
             <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
             Nueva Mesa
         </button>
@@ -335,14 +335,14 @@
                 </button>
             </div>
             <div class="table-modal-body">
-                <div style="background: #1a1a1a; padding: 1rem; border-radius: 10px; text-align: center; margin-bottom: 1rem;">
-                    <span style="color: #888; font-size: 0.9rem;">Total a Pagar</span>
-                    <div style="font-size: 2rem; font-weight: 800; color: #fff;">Bs {{ number_format($checkoutOrderTotal, 2) }}</div>
+                <div style="background: var(--bg-elevated); padding: 1rem; border-radius: 10px; text-align: center; margin-bottom: 1rem;">
+                    <span style="color: var(--text-muted); font-size: 0.9rem;">Total a Pagar</span>
+                    <div style="font-size: 2rem; font-weight: 800; color: var(--text-strong);">Bs {{ number_format($checkoutOrderTotal, 2) }}</div>
                 </div>
 
                 <div style="margin-bottom: 1rem;">
-                    <label style="color: #aaa; font-size: 0.85rem; margin-bottom: 0.5rem; display: block;">Método de Pago</label>
-                    <select wire:model="checkoutPaymentMethod" style="width: 100%; padding: 0.75rem; border-radius: 8px; background: #222; border: 1px solid #333; color: #fff; outline: none;">
+                    <label style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.5rem; display: block;">Método de Pago</label>
+                    <select wire:model="checkoutPaymentMethod" style="width: 100%; padding: 0.75rem; border-radius: 8px; background: var(--border); border: 1px solid var(--border-strong); color: var(--text-strong); outline: none;">
                         <option value="cash">Efectivo</option>
                         <option value="card">Tarjeta / POS</option>
                         <option value="qr">Pago QR</option>
@@ -364,19 +364,19 @@
     <div class="table-modal-overlay">
         <div class="table-modal" style="max-width: 380px;">
             <div class="table-modal-header">
-                <h3>➕ Nueva Mesa</h3>
+                <h3>Nueva Mesa</h3>
                 <button wire:click="$set('showCreateTableModal', false)" class="table-modal-close">
                     <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
             <div class="table-modal-body">
                 <div style="margin-bottom: 1rem;">
-                    <label style="color: #aaa; font-size: 0.85rem; margin-bottom: 0.5rem; display: block;">Nombre o Número de Mesa</label>
+                    <label style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.5rem; display: block;">Nombre o Número de Mesa</label>
                     <input
                         type="text"
                         wire:model="newTableName"
                         placeholder="Ej: Mesa 7, Terraza 2, Barra..."
-                        style="width: 100%; background: #0a0a0a; border: 1px solid #333; color: #fff; padding: 0.75rem; border-radius: 10px; font-size: 1rem; outline: none;"
+                        style="width: 100%; background: var(--bg-base); border: 1px solid var(--border-strong); color: var(--text-strong); padding: 0.75rem; border-radius: 10px; font-size: 1rem; outline: none;"
                     >
                     @error('newTableName')
                         <span style="color: #ef4444; font-size: 0.8rem; margin-top: 0.4rem; display: block;">{{ $message }}</span>
@@ -397,7 +397,7 @@
         <div class="table-modal" style="max-width: 380px;">
             <div class="table-modal-header">
                 <h3 style="color: {{ $deleteErrorMessage ? '#ef4444' : '#f97316' }};">
-                    {{ $deleteErrorMessage ? '⚠️ No se puede eliminar' : '🗑️ Eliminar Mesa' }}
+                    {{ $deleteErrorMessage ? 'No se puede eliminar' : 'Eliminar Mesa' }}
                 </h3>
                 <button wire:click="$set('showDeleteTableModal', false)" class="table-modal-close">
                     <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -410,12 +410,12 @@
                     </div>
                     <button wire:click="$set('showDeleteTableModal', false)" class="btn-action btn-secondary" style="margin-top: 0.5rem;">Entendido</button>
                 @else
-                    <div style="background: #1a1a1a; border-radius: 10px; padding: 1rem; color: #aaa; font-size: 0.9rem; text-align: center;">
+                    <div style="background: var(--bg-elevated); border-radius: 10px; padding: 1rem; color: var(--text-secondary); font-size: 0.9rem; text-align: center;">
                         ¿Estás seguro de que quieres eliminar esta mesa? Esta acción no se puede deshacer.
                     </div>
                     <div style="display: flex; gap: 0.75rem; margin-top: 0.5rem;">
                         <button wire:click="$set('showDeleteTableModal', false)" class="btn-action btn-secondary" style="flex: 1;">Cancelar</button>
-                        <button wire:click="deleteTable" class="btn-action" style="flex: 1; background: #ef4444; color: #fff; border: none;">Sí, Eliminar</button>
+                        <button wire:click="deleteTable" class="btn-action" style="flex: 1; background: #ef4444; color: var(--text-strong); border: none;">Sí, Eliminar</button>
                     </div>
                 @endif
             </div>

@@ -4,8 +4,8 @@
         /* ─── Catálogo Panel ──────────────────────────────────── */
         .catalog-panel {
             flex: 1;
-            background: #111;
-            border: 1px solid #222;
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
             border-radius: 20px;
             display: flex;
             flex-direction: column;
@@ -14,8 +14,8 @@
         /* Categories bar */
         .categories-bar {
             padding: 1rem;
-            border-bottom: 1px solid #1e1e1e;
-            background: #0d0d0d;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-base);
             overflow-x: auto;
             white-space: nowrap;
             display: flex;
@@ -23,7 +23,7 @@
         }
         .categories-bar::-webkit-scrollbar { height: 4px; }
         .categories-bar::-webkit-scrollbar-track { background: transparent; }
-        .categories-bar::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+        .categories-bar::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
         .cat-btn {
             padding: 0.6rem 1.25rem;
             border-radius: 50px;
@@ -36,13 +36,13 @@
         }
         .cat-btn-active {
             background: linear-gradient(135deg, #dc2626, #b91c1c);
-            color: #fff;
+            color: var(--text-strong);
             box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
         }
         .cat-btn-inactive {
-            background: #1a1a1a;
-            color: #888;
-            border: 1px solid #2a2a2a;
+            background: var(--bg-elevated);
+            color: var(--text-muted);
+            border: 1px solid var(--border);
         }
         .cat-btn-inactive:hover {
             border-color: #dc2626;
@@ -54,11 +54,11 @@
             flex: 1;
             overflow-y: auto;
             padding: 1.25rem;
-            background: #0d0d0d;
+            background: var(--bg-base);
         }
         .products-area::-webkit-scrollbar { width: 4px; }
         .products-area::-webkit-scrollbar-track { background: transparent; }
-        .products-area::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+        .products-area::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
         .products-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -69,7 +69,7 @@
 
         .prod-card {
             cursor: pointer;
-            background: #141414;
+            background: var(--bg-surface);
             padding: 1rem;
             border-radius: 16px;
             border: 2px solid transparent;
@@ -85,7 +85,7 @@
         }
         .prod-thumb {
             height: 80px;
-            background: #1a1a1a;
+            background: var(--bg-elevated);
             border-radius: 12px;
             margin-bottom: 0.75rem;
             display: flex;
@@ -104,7 +104,7 @@
         }
         .prod-name {
             font-weight: 700;
-            color: #e5e5e5;
+            color: var(--text);
             font-size: 0.85rem;
             line-height: 1.3;
         }
@@ -123,7 +123,7 @@
         .variants-title {
             font-size: 0.75rem;
             font-weight: 700;
-            color: #555;
+            color: var(--text-faint);
             text-transform: uppercase;
             letter-spacing: 0.1em;
             margin-bottom: 0.75rem;
@@ -137,22 +137,22 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: #141414;
-            border: 1px solid #2a2a2a;
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
             padding: 1rem;
             border-radius: 14px;
             cursor: pointer;
             transition: all 0.2s ease;
-            color: #ccc;
+            color: var(--text-secondary);
             font-size: 0.85rem;
         }
         .variant-btn:hover {
             background: linear-gradient(135deg, #dc2626, #b91c1c);
             border-color: #dc2626;
-            color: #fff;
+            color: var(--text-strong);
         }
         .variant-btn:hover .variant-price {
-            color: #fff;
+            color: var(--text-strong);
         }
         .variant-name {
             font-weight: 700;
@@ -166,8 +166,8 @@
         /* ─── Ticket/Cart Panel ─────────────────────────────── */
         .ticket-panel {
             width: 380px;
-            background: #111;
-            border: 1px solid #222;
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
             border-radius: 20px;
             display: flex;
             flex-direction: column;
@@ -175,8 +175,8 @@
         }
         .ticket-header {
             padding: 1rem 1.25rem;
-            background: linear-gradient(135deg, #0a0a0a, #111);
-            border-bottom: 1px solid #222;
+            background: linear-gradient(135deg, var(--bg-base), var(--bg-surface));
+            border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -184,11 +184,11 @@
         .ticket-title {
             font-weight: 800;
             font-size: 1.05rem;
-            color: #fff;
+            color: var(--text-strong);
         }
         .ticket-count {
             background: linear-gradient(135deg, #dc2626, #b91c1c);
-            color: #fff;
+            color: var(--text-strong);
             padding: 0.25rem 0.7rem;
             border-radius: 50px;
             font-size: 0.7rem;
@@ -201,10 +201,10 @@
         }
         .ticket-items::-webkit-scrollbar { width: 4px; }
         .ticket-items::-webkit-scrollbar-track { background: transparent; }
-        .ticket-items::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+        .ticket-items::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
         .ticket-item {
-            background: #0d0d0d;
-            border: 1px solid #1e1e1e;
+            background: var(--bg-base);
+            border: 1px solid var(--border);
             border-radius: 14px;
             padding: 0.85rem;
             margin-bottom: 0.75rem;
@@ -217,13 +217,13 @@
         }
         .ticket-item-name {
             font-weight: 700;
-            color: #e5e5e5;
+            color: var(--text);
             font-size: 0.85rem;
             line-height: 1;
         }
         .ticket-item-variant {
             font-size: 0.7rem;
-            color: #555;
+            color: var(--text-faint);
             margin-top: 0.15rem;
         }
         .ticket-item-price {
@@ -247,8 +247,8 @@
         }
         .ticket-sauce-tag {
             font-size: 0.6rem;
-            background: #1a1a1a;
-            color: #666;
+            background: var(--bg-elevated);
+            color: var(--text-muted);
             padding: 0.15rem 0.4rem;
             border-radius: 4px;
         }
@@ -262,25 +262,25 @@
             flex: 1;
             display: flex;
             align-items: center;
-            background: #141414;
-            border: 1px solid #222;
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
             border-radius: 8px;
             padding: 0 0.5rem;
             height: 32px;
         }
-        .ticket-note-input span { color: #444; font-size: 0.7rem; margin-right: 0.25rem; }
+        .ticket-note-input span { color: var(--text-faint); font-size: 0.7rem; margin-right: 0.25rem; }
         .ticket-note-input input {
             width: 100%;
             font-size: 0.75rem;
             background: transparent;
             border: none;
-            color: #ccc;
+            color: var(--text-secondary);
             outline: none;
         }
         .qty-controls {
             display: flex;
-            background: #141414;
-            border: 1px solid #222;
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
             border-radius: 8px;
             overflow: hidden;
             height: 32px;
@@ -294,7 +294,7 @@
             transition: all 0.15s ease;
             background: transparent;
             border: none;
-            color: #666;
+            color: var(--text-muted);
         }
         .qty-btn:first-child:hover { background: rgba(220, 38, 38, 0.1); color: #dc2626; }
         .qty-btn:last-child:hover { background: rgba(34, 197, 94, 0.1); color: #22c55e; }
@@ -305,9 +305,9 @@
             justify-content: center;
             font-weight: 800;
             font-size: 0.8rem;
-            color: #fff;
-            border-left: 1px solid #222;
-            border-right: 1px solid #222;
+            color: var(--text-strong);
+            border-left: 1px solid var(--border);
+            border-right: 1px solid var(--border);
         }
         /* Empty state */
         .ticket-empty {
@@ -316,22 +316,22 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            color: #333;
+            color: var(--border-strong);
         }
         .ticket-empty span { font-size: 3rem; margin-bottom: 0.75rem; opacity: 0.3; }
-        .ticket-empty p { font-weight: 500; color: #444; font-size: 0.85rem; }
+        .ticket-empty p { font-weight: 500; color: var(--text-faint); font-size: 0.85rem; }
         /* Footer */
         .ticket-footer {
             padding: 1rem 1.25rem;
-            border-top: 1px solid #222;
-            background: #0d0d0d;
+            border-top: 1px solid var(--border);
+            background: var(--bg-base);
         }
         .ticket-notes-area {
             width: 100%;
             border-radius: 12px;
-            border: 1px solid #222;
-            background: #111;
-            color: #ccc;
+            border: 1px solid var(--border);
+            background: var(--bg-surface);
+            color: var(--text-secondary);
             font-size: 0.8rem;
             padding: 0.65rem;
             margin-bottom: 1rem;
@@ -349,7 +349,7 @@
             margin-bottom: 1rem;
         }
         .ticket-total-label {
-            color: #555;
+            color: var(--text-faint);
             font-weight: 700;
             text-transform: uppercase;
             font-size: 0.7rem;
@@ -367,7 +367,7 @@
             width: 100%;
             padding: 1rem;
             background: linear-gradient(135deg, #dc2626, #b91c1c);
-            color: #fff;
+            color: var(--text-strong);
             font-weight: 800;
             font-size: 0.9rem;
             letter-spacing: 0.03em;
@@ -430,22 +430,22 @@
             justify-content: center; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
         }
         .promo-modal {
-            background: #111; border: 1px solid #222; width: 100%; max-width: 440px;
+            background: var(--bg-surface); border: 1px solid var(--border); width: 100%; max-width: 440px;
             border-radius: 20px; overflow: hidden; max-height: 80vh; display: flex; flex-direction: column;
         }
         .promo-modal-header {
-            padding: 1.25rem 1.5rem; background: #0a0a0a; border-bottom: 1px solid #222;
+            padding: 1.25rem 1.5rem; background: var(--bg-base); border-bottom: 1px solid var(--border);
             display: flex; justify-content: space-between; align-items: center;
         }
-        .promo-modal-header h3 { font-weight: 800; color: #fff; font-size: 1.1rem; }
+        .promo-modal-header h3 { font-weight: 800; color: var(--text-strong); font-size: 1.1rem; }
         .promo-modal-body { padding: 1rem 1.25rem; overflow-y: auto; flex: 1; }
         .promo-option {
-            background: #0d0d0d; border: 1px solid #1e1e1e; border-radius: 14px;
+            background: var(--bg-base); border: 1px solid var(--border); border-radius: 14px;
             padding: 1rem; margin-bottom: 0.65rem; cursor: pointer; transition: all 0.2s;
         }
         .promo-option:hover { border-color: #a78bfa; background: rgba(139, 92, 246, 0.03); transform: translateY(-1px); }
-        .promo-option-name { font-weight: 800; color: #e5e5e5; font-size: 0.9rem; margin-bottom: 0.3rem; }
-        .promo-option-desc { font-size: 0.75rem; color: #666; margin-bottom: 0.4rem; }
+        .promo-option-name { font-weight: 800; color: var(--text); font-size: 0.9rem; margin-bottom: 0.3rem; }
+        .promo-option-desc { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.4rem; }
         .promo-option-tags { display: flex; flex-wrap: wrap; gap: 0.35rem; }
         .promo-option-tag {
             font-size: 0.6rem; font-weight: 700; padding: 0.15rem 0.45rem;
@@ -454,7 +454,7 @@
         .promo-option-tag-type { background: rgba(139, 92, 246, 0.1); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.2); }
         .promo-option-tag-value { background: rgba(249, 115, 22, 0.1); color: #f97316; border: 1px solid rgba(249, 115, 22, 0.2); }
         .promo-option-tag-branch { background: rgba(59, 130, 246, 0.1); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.2); }
-        .promo-empty-list { text-align: center; padding: 2rem; color: #444; }
+        .promo-empty-list { text-align: center; padding: 2rem; color: var(--text-faint); }
         .promo-empty-list span { font-size: 2rem; display: block; margin-bottom: 0.5rem; opacity: 0.3; }
 
         /* ─── Sauce Modal ───────────────────────────────────── */
@@ -469,8 +469,8 @@
             backdrop-filter: blur(8px);
         }
         .sauce-modal {
-            background: #111;
-            border: 1px solid #222;
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
             width: 100%;
             max-width: 440px;
             border-radius: 20px;
@@ -478,8 +478,8 @@
         }
         .sauce-modal-header {
             padding: 1.25rem 1.5rem;
-            background: #0a0a0a;
-            border-bottom: 1px solid #222;
+            background: var(--bg-base);
+            border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -487,7 +487,7 @@
         .sauce-modal-header h3 {
             font-size: 1.15rem;
             font-weight: 800;
-            color: #fff;
+            color: var(--text-strong);
         }
         .sauce-modal-header p {
             font-size: 0.8rem;
@@ -501,9 +501,9 @@
             align-items: center;
             justify-content: center;
             background: transparent;
-            border: 1px solid #222;
+            border: 1px solid var(--border);
             border-radius: 10px;
-            color: #666;
+            color: var(--text-muted);
             cursor: pointer;
             transition: all 0.2s ease;
         }
@@ -518,10 +518,10 @@
         }
         .sauce-modal-body::-webkit-scrollbar { width: 4px; }
         .sauce-modal-body::-webkit-scrollbar-track { background: transparent; }
-        .sauce-modal-body::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+        .sauce-modal-body::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
         .sauce-progress {
             width: 100%;
-            background: #1a1a1a;
+            background: var(--bg-elevated);
             border-radius: 50px;
             height: 6px;
             margin-bottom: 1rem;
@@ -538,8 +538,8 @@
             justify-content: space-between;
             align-items: center;
             padding: 0.85rem;
-            background: #0d0d0d;
-            border: 1px solid #1e1e1e;
+            background: var(--bg-base);
+            border: 1px solid var(--border);
             border-radius: 14px;
             margin-bottom: 0.5rem;
             transition: all 0.2s ease;
@@ -550,7 +550,7 @@
         }
         .sauce-name {
             font-weight: 700;
-            color: #e5e5e5;
+            color: var(--text);
             font-size: 0.85rem;
         }
         .sauce-spice { margin-top: 0.2rem; }
@@ -559,8 +559,8 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            background: #111;
-            border: 1px solid #222;
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
             padding: 0.2rem;
             border-radius: 10px;
         }
@@ -574,24 +574,24 @@
             background: transparent;
             border: none;
             cursor: pointer;
-            color: #666;
+            color: var(--text-muted);
             transition: all 0.15s ease;
         }
         .sauce-counter-btn:hover {
-            background: #1a1a1a;
-            color: #fff;
+            background: var(--bg-elevated);
+            color: var(--text-strong);
         }
         .sauce-counter-value {
             font-weight: 900;
             font-size: 0.85rem;
             width: 20px;
             text-align: center;
-            color: #fff;
+            color: var(--text-strong);
         }
         .sauce-modal-footer {
             padding: 1.25rem 1.5rem;
-            border-top: 1px solid #222;
-            background: #0d0d0d;
+            border-top: 1px solid var(--border);
+            background: var(--bg-base);
         }
         .btn-confirm-sauces {
             width: 100%;
@@ -605,21 +605,21 @@
         }
         .btn-confirm-sauces-ready {
             background: linear-gradient(135deg, #dc2626, #b91c1c);
-            color: #fff;
+            color: var(--text-strong);
             box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
         }
         .btn-confirm-sauces-ready:hover {
             background: linear-gradient(135deg, #ef4444, #dc2626);
         }
         .btn-confirm-sauces-disabled {
-            background: #1a1a1a;
-            color: #444;
+            background: var(--bg-elevated);
+            color: var(--text-faint);
             cursor: not-allowed;
             display: none;
         }
         .sauce-missing-text {
             text-align: center;
-            color: #555;
+            color: var(--text-faint);
             font-size: 0.75rem;
             font-weight: 500;
         }
@@ -647,7 +647,7 @@
                              class="prod-card {{ $activeProductId === $product->id ? 'prod-card-active' : '' }}">
                             <div class="prod-thumb">
                                 @if($product->image) <img src="{{ $product->image }}" alt="{{ $product->name }}"> 
-                                @else <span>🍗</span> @endif
+                                @else <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="opacity:0.35;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg> @endif
                             </div>
                             <h3 class="prod-name">{{ $product->name }}</h3>
                             @if($product->has_sauces)
@@ -676,7 +676,7 @@
     <!-- Ticket/Carrito (Derecha 40%) -->
     <div class="ticket-panel">
         <div class="ticket-header">
-            <h2 class="ticket-title">Ticket Mesa #{{ $tableId ?? '...' }}</h2>
+            <h2 class="ticket-title">Ticket {{ $tableName ?? ($tableId ? 'Mesa #'.$tableId : '...') }}</h2>
             <span class="ticket-count">{{ count($cart) }} Items</span>
         </div>
 
@@ -694,7 +694,7 @@
                     @if($item['has_sauces'])
                         <div style="margin-bottom: 0.5rem;">
                             <button wire:click="openSauceModal({{ $index }})" class="ticket-sauce-btn">
-                                ✏️ Configurar Salsas
+                                Configurar Salsas
                             </button>
                             <div style="display: flex; flex-wrap: wrap; gap: 0.25rem; margin-top: 0.35rem;">
                                 @foreach($item['sauces'] as $sauce)
@@ -707,7 +707,7 @@
                     <div class="ticket-item-controls">
                         <!-- Input Nota Item -->
                         <div class="ticket-note-input">
-                            <span>✏️</span>
+                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                             <input wire:model.live.debounce.500ms="cart.{{ $index }}.notes" type="text" placeholder="Nota ítem...">
                         </div>
                         <!-- Controles QTY -->
@@ -724,7 +724,7 @@
                 </div>
             @empty
                 <div class="ticket-empty">
-                    <span>🛒</span>
+                    <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="opacity:0.4;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                     <p>El pedido está vacío</p>
                 </div>
             @endforelse
@@ -736,26 +736,33 @@
                 @if($selectedPromotionId)
                     <div class="promo-applied">
                         <div class="promo-applied-info">
-                            <span>🎉</span>
+                            <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
                             <span class="promo-applied-name">{{ $selectedPromotionName }}</span>
                         </div>
                         <button wire:click="removePromotion" class="promo-applied-remove" title="Quitar promoción">✕</button>
                     </div>
                 @else
                     <button wire:click="openPromoModal" class="btn-add-promo">
-                        🎉 Aplicar Promoción
+                        Aplicar Promoción
                     </button>
                 @endif
             </div>
+
+            {{-- Aviso: promoción no aplicable por pedido mínimo --}}
+            @if($promotionWarning)
+                <div style="background: rgba(220,38,38,0.1); border: 1px solid rgba(220,38,38,0.3); color: #f87171; padding: 0.6rem 0.8rem; border-radius: 10px; font-size: 0.78rem; font-weight: 600; margin-bottom: 0.75rem;">
+                    {{ $promotionWarning }}
+                </div>
+            @endif
 
             {{-- Subtotal --}}
             @if($discountAmount > 0)
                 <div class="promo-discount-row">
                     <span class="ticket-total-label">Subtotal</span>
-                    <span style="font-size: 0.9rem; font-weight: 700; color: #888;">${{ number_format($this->subtotal, 2) }}</span>
+                    <span style="font-size: 0.9rem; font-weight: 700; color: var(--text-muted);">${{ number_format($this->subtotal, 2) }}</span>
                 </div>
                 <div class="promo-discount-row">
-                    <span class="promo-discount-label">🎉 Descuento</span>
+                    <span class="promo-discount-label">Descuento</span>
                     <span class="promo-discount-value">-${{ number_format($discountAmount, 2) }}</span>
                 </div>
             @endif
@@ -808,7 +815,7 @@
                             <h4 class="sauce-name">{{ $sauce->name }}</h4>
                             <div class="sauce-spice">
                                 @for($i = 0; $i < $sauce->spice_level; $i++)
-                                    <span>🌶️</span>
+                                    <svg width="13" height="13" fill="#dc2626" viewBox="0 0 24 24" style="margin-right:1px;"><path d="M12 2C9 6 7 9 7 13a5 5 0 0010 0c0-1.5-.5-3-1.5-4.5C15 11 13.5 12 12 12c1-2 1-5 0-10z"></path></svg>
                                 @endfor
                             </div>
                         </div>
@@ -843,8 +850,8 @@
     <div class="promo-modal-overlay">
         <div class="promo-modal">
             <div class="promo-modal-header">
-                <h3>🎉 Seleccionar Promoción</h3>
-                <button wire:click="$set('showPromoModal', false)" style="background:transparent;border:1px solid #222;color:#666;width:36px;height:36px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                <h3>Seleccionar Promoción</h3>
+                <button wire:click="$set('showPromoModal', false)" style="background:transparent;border:1px solid var(--border);color:var(--text-muted);width:36px;height:36px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;">
                     ✕
                 </button>
             </div>
@@ -859,11 +866,11 @@
                             <div class="promo-option-tags">
                                 <span class="promo-option-tag promo-option-tag-type">
                                     @switch(data_get($promo, 'type'))
-                                        @case('discount') 💰 Descuento @break
-                                        @case('combo') 📦 Combo @break
-                                        @case('birthday') 🎂 Cumpleaños @break
-                                        @case('free_item') 🎁 Gratis @break
-                                        @case('custom') ⚙️ Especial @break
+                                        @case('discount') Descuento @break
+                                        @case('combo') Combo @break
+                                        @case('birthday') Cumpleaños @break
+                                        @case('free_item') Gratis @break
+                                        @case('custom') Especial @break
                                     @endswitch
                                 </span>
                                 <span class="promo-option-tag promo-option-tag-value">
@@ -876,14 +883,14 @@
                                     @endif
                                 </span>
                                 <span class="promo-option-tag promo-option-tag-branch">
-                                    {{ data_get($promo, 'branch.name', '🌐 Todas') }}
+                                    {{ data_get($promo, 'branch.name', 'Todas') }}
                                 </span>
                             </div>
                         </div>
                     @endforeach
                 @else
                     <div class="promo-empty-list">
-                        <span>🎉</span>
+                        <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="opacity:0.4;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
                         <p>No hay promociones activas disponibles.</p>
                     </div>
                 @endif

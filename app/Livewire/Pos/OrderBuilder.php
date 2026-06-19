@@ -14,11 +14,13 @@ use Illuminate\Support\Facades\Log;
 class OrderBuilder extends Component
 {
     public $tableId = null;
+    public $tableName = null;
 
     #[On('table-selected')]
     public function setTable($id = null)
     {
         $this->tableId = $id;
+        $this->tableName = $id ? (\App\Models\Table::find($id)->name ?? null) : null;
         // Reiniciar carrito o cargar carrito de mesa existente
         $this->cart = [];
         $this->saveCartToSession();
@@ -44,6 +46,7 @@ class OrderBuilder extends Component
     public $selectedPromotionName = '';
     public $discountAmount = 0;
     public $showPromoModal = false;
+    public $promotionWarning = '';
 
     // Modal de Salsas
     public $showSauceModal = false;
@@ -99,6 +102,7 @@ class OrderBuilder extends Component
         $this->selectedPromotionId = null;
         $this->selectedPromotionName = '';
         $this->discountAmount = 0;
+        $this->promotionWarning = '';
         $this->saveCartToSession();
     }
 
@@ -106,6 +110,7 @@ class OrderBuilder extends Component
     {
         if (!$this->selectedPromotionId) {
             $this->discountAmount = 0;
+            $this->promotionWarning = '';
             return;
         }
 
@@ -116,6 +121,17 @@ class OrderBuilder extends Component
         }
 
         $subtotal = collect($this->cart)->sum(fn($item) => $item['price'] * $item['quantity']);
+
+        // Condición: pedido mínimo. Si no se cumple, no se aplica el descuento.
+        $minOrder = $promo->conditions['min_order_total'] ?? null;
+        if ($minOrder !== null && $subtotal < (float) $minOrder) {
+            $this->discountAmount = 0;
+            $this->promotionWarning = 'Esta promoción requiere un pedido mínimo de $'
+                . number_format((float) $minOrder, 2) . ' (subtotal actual: $' . number_format($subtotal, 2) . ').';
+            return;
+        }
+
+        $this->promotionWarning = '';
 
         if ($promo->discount_type === 'percentage') {
             $this->discountAmount = round($subtotal * ($promo->discount_value / 100), 2);

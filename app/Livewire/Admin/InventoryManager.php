@@ -211,7 +211,11 @@ class InventoryManager extends Component
     public function render()
     {
         $branches = Branch::active()->get();
-        $variants = ProductVariant::with('product')->get();
+        // Solo variantes de productos que NO son alitas (las alitas usan su propio
+        // control de stock por kilos). El inventario aquí es para helados, bebidas, etc.
+        $variants = ProductVariant::with('product')
+            ->whereHas('product', fn($q) => $q->where('is_wings', false))
+            ->get();
 
         $inventoryList = Inventory::with(['productVariant.product', 'branch'])
             ->when($this->branchId, function ($query) {
