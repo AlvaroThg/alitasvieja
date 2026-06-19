@@ -1,6 +1,6 @@
-# Alitas Vieja — Sistema POS
+# Alitas La Vieja — Sistema POS
 
-> Sistema de Punto de Venta (POS) interno para el restaurante **Alitas Vega**,
+> Sistema de Punto de Venta (POS) interno para el restaurante **Alitas La Vieja**,
 > con soporte para dos sucursales: **Cochabamba** y **Tarija**.
 
 ---
