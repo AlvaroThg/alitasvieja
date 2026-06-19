@@ -5,6 +5,7 @@ namespace App\Livewire\Admin;
 use Livewire\Component;
 use App\Modules\Menu\Models\Product;
 use App\Modules\Menu\Models\Category;
+use App\Modules\Menu\Models\ProductPrice;
 
 class ProductManager extends Component
 {
@@ -153,12 +154,12 @@ class ProductManager extends Component
     {
         foreach ($branchPrices as $branchId => $price) {
             if ($price !== null && $price !== '') {
-                \App\Models\ProductPrice::updateOrCreate(
+                ProductPrice::updateOrCreate(
                     ['product_variant_id' => $variant->id, 'branch_id' => $branchId],
                     ['price' => $price]
                 );
             } else {
-                \App\Models\ProductPrice::where('product_variant_id', $variant->id)
+                ProductPrice::where('product_variant_id', $variant->id)
                     ->where('branch_id', $branchId)
                     ->delete();
             }

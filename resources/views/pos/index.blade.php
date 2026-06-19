@@ -129,12 +129,28 @@
             <div class="nav-brand-text">Alitas <span>Vega</span> — POS</div>
         </div>
         <div class="nav-info">
+            @if(auth()->user()->isOwner())
             <a href="{{ route('admin.dashboard') }}" class="btn-back" style="margin-bottom: 0; padding: 0.4rem 0.8rem; font-size: 0.75rem;">
                 <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                 Dashboard
             </a>
-            <div class="nav-badge">Sucursal Principal</div>
+            @endif
+            @if(auth()->user()->isCashier())
+            <a href="{{ route('cash.movements') }}" class="btn-back" style="margin-bottom: 0; padding: 0.4rem 0.8rem; font-size: 0.75rem;">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z"></path></svg>
+                Caja
+            </a>
+            <a href="{{ route('admin.inventory.index') }}" class="btn-back" style="margin-bottom: 0; padding: 0.4rem 0.8rem; font-size: 0.75rem;">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                Inventario
+            </a>
+            @endif
+            <div class="nav-badge">{{ auth()->user()->branch->name ?? 'Sin Sucursal' }}</div>
             <div class="nav-time" id="pos-clock"></div>
+            <form method="POST" action="{{ route('logout') }}" style="display:inline;">
+                @csrf
+                <button type="submit" style="background: transparent; border: 1px solid #333; color: #888; padding: 0.35rem 0.75rem; border-radius: 8px; font-size: 0.75rem; cursor: pointer;">Salir</button>
+            </form>
         </div>
     </nav>
 

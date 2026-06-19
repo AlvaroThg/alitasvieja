@@ -91,9 +91,6 @@ Route::middleware(['auth', 'role:owner'])->prefix('admin')->name('admin.')->grou
 Route::middleware(['auth', 'role:owner,branch_admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/orders', [AdminReportController::class, 'orders'])->name('orders.index');
 
-    // Gestión de Inventario (Fase 3)
-    Route::get('/inventory', function () { return view('admin.inventory'); })->name('inventory.index');
-
     // NUEVO — Fase 4: Reportes owner + branch_admin
     Route::get('/reports/payments', [AdminReportController::class, 'paymentMethods'])->name('reports.payments');
     Route::get('/reports/wings', [AdminReportController::class, 'wingStats'])->name('reports.wings');
@@ -103,6 +100,11 @@ Route::middleware(['auth', 'role:owner,branch_admin'])->prefix('admin')->name('a
     Route::get('/reports/cash', [CashReportController::class, 'index'])->name('reports.cash.index');
     Route::get('/reports/cash/export', [CashReportController::class, 'export'])->name('reports.cash.export');
     Route::get('/reports/cash/{session}', [CashReportController::class, 'show'])->name('reports.cash.show');
+});
+
+// ─── Inventario — Accesible por Cajeros, Branch Admin y Owner ───────────────
+Route::middleware(['auth', 'role:owner,branch_admin,cashier', 'branch'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/inventory', function () { return view('admin.inventory'); })->name('inventory.index');
 });
 
 // ─── POS — Aplicar Promociones en Pedidos (Fase 3) ─────────────────────────
