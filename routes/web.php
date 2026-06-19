@@ -20,7 +20,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
 
 // ─── POS — Cajeros y Mozos (Fase 1) ──────────────────────────────────────────
-Route::middleware(['auth', 'role:owner,cashier,waiter', 'branch'])->prefix('pos')->name('pos.')->group(function () {
+Route::middleware(['auth', 'role:branch_admin,cashier,waiter', 'branch'])->prefix('pos')->name('pos.')->group(function () {
     Route::get('/', fn() => view('pos.index'))->name('index');
 
     // Pedidos
@@ -44,8 +44,8 @@ Route::middleware(['auth', 'role:owner,cashier,waiter', 'branch'])->prefix('kitc
     Route::patch('/orders/{order}/ready', [KitchenController::class, 'markReady'])->name('orders.ready');
 });
 
-// ─── Caja — Cajero, Branch Admin, Owner (Fase 2) ─────────────────────────────
-Route::middleware(['auth', 'role:owner,branch_admin,cashier', 'branch'])->prefix('cash')->name('cash.')->group(function () {
+// ─── Caja — Cajero y Branch Admin (Fase 2) ───────────────────────────────────
+Route::middleware(['auth', 'role:branch_admin,cashier', 'branch'])->prefix('cash')->name('cash.')->group(function () {
     Route::get('/sessions/active', [CashController::class, 'active'])->name('sessions.active');
     Route::post('/sessions/open', [CashController::class, 'open'])->name('sessions.open');
     Route::get('/sessions/{session}', [CashController::class, 'show'])->name('sessions.show');
@@ -108,7 +108,7 @@ Route::middleware(['auth', 'role:owner,branch_admin,cashier', 'branch'])->prefix
 });
 
 // ─── POS — Aplicar Promociones en Pedidos (Fase 3) ─────────────────────────
-Route::middleware(['auth', 'role:owner,cashier', 'branch'])->prefix('pos')->name('pos.')->group(function () {
+Route::middleware(['auth', 'role:branch_admin,cashier,waiter', 'branch'])->prefix('pos')->name('pos.')->group(function () {
     Route::get('/orders/{order}/promotions', [\App\Modules\Promotions\Http\Controllers\PromotionController::class, 'available'])->name('orders.promotions.available');
     Route::post('/orders/{order}/promotions', [\App\Modules\Promotions\Http\Controllers\PromotionController::class, 'applyToOrder'])->name('orders.promotions.apply');
     Route::delete('/orders/{order}/promotions', [\App\Modules\Promotions\Http\Controllers\PromotionController::class, 'removeFromOrder'])->name('orders.promotions.remove');
