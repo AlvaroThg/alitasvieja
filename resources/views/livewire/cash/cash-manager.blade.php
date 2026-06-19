@@ -1,8 +1,8 @@
 <div class="cash-manager-container">
     <style>
         .cash-card {
-            background: linear-gradient(145deg, #141414, #1a1a1a);
-            border: 1px solid #2a2a2a;
+            background: linear-gradient(145deg, var(--bg-surface), var(--bg-elevated));
+            border: 1px solid var(--border);
             border-radius: 20px;
             padding: 2rem;
             width: 100%;
@@ -20,7 +20,7 @@
             border-radius: 20px 20px 0 0;
         }
         .cash-title {
-            color: #fff;
+            color: var(--text-strong);
             font-size: 1.5rem;
             font-weight: 800;
             text-align: center;
@@ -31,16 +31,16 @@
         }
         .cash-label {
             display: block;
-            color: #aaa;
+            color: var(--text-secondary);
             font-size: 0.85rem;
             margin-bottom: 0.5rem;
             font-weight: 600;
         }
         .cash-input, .cash-select {
             width: 100%;
-            background: #111;
-            border: 1px solid #333;
-            color: #fff;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-strong);
+            color: var(--text-strong);
             padding: 0.85rem;
             border-radius: 12px;
             font-size: 1rem;
@@ -55,7 +55,7 @@
             width: 100%;
             padding: 1rem;
             background: linear-gradient(135deg, #dc2626, #b91c1c);
-            color: #fff;
+            color: var(--text-strong);
             font-weight: 800;
             text-transform: uppercase;
             border: none;
@@ -70,18 +70,18 @@
         }
         .movements-list {
             margin-top: 2rem;
-            border-top: 1px solid #333;
+            border-top: 1px solid var(--border-strong);
             padding-top: 1.5rem;
         }
         .movement-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: #111;
+            background: var(--bg-surface);
             padding: 1rem;
             border-radius: 12px;
             margin-bottom: 0.75rem;
-            border-left: 4px solid #333;
+            border-left: 4px solid var(--border-strong);
         }
         .movement-item.income {
             border-left-color: #22c55e;
@@ -90,12 +90,12 @@
             border-left-color: #ef4444;
         }
         .movement-details h4 {
-            color: #fff;
+            color: var(--text-strong);
             font-size: 1rem;
             margin-bottom: 0.25rem;
         }
         .movement-details p {
-            color: #777;
+            color: var(--text-muted);
             font-size: 0.8rem;
         }
         .movement-amount {
@@ -134,7 +134,7 @@
         <div class="cash-card" style="max-width: 800px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                 <h2 class="cash-title" style="margin-bottom: 0;">Caja Activa</h2>
-                <span style="color: #aaa; font-size: 0.9rem;">
+                <span style="color: var(--text-secondary); font-size: 0.9rem;">
                     Abierta por: {{ $session->opener->name ?? 'Usuario' }} | Monto Inicial: ${{ number_format($session->opening_amount, 2) }}
                 </span>
             </div>
@@ -142,7 +142,7 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
                 <!-- Formulario -->
                 <div>
-                    <h3 style="color: #fff; margin-bottom: 1rem; font-size: 1.1rem;">Nuevo Movimiento</h3>
+                    <h3 style="color: var(--text-strong); margin-bottom: 1rem; font-size: 1.1rem;">Nuevo Movimiento</h3>
                     <form wire:submit.prevent="addMovement">
                         <div class="cash-form-group">
                             <label class="cash-label">Tipo de Movimiento</label>
@@ -177,7 +177,7 @@
 
                 <!-- Lista -->
                 <div>
-                    <h3 style="color: #fff; margin-bottom: 1rem; font-size: 1.1rem;">Últimos Movimientos</h3>
+                    <h3 style="color: var(--text-strong); margin-bottom: 1rem; font-size: 1.1rem;">Últimos Movimientos</h3>
                     <div style="max-height: 400px; overflow-y: auto; padding-right: 0.5rem;">
                         @forelse($movements as $mov)
                             <div class="movement-item {{ $mov->type }}">
@@ -190,7 +190,7 @@
                                 </div>
                             </div>
                         @empty
-                            <div style="text-align: center; color: #777; padding: 2rem 0;">
+                            <div style="text-align: center; color: var(--text-muted); padding: 2rem 0;">
                                 No hay movimientos registrados
                             </div>
                         @endforelse

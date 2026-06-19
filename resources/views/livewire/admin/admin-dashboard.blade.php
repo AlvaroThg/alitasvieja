@@ -260,8 +260,8 @@
             flex-wrap: wrap;
             margin-bottom: 2rem;
             padding: 1.25rem 1.5rem;
-            background: linear-gradient(145deg, #141414, #1a1a1a);
-            border: 1px solid #2a2a2a;
+            background: linear-gradient(145deg, var(--bg-surface), var(--bg-elevated));
+            border: 1px solid var(--border);
             border-radius: 16px;
         }
         .filters-group {
@@ -272,24 +272,24 @@
         .filters-label {
             font-size: 0.8rem;
             font-weight: 600;
-            color: #666;
+            color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
         .pill-group {
             display: flex;
             gap: 0.35rem;
-            background: #0a0a0a;
+            background: var(--bg-base);
             padding: 4px;
             border-radius: 12px;
-            border: 1px solid #222;
+            border: 1px solid var(--border);
         }
         .pill {
             padding: 0.5rem 1.1rem;
             border: none;
             border-radius: 10px;
             background: transparent;
-            color: #888;
+            color: var(--text-muted);
             font-size: 0.82rem;
             font-weight: 600;
             cursor: pointer;
@@ -297,21 +297,21 @@
             font-family: 'Inter', sans-serif;
         }
         .pill:hover {
-            color: #ccc;
+            color: var(--text-secondary);
             background: rgba(255,255,255,0.04);
         }
         .pill--active {
             background: linear-gradient(135deg, #dc2626, #b91c1c);
-            color: #fff;
+            color: var(--text-strong);
             box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
         }
         .pill--active:hover {
-            color: #fff;
+            color: var(--text-strong);
         }
         .branch-select {
-            background: #0a0a0a;
-            color: #fff;
-            border: 1px solid #333;
+            background: var(--bg-base);
+            color: var(--text-strong);
+            border: 1px solid var(--border-strong);
             padding: 0.5rem 1rem;
             border-radius: 10px;
             font-size: 0.85rem;
@@ -361,8 +361,8 @@
             .kpi-grid { grid-template-columns: 1fr; }
         }
         .kpi-card {
-            background: linear-gradient(145deg, #141414, #1a1a1a);
-            border: 1px solid #2a2a2a;
+            background: linear-gradient(145deg, var(--bg-surface), var(--bg-elevated));
+            border: 1px solid var(--border);
             border-radius: 16px;
             padding: 1.25rem 1.5rem;
             display: flex;
@@ -373,7 +373,7 @@
             transition: all 0.3s ease;
         }
         .kpi-card:hover {
-            border-color: #333;
+            border-color: var(--border-strong);
             transform: translateY(-2px);
             box-shadow: 0 8px 24px rgba(0,0,0,0.3);
         }
@@ -419,13 +419,13 @@
         .kpi-value {
             font-size: 1.6rem;
             font-weight: 900;
-            color: #fff;
+            color: var(--text-strong);
             letter-spacing: -0.02em;
             line-height: 1.1;
         }
         .kpi-label {
             font-size: 0.75rem;
-            color: #666;
+            color: var(--text-muted);
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.04em;
@@ -464,8 +464,8 @@
             .charts-row { grid-template-columns: 1fr; }
         }
         .chart-card {
-            background: linear-gradient(145deg, #141414, #1a1a1a);
-            border: 1px solid #2a2a2a;
+            background: linear-gradient(145deg, var(--bg-surface), var(--bg-elevated));
+            border: 1px solid var(--border);
             border-radius: 16px;
             overflow: hidden;
         }
@@ -481,7 +481,7 @@
             gap: 0.5rem;
             font-size: 0.95rem;
             font-weight: 700;
-            color: #fff;
+            color: var(--text-strong);
         }
         .chart-title svg {
             color: #f97316;
@@ -512,8 +512,8 @@
             .tables-row { grid-template-columns: 1fr; }
         }
         .table-card {
-            background: linear-gradient(145deg, #141414, #1a1a1a);
-            border: 1px solid #2a2a2a;
+            background: linear-gradient(145deg, var(--bg-surface), var(--bg-elevated));
+            border: 1px solid var(--border);
             border-radius: 16px;
             overflow: hidden;
         }
@@ -526,7 +526,7 @@
             gap: 0.5rem;
             font-size: 0.95rem;
             font-weight: 700;
-            color: #fff;
+            color: var(--text-strong);
         }
         .table-title svg {
             color: #f97316;
@@ -542,34 +542,34 @@
         .data-table th {
             font-size: 0.7rem;
             font-weight: 600;
-            color: #555;
+            color: var(--text-faint);
             text-transform: uppercase;
             letter-spacing: 0.06em;
             padding: 0.6rem 0.75rem;
             text-align: left;
-            border-bottom: 1px solid #222;
+            border-bottom: 1px solid var(--border);
         }
         .data-table td {
             font-size: 0.85rem;
-            color: #ccc;
+            color: var(--text-secondary);
             padding: 0.7rem 0.75rem;
-            border-bottom: 1px solid #1a1a1a;
+            border-bottom: 1px solid var(--bg-elevated);
             transition: background 0.2s ease;
         }
         .data-table tbody tr:hover td {
             background: rgba(255,255,255,0.02);
         }
         .data-table tfoot td {
-            border-top: 1px solid #333;
+            border-top: 1px solid var(--border-strong);
             border-bottom: none;
-            color: #fff;
+            color: var(--text-strong);
             padding-top: 0.9rem;
         }
         .text-right { text-align: right; }
         .font-mono { font-variant-numeric: tabular-nums; }
         .product-name {
             font-weight: 600;
-            color: #fff;
+            color: var(--text-strong);
         }
         .rank-cell { width: 40px; }
         .rank-badge {
@@ -584,26 +584,26 @@
         }
         .rank-badge--gold {
             background: linear-gradient(135deg, #f59e0b, #d97706);
-            color: #fff;
+            color: var(--text-strong);
             box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
         }
         .rank-badge--silver {
             background: linear-gradient(135deg, #94a3b8, #64748b);
-            color: #fff;
+            color: var(--text-strong);
         }
         .rank-badge--bronze {
             background: linear-gradient(135deg, #b45309, #92400e);
-            color: #fff;
+            color: var(--text-strong);
         }
         .rank-number {
-            color: #555;
+            color: var(--text-faint);
             font-weight: 600;
             font-size: 0.8rem;
         }
         .progress-bar-container {
             width: 100%;
             height: 8px;
-            background: #1a1a1a;
+            background: var(--bg-elevated);
             border-radius: 4px;
             overflow: hidden;
             min-width: 80px;
@@ -625,7 +625,7 @@
         .empty-state {
             text-align: center;
             padding: 3rem 1rem;
-            color: #444;
+            color: var(--text-faint);
         }
         .empty-state svg {
             margin-bottom: 0.75rem;
@@ -662,9 +662,18 @@
             COLORS.pink, COLORS.cyan,
         ];
 
+        // Colores del tema (claro/oscuro) leídos desde las variables CSS
+        const _themeCss = getComputedStyle(document.documentElement);
+        const themeText = (_themeCss.getPropertyValue('--text-secondary') || '#ccc').trim();
+        const themeMuted = (_themeCss.getPropertyValue('--text-muted') || '#666').trim();
+        const themeSurface = (_themeCss.getPropertyValue('--bg-surface') || '#141414').trim();
+        const themeStrong = (_themeCss.getPropertyValue('--text-strong') || '#fff').trim();
+        const themeGrid = document.documentElement.getAttribute('data-theme') === 'light'
+            ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.06)';
+
         // Global Chart.js defaults
-        Chart.defaults.color = '#666';
-        Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
+        Chart.defaults.color = themeText;
+        Chart.defaults.borderColor = themeGrid;
         Chart.defaults.font.family = "'Inter', sans-serif";
 
         // Initialize charts on mount
@@ -723,7 +732,7 @@
                         },
                         scales: {
                             x: {
-                                grid: { color: 'rgba(255,255,255,0.04)' },
+                                grid: { color: themeGrid },
                                 ticks: {
                                     callback: v => '$' + (v >= 1000 ? (v/1000).toFixed(1) + 'K' : v),
                                     font: { size: 11 }
@@ -731,7 +740,7 @@
                             },
                             y: {
                                 grid: { display: false },
-                                ticks: { font: { size: 12, weight: '600' }, color: '#ccc' }
+                                ticks: { font: { size: 12, weight: '600' }, color: themeText }
                             }
                         }
                     }
@@ -748,7 +757,7 @@
                         datasets: [{
                             data: [],
                             backgroundColor: [COLORS.green, COLORS.blue, COLORS.orange, COLORS.purple, COLORS.pink],
-                            borderColor: '#141414',
+                            borderColor: themeSurface,
                             borderWidth: 3,
                             hoverBorderColor: '#333',
                         }]
@@ -764,8 +773,9 @@
                                     padding: 16,
                                     usePointStyle: true,
                                     pointStyleWidth: 10,
-                                    font: { size: 12, weight: '600' },
-                                    color: '#ccc'
+                                    font: { size: 13, weight: '700' },
+                                    boxWidth: 8,
+                                    color: themeStrong
                                 }
                             },
                             tooltip: {
@@ -816,7 +826,7 @@
                                 pointRadius: 4,
                                 pointHoverRadius: 7,
                                 pointBackgroundColor: COLORS.orange,
-                                pointBorderColor: '#141414',
+                                pointBorderColor: themeSurface,
                                 pointBorderWidth: 2,
                                 yAxisID: 'y',
                             },
@@ -832,7 +842,7 @@
                                 pointRadius: 3,
                                 pointHoverRadius: 6,
                                 pointBackgroundColor: COLORS.blue,
-                                pointBorderColor: '#141414',
+                                pointBorderColor: themeSurface,
                                 pointBorderWidth: 2,
                                 yAxisID: 'y1',
                             }
@@ -851,8 +861,9 @@
                                     padding: 20,
                                     usePointStyle: true,
                                     pointStyleWidth: 10,
-                                    font: { size: 12, weight: '600' },
-                                    color: '#ccc'
+                                    font: { size: 13, weight: '700' },
+                                    boxWidth: 8,
+                                    color: themeStrong
                                 }
                             },
                             tooltip: {
@@ -867,13 +878,13 @@
                         },
                         scales: {
                             x: {
-                                grid: { color: 'rgba(255,255,255,0.04)' },
+                                grid: { color: themeGrid },
                                 ticks: { font: { size: 11 }, maxRotation: 45 }
                             },
                             y: {
                                 type: 'linear',
                                 position: 'left',
-                                grid: { color: 'rgba(255,255,255,0.04)' },
+                                grid: { color: themeGrid },
                                 ticks: {
                                     callback: v => '$' + (v >= 1000 ? (v/1000).toFixed(1) + 'K' : v),
                                     font: { size: 11 }

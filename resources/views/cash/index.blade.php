@@ -12,12 +12,12 @@
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: 'Inter', sans-serif;
-            background: #0a0a0a;
+            background: var(--bg-base);
             min-height: 100vh;
         }
         .pos-navbar {
-            background: linear-gradient(135deg, #111 0%, #1a1a1a 100%);
-            border-bottom: 1px solid #222;
+            background: linear-gradient(135deg, var(--bg-surface) 0%, var(--bg-elevated) 100%);
+            border-bottom: 1px solid var(--border);
             padding: 0 1.5rem;
             height: 64px;
             display: flex;
@@ -54,7 +54,7 @@
             box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
         }
         .nav-brand-text {
-            color: #fff;
+            color: var(--text-strong);
             font-size: 1.1rem;
             font-weight: 800;
             letter-spacing: -0.01em;
@@ -72,11 +72,11 @@
             align-items: center;
             gap: 0.5rem;
             padding: 0.6rem 1.25rem;
-            background: #111;
+            background: var(--bg-surface);
             color: #f97316;
             font-weight: 700;
             font-size: 0.85rem;
-            border: 1px solid #222;
+            border: 1px solid var(--border);
             border-radius: 12px;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -86,7 +86,7 @@
             margin-top: 2rem;
         }
         .btn-back:hover {
-            background: #1a1a1a;
+            background: var(--bg-elevated);
             border-color: #f97316;
             transform: translateX(-2px);
         }
@@ -99,7 +99,7 @@
             <div class="nav-brand-icon">🍗</div>
             <div class="nav-brand-text">Alitas <span>Vega</span> — Caja</div>
         </div>
-        <div style="color: #fff; font-weight: 600;">
+        <div style="color: var(--text-strong); font-weight: 600;">
             {{ auth()->user()->name }}
         </div>
     </nav>

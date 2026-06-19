@@ -16,13 +16,13 @@
         body {
             font-family: 'Inter', sans-serif;
             min-height: 100vh;
-            background: #0a0a0a;
-            color: #fff;
+            background: var(--bg-base);
+            color: var(--text-strong);
         }
         /* ── Navbar ── */
         .admin-navbar {
-            background: linear-gradient(135deg, #111 0%, #1a1a1a 100%);
-            border-bottom: 1px solid #222;
+            background: linear-gradient(135deg, var(--bg-surface) 0%, var(--bg-elevated) 100%);
+            border-bottom: 1px solid var(--border);
             padding: 0 1.5rem;
             height: 64px;
             display: flex;
@@ -74,7 +74,7 @@
         .nav-user {
             font-weight: 600;
             font-size: 0.9rem;
-            color: #ccc;
+            color: var(--text-secondary);
         }
         .nav-links {
             display: flex;
@@ -85,17 +85,17 @@
             align-items: center;
             gap: 0.4rem;
             padding: 0.45rem 0.9rem;
-            background: #111;
-            color: #888;
+            background: var(--bg-surface);
+            color: var(--text-muted);
             font-size: 0.78rem;
             font-weight: 600;
-            border: 1px solid #222;
+            border: 1px solid var(--border);
             border-radius: 10px;
             text-decoration: none;
             transition: all 0.2s ease;
         }
         .nav-link:hover {
-            background: #1a1a1a;
+            background: var(--bg-elevated);
             color: #f97316;
             border-color: #f97316;
         }
@@ -105,10 +105,10 @@
             gap: 0.4rem;
             padding: 0.45rem 0.9rem;
             background: transparent;
-            color: #555;
+            color: var(--text-faint);
             font-size: 0.78rem;
             font-weight: 600;
-            border: 1px solid #1e1e1e;
+            border: 1px solid var(--border);
             border-radius: 10px;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -159,17 +159,17 @@
             align-items: center;
             gap: 0.4rem;
             padding: 0.5rem 1rem;
-            background: #111;
+            background: var(--bg-surface);
             color: #f97316;
             font-size: 0.8rem;
             font-weight: 700;
-            border: 1px solid #222;
+            border: 1px solid var(--border);
             border-radius: 12px;
             text-decoration: none;
             transition: all 0.2s ease;
         }
         .quick-link:hover {
-            background: #1a1a1a;
+            background: var(--bg-elevated);
             border-color: #f97316;
             transform: translateY(-1px);
         }
@@ -188,17 +188,9 @@
         </div>
         <div class="nav-right">
             <div class="nav-links">
-                <a href="{{ route('pos.index') }}" class="nav-link">
-                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                    POS
-                </a>
                 <a href="{{ route('admin.products.index') }}" class="nav-link">
                     <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
                     Productos
-                </a>
-                <a href="{{ route('cash.movements') }}" class="nav-link">
-                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    Caja
                 </a>
                 <a href="{{ route('admin.inventory.index') }}" class="nav-link">
                     <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
@@ -223,7 +215,7 @@
     <main class="main-content">
         <div class="page-header">
             <h1 class="page-title">
-                <span class="page-title-icon">📊</span>
+                <span class="page-title-icon"><svg width="22" height="22" fill="none" stroke="#fff" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg></span>
                 Dashboard
             </h1>
             <div class="quick-links">
@@ -234,10 +226,6 @@
                 <a href="{{ route('admin.users.index') }}" class="quick-link">
                     <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                     Usuarios
-                </a>
-                <a href="{{ route('admin.prices.index') }}" class="quick-link">
-                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
-                    Precios
                 </a>
             </div>
         </div>

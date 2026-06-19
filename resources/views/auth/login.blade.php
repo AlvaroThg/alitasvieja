@@ -15,7 +15,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #0a0a0a;
+            background: var(--bg-base);
             position: relative;
             overflow: hidden;
         }
@@ -40,8 +40,8 @@
             pointer-events: none;
         }
         .login-card {
-            background: linear-gradient(145deg, #141414, #1a1a1a);
-            border: 1px solid #2a2a2a;
+            background: linear-gradient(145deg, var(--bg-surface), var(--bg-elevated));
+            border: 1px solid var(--border);
             border-radius: 24px;
             padding: 2.5rem;
             width: 100%;
@@ -71,7 +71,7 @@
             box-shadow: 0 8px 24px rgba(220, 38, 38, 0.2);
         }
         .login-title {
-            color: #fff;
+            color: var(--text-strong);
             font-size: 1.5rem;
             font-weight: 800;
             text-align: center;
@@ -79,7 +79,7 @@
             letter-spacing: -0.02em;
         }
         .login-subtitle {
-            color: #555;
+            color: var(--text-faint);
             font-size: 0.85rem;
             text-align: center;
             margin-bottom: 2rem;
@@ -104,7 +104,7 @@
         }
         .form-label {
             display: block;
-            color: #777;
+            color: var(--text-muted);
             font-size: 0.75rem;
             font-weight: 600;
             margin-bottom: 0.4rem;
@@ -113,10 +113,10 @@
         .form-input {
             width: 100%;
             padding: 0.7rem 0.9rem;
-            background: #0d0d0d;
-            border: 1px solid #2a2a2a;
+            background: var(--bg-base);
+            border: 1px solid var(--border);
             border-radius: 12px;
-            color: #fff;
+            color: var(--text-strong);
             font-size: 0.9rem;
             font-family: inherit;
             outline: none;
@@ -127,7 +127,7 @@
             box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.08);
         }
         .form-input::placeholder {
-            color: #333;
+            color: var(--border-strong);
         }
         /* Remember */
         .remember-row {
@@ -142,7 +142,7 @@
             height: 15px;
         }
         .remember-row label {
-            color: #666;
+            color: var(--text-muted);
             font-size: 0.8rem;
             cursor: pointer;
             font-weight: 500;
@@ -154,7 +154,7 @@
             background: linear-gradient(135deg, #dc2626, #b91c1c);
             border: none;
             border-radius: 14px;
-            color: #fff;
+            color: var(--text-strong);
             font-size: 0.95rem;
             font-weight: 800;
             cursor: pointer;
@@ -174,7 +174,7 @@
         .login-footer {
             text-align: center;
             margin-top: 2rem;
-            color: #333;
+            color: var(--border-strong);
             font-size: 0.7rem;
             font-weight: 500;
             letter-spacing: 0.03em;

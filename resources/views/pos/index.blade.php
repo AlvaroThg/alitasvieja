@@ -11,12 +11,12 @@
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: 'Inter', sans-serif;
-            background: #0a0a0a;
+            background: var(--bg-base);
             min-height: 100vh;
         }
         .pos-navbar {
-            background: linear-gradient(135deg, #111 0%, #1a1a1a 100%);
-            border-bottom: 1px solid #222;
+            background: linear-gradient(135deg, var(--bg-surface) 0%, var(--bg-elevated) 100%);
+            border-bottom: 1px solid var(--border);
             padding: 0 1.5rem;
             height: 64px;
             display: flex;
@@ -53,7 +53,7 @@
             box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
         }
         .nav-brand-text {
-            color: #fff;
+            color: var(--text-strong);
             font-size: 1.1rem;
             font-weight: 800;
             letter-spacing: -0.01em;
@@ -86,7 +86,7 @@
             border-radius: 50%;
         }
         .nav-time {
-            color: #555;
+            color: var(--text-faint);
             font-size: 0.8rem;
             font-weight: 500;
             font-variant-numeric: tabular-nums;
@@ -100,11 +100,11 @@
             align-items: center;
             gap: 0.5rem;
             padding: 0.6rem 1.25rem;
-            background: #111;
+            background: var(--bg-surface);
             color: #f97316;
             font-weight: 700;
             font-size: 0.85rem;
-            border: 1px solid #222;
+            border: 1px solid var(--border);
             border-radius: 12px;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -112,7 +112,7 @@
             text-decoration: none;
         }
         .btn-back:hover {
-            background: #1a1a1a;
+            background: var(--bg-elevated);
             border-color: #f97316;
             transform: translateX(-2px);
         }
@@ -149,7 +149,7 @@
             <div class="nav-time" id="pos-clock"></div>
             <form method="POST" action="{{ route('logout') }}" style="display:inline;">
                 @csrf
-                <button type="submit" style="background: transparent; border: 1px solid #333; color: #888; padding: 0.35rem 0.75rem; border-radius: 8px; font-size: 0.75rem; cursor: pointer;">Salir</button>
+                <button type="submit" style="background: transparent; border: 1px solid var(--border-strong); color: var(--text-muted); padding: 0.35rem 0.75rem; border-radius: 8px; font-size: 0.75rem; cursor: pointer;">Salir</button>
             </form>
         </div>
     </nav>
