@@ -249,6 +249,10 @@
     <div class="table-grid-header">
         <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
         <h2>Mapa de Mesas <span>· Selecciona una mesa</span></h2>
+        <button wire:click="openCreateTableModal" style="margin-left: auto; background: linear-gradient(135deg, #10b981, #047857); color: #fff; border: none; padding: 0.6rem 1.25rem; border-radius: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem;">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            Nueva Mesa
+        </button>
     </div>
     
     <div class="table-grid">
@@ -309,6 +313,12 @@
                 @if($selectedTableForAction->status === 'reserved')
                     <button wire:click="changeStatus('available')" class="btn-action btn-secondary">Quitar Reserva</button>
                 @endif
+
+                {{-- Botón eliminar siempre visible --}}
+                <button wire:click="confirmDeleteTable({{ $selectedTableForAction->id }})" class="btn-action" style="background: transparent; color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); margin-top: 0.5rem;">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    Eliminar Mesa
+                </button>
             </div>
         </div>
     </div>
@@ -348,4 +358,69 @@
         </div>
     </div>
     @endif
+
+    {{-- Modal: Crear Mesa --}}
+    @if($showCreateTableModal)
+    <div class="table-modal-overlay">
+        <div class="table-modal" style="max-width: 380px;">
+            <div class="table-modal-header">
+                <h3>➕ Nueva Mesa</h3>
+                <button wire:click="$set('showCreateTableModal', false)" class="table-modal-close">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="table-modal-body">
+                <div style="margin-bottom: 1rem;">
+                    <label style="color: #aaa; font-size: 0.85rem; margin-bottom: 0.5rem; display: block;">Nombre o Número de Mesa</label>
+                    <input
+                        type="text"
+                        wire:model="newTableName"
+                        placeholder="Ej: Mesa 7, Terraza 2, Barra..."
+                        style="width: 100%; background: #0a0a0a; border: 1px solid #333; color: #fff; padding: 0.75rem; border-radius: 10px; font-size: 1rem; outline: none;"
+                    >
+                    @error('newTableName')
+                        <span style="color: #ef4444; font-size: 0.8rem; margin-top: 0.4rem; display: block;">{{ $message }}</span>
+                    @enderror
+                </div>
+                <button wire:click="createTable" class="btn-action btn-primary">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    Crear Mesa
+                </button>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- Modal: Confirmar / Error Eliminar Mesa --}}
+    @if($showDeleteTableModal)
+    <div class="table-modal-overlay">
+        <div class="table-modal" style="max-width: 380px;">
+            <div class="table-modal-header">
+                <h3 style="color: {{ $deleteErrorMessage ? '#ef4444' : '#f97316' }};">
+                    {{ $deleteErrorMessage ? '⚠️ No se puede eliminar' : '🗑️ Eliminar Mesa' }}
+                </h3>
+                <button wire:click="$set('showDeleteTableModal', false)" class="table-modal-close">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="table-modal-body">
+                @if($deleteErrorMessage)
+                    <div style="background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.3); border-radius: 10px; padding: 1rem; color: #ef4444; font-size: 0.9rem;">
+                        {{ $deleteErrorMessage }}
+                    </div>
+                    <button wire:click="$set('showDeleteTableModal', false)" class="btn-action btn-secondary" style="margin-top: 0.5rem;">Entendido</button>
+                @else
+                    <div style="background: #1a1a1a; border-radius: 10px; padding: 1rem; color: #aaa; font-size: 0.9rem; text-align: center;">
+                        ¿Estás seguro de que quieres eliminar esta mesa? Esta acción no se puede deshacer.
+                    </div>
+                    <div style="display: flex; gap: 0.75rem; margin-top: 0.5rem;">
+                        <button wire:click="$set('showDeleteTableModal', false)" class="btn-action btn-secondary" style="flex: 1;">Cancelar</button>
+                        <button wire:click="deleteTable" class="btn-action" style="flex: 1; background: #ef4444; color: #fff; border: none;">Sí, Eliminar</button>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+    @endif
+
 </div>

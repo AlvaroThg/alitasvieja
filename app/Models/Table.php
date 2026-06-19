@@ -11,4 +11,14 @@ class Table extends Model
 
     
     protected $fillable = ['name', 'status', 'branch_id'];
+
+    public function orders()
+    {
+        return $this->hasMany(\App\Modules\Orders\Models\Order::class, 'table_id');
+    }
+
+    public function hasActiveOrders(): bool
+    {
+        return $this->orders()->whereIn('status', ['open', 'pending'])->exists();
+    }
 }
