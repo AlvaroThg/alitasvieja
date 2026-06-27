@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Modules\Auth\Http\Controllers\Admin\UserController;
 use App\Modules\Cash\Http\Controllers\CashController;
 use App\Modules\Cash\Http\Controllers\CashReportController;
+use App\Modules\Inventory\Http\Controllers\InventoryMovementController;
 use App\Modules\Menu\Http\Controllers\Admin\PriceController;
 use App\Modules\Orders\Http\Controllers\OrderController;
 use App\Modules\Orders\Http\Controllers\CheckoutController;
@@ -90,6 +91,10 @@ Route::middleware(['auth', 'role:owner'])->prefix('admin')->name('admin.')->grou
 // Rutas admin accesibles por owner Y branch_admin
 Route::middleware(['auth', 'role:owner,branch_admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/orders', [AdminReportController::class, 'orders'])->name('orders.index');
+
+    // Historial de Movimientos de Inventario + reporte PDF
+    Route::get('/inventory/movements', fn () => view('admin.inventory-movements'))->name('inventory.movements');
+    Route::get('/inventory/movements/export', [InventoryMovementController::class, 'export'])->name('inventory.movements.export');
 
     // NUEVO — Fase 4: Reportes owner + branch_admin
     Route::get('/reports/payments', [AdminReportController::class, 'paymentMethods'])->name('reports.payments');

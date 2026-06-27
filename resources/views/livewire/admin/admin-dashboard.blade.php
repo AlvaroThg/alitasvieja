@@ -93,6 +93,48 @@
         </div>
     </div>
 
+    {{-- ═══ ÚLTIMOS MOVIMIENTOS DE INVENTARIO ═══ --}}
+    @php
+        $tipoMov = ['in' => 'Entrada', 'out' => 'Salida', 'adjustment' => 'Ajuste', 'sale' => 'Venta'];
+        $tipoColor = ['in' => '#22c55e', 'out' => '#f97316', 'adjustment' => '#60a5fa', 'sale' => '#a78bfa'];
+    @endphp
+    <div style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="font-size: 1rem; font-weight: 800; color: var(--text-strong);">Últimos movimientos de inventario</h3>
+            <a href="{{ route('admin.inventory.movements') }}" style="font-size: 0.8rem; font-weight: 700; color: #f97316; text-decoration: none;">Ver historial →</a>
+        </div>
+        @if($recentMovements->isEmpty())
+            <p style="color: var(--text-muted); font-size: 0.85rem;">Aún no hay movimientos registrados.</p>
+        @else
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem;">
+                    <thead>
+                        <tr style="color: var(--text-muted); text-align: left;">
+                            <th style="padding: 0.4rem 0.6rem; font-weight: 700;">Producto</th>
+                            <th style="padding: 0.4rem 0.6rem; font-weight: 700;">Tipo</th>
+                            <th style="padding: 0.4rem 0.6rem; font-weight: 700; text-align: right;">Cant.</th>
+                            <th style="padding: 0.4rem 0.6rem; font-weight: 700;">Sucursal</th>
+                            <th style="padding: 0.4rem 0.6rem; font-weight: 700;">Usuario</th>
+                            <th style="padding: 0.4rem 0.6rem; font-weight: 700;">Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($recentMovements as $m)
+                            <tr style="border-top: 1px solid var(--border); color: var(--text-secondary);">
+                                <td style="padding: 0.5rem 0.6rem; color: var(--text);">{{ $m->productVariant->product->name ?? '—' }} <span style="color: var(--text-muted);">/ {{ $m->productVariant->name ?? '' }}</span></td>
+                                <td style="padding: 0.5rem 0.6rem;"><span style="color: {{ $tipoColor[$m->type] ?? 'var(--text-muted)' }}; font-weight: 700;">{{ $tipoMov[$m->type] ?? $m->type }}</span></td>
+                                <td style="padding: 0.5rem 0.6rem; text-align: right; font-weight: 700;">{{ $m->quantity }}</td>
+                                <td style="padding: 0.5rem 0.6rem;">{{ $m->branch->name ?? '—' }}</td>
+                                <td style="padding: 0.5rem 0.6rem;">{{ $m->user->name ?? 'Sistema' }}</td>
+                                <td style="padding: 0.5rem 0.6rem; color: var(--text-muted);">{{ $m->created_at->format('d/m H:i') }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
+    </div>
+
     {{-- ═══ GRÁFICOS ROW 1: Ventas por Sucursal + Métodos de Pago ═══ --}}
     <div class="charts-row">
         <div class="chart-card chart-card--wide">

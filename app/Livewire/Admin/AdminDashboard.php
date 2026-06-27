@@ -153,6 +153,14 @@ class AdminDashboard extends Component
 
     public function render()
     {
-        return view('livewire.admin.admin-dashboard');
+        $recentMovements = \App\Modules\Inventory\Models\InventoryMovement::with(['productVariant.product', 'branch', 'user'])
+            ->when($this->branchId, fn ($q) => $q->where('branch_id', $this->branchId))
+            ->latest('id')
+            ->limit(10)
+            ->get();
+
+        return view('livewire.admin.admin-dashboard', [
+            'recentMovements' => $recentMovements,
+        ]);
     }
 }
