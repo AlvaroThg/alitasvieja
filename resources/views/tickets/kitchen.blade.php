@@ -91,9 +91,13 @@
                 @foreach($item->sauces as $sauce)
                     @if($sauce->is_coated && $sauce->quantity > 0)
                         <div class="sauce-line">
-                            → {{ $sauce->quantity }}pz {{ $sauce->sauce->name ?? 'Salsa' }} [bañada]
+                            → {{ $sauce->quantity }} {{ $sauce->quantity == 1 ? 'alita' : 'alitas' }} con {{ $sauce->sauce->name ?? 'Salsa' }}
                         </div>
-                    @elseif(!$sauce->is_coated)
+                    @elseif($sauce->is_coated)
+                        <div class="sauce-line">
+                            → {{ $sauce->sauce->name ?? 'Salsa' }}
+                        </div>
+                    @else
                         <div class="sauce-line">
                             → {{ $sauce->sauce->name ?? 'Salsa' }} [aparte]
                         </div>

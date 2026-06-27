@@ -183,6 +183,7 @@ class OrderBuilder extends Component
             'notes' => '',
             'has_sauces' => $variant->product->has_sauces,
             'max_sauces' => $variant->max_sauces,
+            'wings_count' => (int) $variant->wings_count, // nº de alitas: tope de alitas a bañar
             'sauces' => [], // [ ['id' => 1, 'name' => 'BBQ', 'qty' => 2] ]
         ];
 
@@ -236,7 +237,9 @@ class OrderBuilder extends Component
     {
         $this->tempCartIndex = $cartIndex;
         $item = $this->cart[$cartIndex];
-        $this->tempProductMaxSauces = (int) $item['max_sauces'];
+        // El tope es la cantidad de alitas de la variante (no se puede bañar más
+        // alitas de las que existen). Si no hay nº de alitas, cae a max_sauces.
+        $this->tempProductMaxSauces = (int) (($item['wings_count'] ?? 0) ?: ($item['max_sauces'] ?? 0));
         
         $this->tempSelectedSauces = [];
         foreach ($item['sauces'] as $s) {
@@ -270,27 +273,23 @@ class OrderBuilder extends Component
 
     public function confirmSauces()
     {
-        if ($this->getTempSaucesTotal() === (int)$this->tempProductMaxSauces || $this->getTempSaucesTotal() > 0) { // Regla de negocio: Obliga exactas o no
-             // Mapeamos array al formato del carrito
-             $mappedSauces = [];
-             foreach ($this->tempSelectedSauces as $id => $qty) {
-                 if ($qty > 0) {
-                     $sauce = $this->allSauces->firstWhere('id', $id);
-                     if ($sauce) {
-                         $mappedSauces[] = [
-                             'id' => $sauce->id,
-                             'name' => $sauce->name,
-                             'qty' => $qty
-                         ];
-                     }
-                 }
-             }
-             $this->cart[$this->tempCartIndex]['sauces'] = $mappedSauces;
-             $this->showSauceModal = false;
-             $this->saveCartToSession();
-        } else {
-            // Podrías lanzar un evento de error via Livewire/Alpine si se requiere confirmación exacta
+        // Se permite dejar vacío (sin cantidad). Solo se guardan las salsas elegidas.
+        $mappedSauces = [];
+        foreach ($this->tempSelectedSauces as $id => $qty) {
+            if ($qty > 0) {
+                $sauce = $this->allSauces->firstWhere('id', $id);
+                if ($sauce) {
+                    $mappedSauces[] = [
+                        'id' => $sauce->id,
+                        'name' => $sauce->name,
+                        'qty' => $qty,
+                    ];
+                }
+            }
         }
+        $this->cart[$this->tempCartIndex]['sauces'] = $mappedSauces;
+        $this->showSauceModal = false;
+        $this->saveCartToSession();
     }
 
     // --- Totales ---

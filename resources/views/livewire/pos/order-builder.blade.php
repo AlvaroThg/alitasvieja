@@ -698,7 +698,7 @@
                             </button>
                             <div style="display: flex; flex-wrap: wrap; gap: 0.25rem; margin-top: 0.35rem;">
                                 @foreach($item['sauces'] as $sauce)
-                                    <span class="ticket-sauce-tag">{{ $sauce['name'] }} x{{ $sauce['qty'] }}</span>
+                                    <span class="ticket-sauce-tag">{{ $sauce['name'] }}{{ ($sauce['qty'] ?? 0) > 0 ? ' · '.$sauce['qty'].' alitas' : '' }}</span>
                                 @endforeach
                             </div>
                         </div>
@@ -795,8 +795,8 @@
         <div class="sauce-modal">
             <div class="sauce-modal-header">
                 <div>
-                    <h3>Seleccionar Salsas</h3>
-                    <p>Elige hasta {{ $tempProductMaxSauces }} salsas (Llevas: {{ $this->getTempSaucesTotal() }})</p>
+                    <h3>Salsas por alitas</h3>
+                    <p>Indica cuántas alitas con cada salsa — máx. {{ $tempProductMaxSauces }} ({{ $this->getTempSaucesTotal() }} asignadas). Puedes dejarlo vacío.</p>
                 </div>
                 <button wire:click="$set('showSauceModal', false)" class="sauce-modal-close">
                     <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -835,7 +835,7 @@
 
             <div class="sauce-modal-footer">
                 <button wire:click="confirmSauces" class="btn-confirm-sauces {{ $this->getTempSaucesTotal() == $tempProductMaxSauces ? 'btn-confirm-sauces-ready' : 'btn-confirm-sauces-disabled' }}">
-                    CONFIRMAR {{ $this->getTempSaucesTotal() }}/{{ $tempProductMaxSauces }} SALSAS
+                    CONFIRMAR ({{ $this->getTempSaucesTotal() }}/{{ $tempProductMaxSauces }} alitas)
                 </button>
                 @if($this->getTempSaucesTotal() < $tempProductMaxSauces)
                     <p class="sauce-missing-text" style="margin-top:0.5rem;">Te faltan seleccionar {{ $tempProductMaxSauces - $this->getTempSaucesTotal() }} salsas</p>
