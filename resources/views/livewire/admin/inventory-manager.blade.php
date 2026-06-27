@@ -275,6 +275,9 @@
                     <label class="inv-form-label">Sucursal</label>
                     <select wire:model="formBranchId" class="inv-form-select">
                         <option value="">Seleccionar sucursal...</option>
+                        @if(!$isEdit)
+                            <option value="all">— Todas las sucursales —</option>
+                        @endif
                         @foreach($branches as $branch)
                             <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                         @endforeach

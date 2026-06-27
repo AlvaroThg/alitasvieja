@@ -31,8 +31,9 @@ class InventoryService
 
                 $product = $productVariant->product;
 
-                // REGLA: ignorar productos que no rastrean stock (ej. alitas)
-                if (!$product->tracks_stock) {
+                // REGLA: las alitas usan su propio control de stock por kilos,
+                // no este inventario. Todo lo demás (helados, bebidas, etc.) sí.
+                if ($product->is_wings) {
                     continue;
                 }
 
@@ -42,7 +43,8 @@ class InventoryService
                     ->first();
 
                 if (!$inventory) {
-                    Log::warning("No existe registro de inventario para variant {$item->product_variant_id} en branch {$order->branch_id}. Venta #{$order->order_number} de ítem {$item->id} omitida en inventario.");
+                    // El producto no está registrado en el inventario de esta sucursal:
+                    // no se descuenta (no todos los productos llevan inventario).
                     continue;
                 }
 
@@ -83,9 +85,9 @@ class InventoryService
         return DB::transaction(function () use ($productVariantId, $branchId, $newQuantity, $userId, $reason) {
             $variant = ProductVariant::with('product')->find($productVariantId);
 
-            if (!$variant || !$variant->product->tracks_stock) {
+            if (!$variant || $variant->product->is_wings) {
                 throw ValidationException::withMessages([
-                    'product_variant_id' => 'El producto no existe o no rastrea stock.',
+                    'product_variant_id' => 'El producto no existe o es de alitas (usa control de stock por kilos).',
                 ]);
             }
 
@@ -140,9 +142,9 @@ class InventoryService
         return DB::transaction(function () use ($productVariantId, $branchId, $quantity, $userId, $reason) {
             $variant = ProductVariant::with('product')->find($productVariantId);
 
-            if (!$variant || !$variant->product->tracks_stock) {
+            if (!$variant || $variant->product->is_wings) {
                 throw ValidationException::withMessages([
-                    'product_variant_id' => 'El producto no existe o no rastrea stock.',
+                    'product_variant_id' => 'El producto no existe o es de alitas (usa control de stock por kilos).',
                 ]);
             }
 

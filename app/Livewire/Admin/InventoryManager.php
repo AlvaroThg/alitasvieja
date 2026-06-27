@@ -71,7 +71,11 @@ class InventoryManager extends Component
     public function saveCreate()
     {
         $this->validate([
-            'formBranchId' => 'required|exists:branches,id',
+            'formBranchId' => ['required', function ($attr, $value, $fail) {
+                if ($value !== 'all' && !Branch::where('id', $value)->exists()) {
+                    $fail('Selecciona una sucursal válida.');
+                }
+            }],
             'formVariantId' => 'required|exists:product_variants,id',
             'formStockQuantity' => 'required|integer|min:0',
             'formMinimumAlert' => 'required|integer|min:0',
@@ -86,23 +90,38 @@ class InventoryManager extends Component
                 session()->flash('message', 'Registro de inventario actualizado.');
             }
         } else {
-            // Verificar que no exista duplicado
-            $exists = Inventory::where('product_variant_id', $this->formVariantId)
-                ->where('branch_id', $this->formBranchId)
-                ->first();
+            // "all" = crear el registro en todas las sucursales activas (omite las que ya lo tengan)
+            $branchIds = $this->formBranchId === 'all'
+                ? Branch::active()->pluck('id')->all()
+                : [$this->formBranchId];
 
-            if ($exists) {
-                $this->addError('formVariantId', 'Ya existe un registro de inventario para esta variante en esta sucursal.');
+            $created = 0;
+            foreach ($branchIds as $bid) {
+                $exists = Inventory::where('product_variant_id', $this->formVariantId)
+                    ->where('branch_id', $bid)
+                    ->exists();
+
+                if ($exists) {
+                    continue;
+                }
+
+                Inventory::create([
+                    'product_variant_id' => $this->formVariantId,
+                    'branch_id' => $bid,
+                    'stock_quantity' => $this->formStockQuantity,
+                    'minimum_alert' => $this->formMinimumAlert,
+                ]);
+                $created++;
+            }
+
+            if ($created === 0) {
+                $this->addError('formVariantId', 'Esa variante ya tenía registro de inventario en la(s) sucursal(es) seleccionada(s).');
                 return;
             }
 
-            Inventory::create([
-                'product_variant_id' => $this->formVariantId,
-                'branch_id' => $this->formBranchId,
-                'stock_quantity' => $this->formStockQuantity,
-                'minimum_alert' => $this->formMinimumAlert,
-            ]);
-            session()->flash('message', 'Registro de inventario creado.');
+            session()->flash('message', $created === 1
+                ? 'Registro de inventario creado.'
+                : "Registro de inventario creado en {$created} sucursales.");
         }
 
         $this->showCreateModal = false;
