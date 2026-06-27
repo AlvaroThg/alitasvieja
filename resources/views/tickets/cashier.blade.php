@@ -17,7 +17,7 @@
 </head>
 <body>
     <div class="text-center mb-2">
-        <h2 class="font-bold" style="margin: 0; font-size: 18px;">Alitas Vega</h2>
+        <h2 class="font-bold" style="margin: 0; font-size: 18px;">Alitas La Vieja</h2>
         <p class="text-xs" style="margin: 2px 0;">Ticket de Venta</p>
         <p class="font-bold" style="font-size: 16px;">Turno: #{{ $order->daily_number }}</p>
         <p class="text-xs">Orden {{ $order->order_number }}</p>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Usuarios - Panel de Administración - Alitas Vega</title>
+    <title>Usuarios - Panel de Administración - Alitas La Vieja</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800,900" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -95,7 +95,7 @@
     <nav class="admin-navbar">
         <div class="nav-brand">
             <div class="nav-brand-icon">🍗</div>
-            <div class="nav-brand-text">Alitas <span>Vega</span> — Admin</div>
+            <div class="nav-brand-text">Alitas <span>La Vieja</span> — Admin</div>
         </div>
         <div style="font-weight: 600;">
             {{ auth()->user()->name }}

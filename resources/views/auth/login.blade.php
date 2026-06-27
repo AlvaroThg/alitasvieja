@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Iniciar Sesión — Alitas Vega</title>
+    <title>Iniciar Sesión — Alitas La Vieja</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800,900" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -185,7 +185,7 @@
     <div class="login-card">
 
         <div class="login-icon">🍗</div>
-        <h1 class="login-title">Alitas Vega</h1>
+        <h1 class="login-title">Alitas La Vieja</h1>
         <p class="login-subtitle">Sistema POS — Acceso interno</p>
 
         @if ($errors->any())
@@ -239,7 +239,7 @@
             </button>
         </form>
 
-        <p class="login-footer">Alitas Vega © {{ date('Y') }} — Todos los derechos reservados</p>
+        <p class="login-footer">Alitas La Vieja © {{ date('Y') }} — Todos los derechos reservados</p>
     </div>
 </body>
 </html>
