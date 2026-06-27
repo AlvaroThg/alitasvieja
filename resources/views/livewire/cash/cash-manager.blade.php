@@ -139,6 +139,23 @@
                 </span>
             </div>
 
+            {{-- ═══ CAJA CHICA ═══ --}}
+            <div style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between; background: var(--bg-base); border: 1px solid var(--border); border-radius: 14px; padding: 1rem 1.25rem; margin-bottom: 1.5rem;">
+                <div>
+                    <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted);">Caja Chica</div>
+                    <div style="font-size: 1.6rem; font-weight: 800; color: {{ $pettyBalance > 0 ? '#22c55e' : 'var(--text-muted)' }};">${{ number_format($pettyBalance, 2) }}</div>
+                    <div style="font-size: 0.72rem; color: var(--text-muted); max-width: 320px;">Los egresos se pagan de aquí. Si no alcanza, se repone automáticamente desde la Caja de Venta.</div>
+                </div>
+                <form wire:submit.prevent="loadPettyCash" style="display: flex; gap: 0.5rem; align-items: flex-end;">
+                    <div class="cash-form-group" style="margin: 0;">
+                        <label class="cash-label" style="font-size: 0.7rem;">Cargar a Caja Chica ($)</label>
+                        <input type="number" step="0.01" wire:model="petty_amount" class="cash-input" placeholder="0.00" style="max-width: 150px;">
+                        @error('petty_amount') <span class="error-message">{{ $message }}</span> @enderror
+                    </div>
+                    <button type="submit" class="btn-submit" style="margin-top: 0; white-space: nowrap;">Cargar</button>
+                </form>
+            </div>
+
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
                 <!-- Formulario -->
                 <div>
@@ -147,8 +164,8 @@
                         <div class="cash-form-group">
                             <label class="cash-label">Tipo de Movimiento</label>
                             <select wire:model="type" class="cash-select">
-                                <option value="income">Entrada (Ingreso)</option>
-                                <option value="expense">Salida (Egreso)</option>
+                                <option value="income">Entrada (Ingreso a Caja de Venta)</option>
+                                <option value="expense">Salida / Egreso (desde Caja Chica)</option>
                             </select>
                             @error('type') <span class="error-message">{{ $message }}</span> @enderror
                         </div>
@@ -182,7 +199,13 @@
                         @forelse($movements as $mov)
                             <div class="movement-item {{ $mov->type }}">
                                 <div class="movement-details">
-                                    <h4>{{ $mov->concept }}</h4>
+                                    <h4>{{ $mov->concept }}
+                                        @if($mov->cash_box === 'petty')
+                                            <span style="font-size:0.6rem; font-weight:700; color:#a78bfa; border:1px solid rgba(167,139,250,0.4); border-radius:6px; padding:0.05rem 0.3rem; margin-left:0.25rem;">CAJA CHICA</span>
+                                        @elseif($mov->cash_box === 'transfer')
+                                            <span style="font-size:0.6rem; font-weight:700; color:#60a5fa; border:1px solid rgba(96,165,250,0.4); border-radius:6px; padding:0.05rem 0.3rem; margin-left:0.25rem;">TRASPASO</span>
+                                        @endif
+                                    </h4>
                                     <p>{{ $mov->created_at->format('H:i') }} - {{ $mov->reference ?? 'Sin ref.' }}</p>
                                 </div>
                                 <div class="movement-amount {{ $mov->type }}">

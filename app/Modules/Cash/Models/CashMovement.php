@@ -12,6 +12,7 @@ class CashMovement extends Model
         'cash_session_id',
         'user_id',
         'type',
+        'cash_box',
         'amount',
         'concept',
         'reference',

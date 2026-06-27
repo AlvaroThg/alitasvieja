@@ -18,6 +18,8 @@ class CashManager extends Component
     public $concept = '';
     public $reference = '';
 
+    public $petty_amount = '';
+
     public function mount(CashService $cashService)
     {
         $this->loadSession($cashService);
@@ -59,13 +61,18 @@ class CashManager extends Component
         ]);
 
         if ($this->session) {
-            $cashService->addMovement($this->session, Auth::id(), [
-                'type' => $this->type,
-                'amount' => $this->amount,
-                'concept' => $this->concept,
-                'reference' => $this->reference,
-            ]);
-            
+            if ($this->type === 'expense') {
+                // Los egresos se pagan desde la Caja Chica (con traspaso automático si no alcanza).
+                $cashService->registerPettyExpense($this->session, Auth::id(), (float) $this->amount, $this->concept, $this->reference ?: null);
+            } else {
+                $cashService->addMovement($this->session, Auth::id(), [
+                    'type' => 'income',
+                    'amount' => $this->amount,
+                    'concept' => $this->concept,
+                    'reference' => $this->reference,
+                ]);
+            }
+
             $this->amount = '';
             $this->concept = '';
             $this->reference = '';
@@ -73,11 +80,30 @@ class CashManager extends Component
         }
     }
 
+    public function loadPettyCash(CashService $cashService)
+    {
+        $this->validate(['petty_amount' => 'required|numeric|min:0.01']);
+
+        if ($this->session) {
+            $cashService->loadPettyCash($this->session, Auth::id(), (float) $this->petty_amount);
+            $this->petty_amount = '';
+            $this->loadSession($cashService);
+        }
+    }
+
     public function render()
     {
         $movements = $this->session ? $this->session->movements()->latest()->get() : [];
+
+        $pettyBalance = 0.0;
+        $branchId = Auth::user()->activeBranchId();
+        if ($branchId) {
+            $pettyBalance = (float) (\App\Models\Branch::find($branchId)->petty_cash_balance ?? 0);
+        }
+
         return view('livewire.cash.cash-manager', [
-            'movements' => $movements
+            'movements' => $movements,
+            'pettyBalance' => $pettyBalance,
         ]);
     }
 }

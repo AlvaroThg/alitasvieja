@@ -2,6 +2,7 @@
 
 namespace App\Modules\Cash\Services;
 
+use App\Models\Branch;
 use App\Modules\Cash\Models\CashMovement;
 use App\Modules\Cash\Models\CashSession;
 use Illuminate\Support\Facades\DB;
@@ -77,6 +78,107 @@ class CashService
             'concept'         => $data['concept'],
             'reference'       => $data['reference'] ?? null,
         ]);
+    }
+
+    /**
+     * Registra un egreso pagado desde la Caja Chica.
+     * Si la Caja Chica no tiene saldo suficiente, traspasa automáticamente la
+     * diferencia desde la Caja de Venta (si esta tiene fondos suficientes).
+     *
+     * @throws ValidationException
+     */
+    public function registerPettyExpense(CashSession $session, int $userId, float $amount, string $concept, ?string $reference = null): void
+    {
+        if (!$session->is_open) {
+            throw ValidationException::withMessages(['session' => 'La sesión de caja ya está cerrada.']);
+        }
+        if ($amount <= 0) {
+            throw ValidationException::withMessages(['amount' => 'El monto debe ser mayor a 0.']);
+        }
+        if (empty($concept)) {
+            throw ValidationException::withMessages(['concept' => 'El concepto del egreso es obligatorio.']);
+        }
+
+        DB::transaction(function () use ($session, $userId, $amount, $concept, $reference) {
+            $branch = Branch::where('id', $session->branch_id)->lockForUpdate()->first();
+            $pettyBalance = (float) $branch->petty_cash_balance;
+
+            // Si la Caja Chica no alcanza, reponer la diferencia desde la Caja de Venta.
+            if ($amount > $pettyBalance) {
+                $shortfall = round($amount - $pettyBalance, 2);
+                $salesAvailable = $session->fresh()->calculateExpected();
+
+                if ($salesAvailable + 0.001 < $shortfall) {
+                    throw ValidationException::withMessages([
+                        'amount' => 'Caja de Venta no tiene saldo suficiente para reponer la Caja Chica (faltan '
+                            . number_format($shortfall, 2) . ' Bs).',
+                    ]);
+                }
+
+                CashMovement::create([
+                    'cash_session_id' => $session->id,
+                    'user_id'         => $userId,
+                    'type'            => 'expense',
+                    'cash_box'        => 'transfer',
+                    'amount'          => $shortfall,
+                    'concept'         => 'Traspaso automático a Caja Chica',
+                    'reference'       => null,
+                ]);
+                $pettyBalance += $shortfall;
+            }
+
+            CashMovement::create([
+                'cash_session_id' => $session->id,
+                'user_id'         => $userId,
+                'type'            => 'expense',
+                'cash_box'        => 'petty',
+                'amount'          => $amount,
+                'concept'         => $concept,
+                'reference'       => $reference,
+            ]);
+
+            $branch->petty_cash_balance = round($pettyBalance - $amount, 2);
+            $branch->save();
+        });
+    }
+
+    /**
+     * Carga manual de fondos a la Caja Chica, traspasados desde la Caja de Venta.
+     *
+     * @throws ValidationException
+     */
+    public function loadPettyCash(CashSession $session, int $userId, float $amount): void
+    {
+        if (!$session->is_open) {
+            throw ValidationException::withMessages(['session' => 'La sesión de caja ya está cerrada.']);
+        }
+        if ($amount <= 0) {
+            throw ValidationException::withMessages(['petty_amount' => 'El monto debe ser mayor a 0.']);
+        }
+
+        DB::transaction(function () use ($session, $userId, $amount) {
+            $branch = Branch::where('id', $session->branch_id)->lockForUpdate()->first();
+            $salesAvailable = $session->fresh()->calculateExpected();
+
+            if ($salesAvailable + 0.001 < $amount) {
+                throw ValidationException::withMessages([
+                    'petty_amount' => 'Caja de Venta no tiene saldo suficiente para esta carga.',
+                ]);
+            }
+
+            CashMovement::create([
+                'cash_session_id' => $session->id,
+                'user_id'         => $userId,
+                'type'            => 'expense',
+                'cash_box'        => 'transfer',
+                'amount'          => $amount,
+                'concept'         => 'Carga manual a Caja Chica',
+                'reference'       => null,
+            ]);
+
+            $branch->petty_cash_balance = round((float) $branch->petty_cash_balance + $amount, 2);
+            $branch->save();
+        });
     }
 
     /**
