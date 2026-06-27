@@ -47,10 +47,11 @@ RUN composer install \
 FROM node:20-alpine AS frontend
 
 WORKDIR /app
-COPY package.json package-lock.json ./
-RUN npm ci --ignore-scripts
+RUN corepack enable
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile --ignore-scripts
 COPY . .
-RUN npm run build
+RUN pnpm run build
 
 # ─── Etapa 4: Imagen final de producción ──────────────────────────────────────
 FROM base AS production

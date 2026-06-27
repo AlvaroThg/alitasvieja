@@ -46,7 +46,7 @@ cd alitasvega
 composer install
 
 # 3. Instalar dependencias JS
-npm install && npm run dev
+pnpm install && pnpm run dev
 
 # 4. Configurar el entorno
 cp .env.example .env
