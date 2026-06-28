@@ -664,8 +664,16 @@
                 <h4 class="variants-title">Selecciona una variante:</h4>
                 <div class="variants-grid">
                     @foreach($variants as $variant)
-                        <button wire:click="addVariant({{ $variant->id }})" class="variant-btn">
-                            <span class="variant-name">{{ $variant->name }}</span>
+                        @php $st = $this->availableStock($variant->id); @endphp
+                        <button wire:click="addVariant({{ $variant->id }})" class="variant-btn" @if($st !== null && $st <= 0) disabled style="opacity:0.55; cursor:not-allowed;" @endif>
+                            <span class="variant-name">
+                                {{ $variant->name }}
+                                @if($st !== null)
+                                    <span style="display:block; font-size:0.65rem; font-weight:700; margin-top:2px; color: {{ $st <= 0 ? '#ef4444' : ($st <= 3 ? '#f97316' : 'var(--text-muted)') }};">
+                                        {{ $st <= 0 ? 'Agotado' : 'Quedan: '.$st }}
+                                    </span>
+                                @endif
+                            </span>
                             <span class="variant-price">Bs. {{ number_format($this->priceFor($variant), 2) }}</span>
                         </button>
                     @endforeach
@@ -794,6 +802,13 @@
                 printWindow.focus();
             }
         }
+
+        document.addEventListener('livewire:init', () => {
+            Livewire.on('stock-alert', (e) => {
+                const msg = Array.isArray(e) ? (e[0]?.message) : e?.message;
+                if (msg) window.alert(msg);
+            });
+        });
     </script>
 
     <!-- Modal de Salsas Drawer/Overlay -->

@@ -8,6 +8,7 @@ use App\Modules\Menu\Models\Category;
 use App\Modules\Menu\Models\Product;
 use App\Modules\Menu\Models\ProductVariant;
 use App\Modules\Menu\Models\Sauce;
+use App\Modules\Inventory\Models\Inventory;
 use App\Modules\Promotions\Models\Promotion;
 use Illuminate\Support\Facades\Log;
 
@@ -176,16 +177,55 @@ class OrderBuilder extends Component
         }
     }
 
+    /**
+     * Stock disponible de una variante en la sucursal activa.
+     * Devuelve null si el producto no controla stock (alitas o sin registro de inventario).
+     */
+    public function availableStock($variantId)
+    {
+        $variant = ProductVariant::with('product')->find($variantId);
+        if (!$variant || !$variant->product || $variant->product->is_wings) {
+            return null;
+        }
+        $branchId = auth()->user()?->activeBranchId() ?? 1;
+        $inv = Inventory::where('product_variant_id', $variantId)
+            ->where('branch_id', $branchId)
+            ->first();
+
+        return $inv ? (int) $inv->stock_quantity : null;
+    }
+
     public function addVariant($variantId)
     {
         $variant = ProductVariant::with(['product', 'prices'])->find($variantId);
         if (!$variant) return;
+
+        // Validar stock disponible (productos con inventario).
+        $stock = $this->availableStock($variant->id);
+        if ($stock !== null) {
+            $inCart = collect($this->cart)->where('variant_id', $variant->id)->sum('quantity');
+            if ($inCart + 1 > $stock) {
+                $this->dispatch('stock-alert', message: 'Cantidad de Stock de producto insuficiente. Quedan: ' . max(0, $stock) . '.');
+                return;
+            }
+        }
 
         // Determinar precio por sucursal
         $user = auth()->user();
         $branchId = $user ? $user->activeBranchId() : 1;
         $branchPriceRecord = $variant->prices->firstWhere('branch_id', $branchId);
         $finalPrice = $branchPriceRecord ? $branchPriceRecord->price : $variant->price;
+
+        // Unir productos idénticos: misma variante, sin salsas y sin nota → acumula cantidad.
+        if (!$variant->product->has_sauces) {
+            foreach ($this->cart as $i => $existing) {
+                if ($existing['variant_id'] === $variant->id && empty($existing['sauces']) && empty($existing['notes'])) {
+                    $this->cart[$i]['quantity']++;
+                    $this->saveCartToSession();
+                    return;
+                }
+            }
+        }
 
         $cartItem = [
             'id' => uniqid(),
@@ -212,6 +252,15 @@ class OrderBuilder extends Component
     public function incrementQty($index)
     {
         if (isset($this->cart[$index])) {
+            // Validar stock disponible antes de aumentar.
+            $stock = $this->availableStock($this->cart[$index]['variant_id']);
+            if ($stock !== null) {
+                $inCart = collect($this->cart)->where('variant_id', $this->cart[$index]['variant_id'])->sum('quantity');
+                if ($inCart + 1 > $stock) {
+                    $this->dispatch('stock-alert', message: 'Cantidad de Stock de producto insuficiente. Quedan: ' . max(0, $stock) . '.');
+                    return;
+                }
+            }
             $this->cart[$index]['quantity']++;
             $this->saveCartToSession();
         }
