@@ -47,7 +47,7 @@
                     <br><span class="text-xs" style="font-style: italic;">* {{ $item->notes }}</span>
                 @endif
             </td>
-            <td class="text-right" style="width: 30%">${{ number_format($item->subtotal, 2) }}</td>
+            <td class="text-right" style="width: 30%">Bs. {{ number_format($item->subtotal, 2) }}</td>
         </tr>
         @endforeach
     </table>
@@ -57,7 +57,7 @@
     <table>
         <tr>
             <td class="font-bold">Subtotal:</td>
-            <td class="text-right">${{ number_format($order->subtotal, 2) }}</td>
+            <td class="text-right">Bs. {{ number_format($order->subtotal, 2) }}</td>
         </tr>
         @if($order->discount > 0)
         <tr>
@@ -67,12 +67,12 @@
                     <br><span class="text-xs" style="font-weight: normal; font-style: italic;">({{ $order->appliedPromotion->promotion->name }})</span>
                 @endif
             </td>
-            <td class="text-right">-${{ number_format($order->discount, 2) }}</td>
+            <td class="text-right">-Bs. {{ number_format($order->discount, 2) }}</td>
         </tr>
         @endif
         <tr>
             <td class="font-bold" style="font-size: 14px;">TOTAL:</td>
-            <td class="text-right font-bold" style="font-size: 14px;">${{ number_format($order->total, 2) }}</td>
+            <td class="text-right font-bold" style="font-size: 14px;">Bs. {{ number_format($order->total, 2) }}</td>
         </tr>
     </table>
 

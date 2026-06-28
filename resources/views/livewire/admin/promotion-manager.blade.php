@@ -185,7 +185,7 @@
                             @if($promo->discount_type === 'percentage')
                                 {{ $promo->discount_value }}% OFF
                             @elseif($promo->discount_type === 'fixed')
-                                -${{ number_format($promo->discount_value, 2) }}
+                                -Bs. {{ number_format($promo->discount_value, 2) }}
                             @else
                                 Gratis x{{ $promo->free_quantity }}
                             @endif
@@ -269,13 +269,13 @@
                         <label class="promo-form-label">Tipo de Descuento</label>
                         <select wire:model.live="discount_type" class="promo-form-select">
                             <option value="percentage">% Porcentaje</option>
-                            <option value="fixed">$ Monto Fijo</option>
+                            <option value="fixed">Bs. Monto Fijo</option>
                             <option value="free_item">Artículo Gratis</option>
                         </select>
                     </div>
                     @if($discount_type !== 'free_item')
                     <div class="promo-form-group">
-                        <label class="promo-form-label">Valor del Descuento {{ $discount_type === 'percentage' ? '(%)' : '($)' }}</label>
+                        <label class="promo-form-label">Valor del Descuento {{ $discount_type === 'percentage' ? '(%)' : '(Bs.)' }}</label>
                         <input wire:model="discount_value" type="number" step="0.01" min="0" class="promo-form-input" placeholder="Ej: 15">
                     </div>
                     @endif
@@ -300,7 +300,7 @@
                 @endif
 
                 <div class="promo-form-group">
-                    <label class="promo-form-label">Pedido Mínimo ($) — Condición opcional</label>
+                    <label class="promo-form-label">Pedido Mínimo (Bs.) — Condición opcional</label>
                     <input wire:model="conditions_min_order" type="number" step="0.01" min="0" class="promo-form-input" placeholder="Ej: 200.00 (dejar vacío = sin mínimo)">
                 </div>
 
