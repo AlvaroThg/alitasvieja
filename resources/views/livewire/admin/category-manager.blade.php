@@ -25,7 +25,13 @@
     </style>
 
     <div class="cm-header">
-        <h2 class="cm-title">Gestión de Categorías</h2>
+        <div>
+            <h2 class="cm-title">Categorías de Productos</h2>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.35rem; max-width: 560px;">
+                Agrupan tus productos por tipo. Por ejemplo, la categoría <strong>"Alitas"</strong> contiene productos como <strong>"Alitas Clásicas"</strong>;
+                la categoría <strong>"Helados"</strong> contiene <strong>"Helado de Fresa"</strong>, etc.
+            </p>
+        </div>
         <button wire:click="create" class="btn-add">+ Nueva Categoría</button>
     </div>
 
