@@ -1,5 +1,6 @@
 <div class="product-manager-container">
     <style>
+        [x-cloak] { display: none !important; }
         .pm-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
         .pm-title { color: var(--text-strong); font-size: 1.5rem; font-weight: 800; }
         .btn-add { background: linear-gradient(135deg, #dc2626, #b91c1c); color: var(--text-strong); padding: 0.6rem 1.25rem; border-radius: 12px; font-weight: 700; border: none; cursor: pointer; }
@@ -37,6 +38,13 @@
         <button wire:click="create" class="btn-add">+ Nuevo Producto</button>
     </div>
 
+    @if(session()->has('message'))
+        <div style="background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); color: #22c55e; padding: 0.75rem 1rem; border-radius: 10px; font-size: 0.85rem; font-weight: 600; margin-bottom: 1rem;">{{ session('message') }}</div>
+    @endif
+    @if(session()->has('error'))
+        <div style="background: rgba(220,38,38,0.1); border: 1px solid rgba(220,38,38,0.3); color: #f87171; padding: 0.75rem 1rem; border-radius: 10px; font-size: 0.85rem; font-weight: 600; margin-bottom: 1rem;">{{ session('error') }}</div>
+    @endif
+
     <table class="pm-table">
         <thead>
             <tr>
@@ -59,7 +67,12 @@
                 </td>
                 <td>{{ $product->variants->count() }}</td>
                 <td>
-                    <button wire:click="edit({{ $product->id }})" style="background: transparent; border: none; color: #f97316; cursor: pointer; text-decoration: underline;">Editar</button>
+                    <div style="display: flex; gap: 0.75rem; align-items: center;">
+                        <button wire:click="edit({{ $product->id }})" style="background: transparent; border: none; color: #f97316; cursor: pointer; text-decoration: underline;">Editar</button>
+                        <button wire:click="confirmDeleteProduct({{ $product->id }})" title="Eliminar" style="background: transparent; border: none; color: #ef4444; cursor: pointer; display: inline-flex; align-items: center;">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </div>
                 </td>
             </tr>
             @endforeach
@@ -76,6 +89,7 @@
                     <div class="form-group">
                         <label class="form-label">Nombre del Producto</label>
                         <input type="text" wire:model="name" class="form-input">
+                        @error('name') <p style="color: #f87171; font-size: 0.75rem; margin-top: 0.25rem;">{{ $message }}</p> @enderror
                     </div>
                     <div class="form-group">
                         <label class="form-label">Categoría</label>
@@ -136,7 +150,14 @@
                             <span class="form-label">Piezas</span>
                             <span class="form-label">Max Salsas</span>
                         @endif
-                        <span class="form-label" style="color: #f97316;" title="Se usa cuando una sucursal no tiene precio propio. Si pones precio por sucursal, ese manda.">Precio general</span>
+                        <span class="form-label" style="color: #f97316; position: relative; display: inline-flex; align-items: center; gap: 4px;" x-data="{ open: false }">
+                            Precio general
+                            <button type="button" @click="open = !open" style="background: var(--border-strong); color: var(--text-strong); border: none; width: 15px; height: 15px; border-radius: 50%; font-size: 0.6rem; font-weight: 700; cursor: pointer; line-height: 1; flex-shrink: 0;">?</button>
+                            <div x-show="open" x-cloak @click.outside="open = false"
+                                 style="position: absolute; top: 130%; left: 0; z-index: 70; background: var(--bg-elevated); border: 1px solid var(--border-strong); border-radius: 10px; padding: 0.65rem 0.8rem; width: 240px; font-size: 0.72rem; color: var(--text-secondary); font-weight: 400; text-transform: none; letter-spacing: normal; line-height: 1.4; box-shadow: 0 8px 24px rgba(0,0,0,0.35);">
+                                Es el precio que se usa cuando una sucursal <strong>no tiene precio propio</strong>. Si pones un precio por sucursal, ese manda.
+                            </div>
+                        </span>
                         @foreach($branches as $b)
                             <span class="form-label" style="color: #38bdf8;">{{ $b->name }}</span>
                         @endforeach
@@ -159,6 +180,14 @@
 
                         <button wire:click="removeVariant({{ $index }})" class="btn-remove">X</button>
                     </div>
+                    @error('variants.'.$index.'.price')
+                        <p style="color: #f87171; font-size: 0.75rem; margin: -0.25rem 0 0.5rem 0;">{{ $message }}</p>
+                    @enderror
+                    @foreach($branches as $b)
+                        @error('variants.'.$index.'.branch_prices.'.$b->id)
+                            <p style="color: #f87171; font-size: 0.75rem; margin: -0.25rem 0 0.5rem 0;">{{ $message }}</p>
+                        @enderror
+                    @endforeach
                     @endforeach
                 </div>
             </div>
@@ -166,6 +195,21 @@
             <div class="modal-actions">
                 <button wire:click="$set('showModal', false)" class="btn-cancel">Cancelar</button>
                 <button wire:click="save" class="btn-save">Guardar Producto</button>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    @if($showDeleteModal)
+    <div class="pm-modal">
+        <div class="pm-modal-content" style="max-width: 420px;">
+            <h3 style="color: var(--text-strong); margin-bottom: 0.75rem; font-size: 1.2rem;">Eliminar producto</h3>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;">
+                ¿Seguro que quieres eliminar <strong>"{{ $deleteProductName }}"</strong>? Esta acción no se puede deshacer.
+            </p>
+            <div class="modal-actions">
+                <button wire:click="$set('showDeleteModal', false)" class="btn-cancel">Cancelar</button>
+                <button wire:click="deleteProduct" class="btn-save" style="background: #ef4444;">Sí, eliminar</button>
             </div>
         </div>
     </div>

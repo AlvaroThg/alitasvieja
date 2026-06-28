@@ -5,6 +5,7 @@ namespace App\Livewire\Admin;
 use Livewire\Component;
 use App\Modules\Menu\Models\Product;
 use App\Modules\Menu\Models\Category;
+use Illuminate\Validation\Rule;
 use App\Modules\Menu\Models\ProductPrice;
 
 class ProductManager extends Component
@@ -16,6 +17,11 @@ class ProductManager extends Component
     public $showModal = false;
     public $isEdit = false;
     public $productId;
+
+    // Eliminar
+    public $showDeleteModal = false;
+    public $deleteProductId = null;
+    public $deleteProductName = '';
 
     // Product form fields
     public $category_id;
@@ -105,16 +111,74 @@ class ProductManager extends Component
         $this->variants = array_values($this->variants);
     }
 
+    public function confirmDeleteProduct($id)
+    {
+        $product = Product::find($id);
+        if (!$product) return;
+        $this->deleteProductId = $id;
+        $this->deleteProductName = $product->name;
+        $this->showDeleteModal = true;
+    }
+
+    public function deleteProduct()
+    {
+        $product = Product::with('variants')->find($this->deleteProductId);
+        if (!$product) {
+            $this->showDeleteModal = false;
+            return;
+        }
+
+        $variantIds = $product->variants->pluck('id')->all();
+
+        // Si el producto ya fue usado en pedidos, no se borra (se debe desactivar).
+        $usedInOrders = \Illuminate\Support\Facades\DB::table('order_items')
+            ->whereIn('product_variant_id', $variantIds)->exists();
+
+        if ($usedInOrders) {
+            $this->showDeleteModal = false;
+            session()->flash('error', 'No se puede eliminar "' . $product->name . '": ya tiene pedidos registrados. Desactívalo en su lugar.');
+            return;
+        }
+
+        foreach ($product->variants as $variant) {
+            \App\Models\ProductPrice::where('product_variant_id', $variant->id)->delete();
+            \App\Modules\Inventory\Models\Inventory::where('product_variant_id', $variant->id)->delete();
+            \App\Modules\Inventory\Models\InventoryMovement::where('product_variant_id', $variant->id)->delete();
+            $variant->delete();
+        }
+        $product->delete();
+
+        $this->showDeleteModal = false;
+        $this->deleteProductId = null;
+        $this->loadData();
+        session()->flash('message', 'Producto eliminado.');
+    }
+
     public function save()
     {
         $this->validate([
             'category_id' => 'required|exists:categories,id',
-            'name' => 'required|string|max:255',
+            'name' => ['required', 'string', 'max:255', Rule::unique('products', 'name')->ignore($this->productId)],
             'variants' => 'required|array|min:1',
             // El nombre de la variante es opcional (un producto simple no necesita nombre de variante).
             'variants.*.name' => 'nullable|string|max:255',
             'variants.*.price' => 'nullable|numeric|min:0',
+            'variants.*.branch_prices.*' => 'nullable|numeric|min:0',
+        ], [
+            'name.unique' => 'Ya existe un producto con ese nombre.',
+            'variants.*.price.min' => 'El precio no puede ser negativo.',
+            'variants.*.branch_prices.*.min' => 'El precio por sucursal no puede ser negativo.',
         ]);
+
+        // Cada variante debe tener al menos un precio (general o por sucursal).
+        foreach ($this->variants as $i => $v) {
+            $hasGeneral = is_numeric($v['price'] ?? null) && (float) $v['price'] > 0;
+            $hasBranch = collect($v['branch_prices'] ?? [])->contains(fn ($p) => is_numeric($p) && (float) $p > 0);
+            if (!$hasGeneral && !$hasBranch) {
+                $this->addError("variants.{$i}.price", 'Debe ingresar el precio del producto.');
+                return;
+            }
+        }
 
         $productData = [
             'category_id' => $this->category_id,
