@@ -553,8 +553,9 @@
             color: var(--text);
             font-size: 0.85rem;
         }
-        .sauce-spice { margin-top: 0.2rem; }
+        .sauce-spice { margin-top: 0.2rem; display: flex; flex-direction: row; flex-wrap: wrap; gap: 2px; align-items: center; }
         .sauce-spice span { font-size: 0.6rem; }
+        .sauce-spice svg { display: block; flex-shrink: 0; }
         .sauce-counter {
             display: flex;
             align-items: center;
@@ -665,7 +666,7 @@
                     @foreach($variants as $variant)
                         <button wire:click="addVariant({{ $variant->id }})" class="variant-btn">
                             <span class="variant-name">{{ $variant->name }}</span>
-                            <span class="variant-price">${{ number_format($variant->price, 2) }}</span>
+                            <span class="variant-price">Bs. {{ number_format($this->priceFor($variant), 2) }}</span>
                         </button>
                     @endforeach
                 </div>
@@ -688,7 +689,13 @@
                             <h4 class="ticket-item-name">{{ $item['product_name'] }}</h4>
                             <span class="ticket-item-variant">{{ $item['variant_name'] }}</span>
                         </div>
-                        <span class="ticket-item-price">${{ number_format($item['price'] * $item['quantity'], 2) }}</span>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span class="ticket-item-price">Bs. {{ number_format($item['price'] * $item['quantity'], 2) }}</span>
+                            <button wire:click="removeItem({{ $index }})" title="Quitar del pedido"
+                                    style="background: transparent; border: none; color: #ef4444; cursor: pointer; padding: 2px; display: flex; align-items: center;">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            </button>
+                        </div>
                     </div>
 
                     @if($item['has_sauces'])
@@ -759,17 +766,17 @@
             @if($discountAmount > 0)
                 <div class="promo-discount-row">
                     <span class="ticket-total-label">Subtotal</span>
-                    <span style="font-size: 0.9rem; font-weight: 700; color: var(--text-muted);">${{ number_format($this->subtotal, 2) }}</span>
+                    <span style="font-size: 0.9rem; font-weight: 700; color: var(--text-muted);">Bs. {{ number_format($this->subtotal, 2) }}</span>
                 </div>
                 <div class="promo-discount-row">
                     <span class="promo-discount-label">Descuento</span>
-                    <span class="promo-discount-value">-${{ number_format($discountAmount, 2) }}</span>
+                    <span class="promo-discount-value">-Bs. {{ number_format($discountAmount, 2) }}</span>
                 </div>
             @endif
 
             <div class="ticket-total-row">
                 <span class="ticket-total-label">Total a Pagar</span>
-                <span class="ticket-total-value">${{ number_format($this->total, 2) }}</span>
+                <span class="ticket-total-value">Bs. {{ number_format($this->total, 2) }}</span>
             </div>
             
             <button wire:click="submitOrder" class="btn-send-kitchen">
@@ -877,7 +884,7 @@
                                     @if(data_get($promo, 'discount_type') === 'percentage')
                                         {{ data_get($promo, 'discount_value') }}% OFF
                                     @elseif(data_get($promo, 'discount_type') === 'fixed')
-                                        -${{ number_format(data_get($promo, 'discount_value'), 2) }}
+                                        -Bs. {{ number_format(data_get($promo, 'discount_value'), 2) }}
                                     @else
                                         Gratis x{{ data_get($promo, 'free_quantity') }}
                                     @endif

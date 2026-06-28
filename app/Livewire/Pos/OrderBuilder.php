@@ -126,8 +126,8 @@ class OrderBuilder extends Component
         $minOrder = $promo->conditions['min_order_total'] ?? null;
         if ($minOrder !== null && $subtotal < (float) $minOrder) {
             $this->discountAmount = 0;
-            $this->promotionWarning = 'Esta promoción requiere un pedido mínimo de $'
-                . number_format((float) $minOrder, 2) . ' (subtotal actual: $' . number_format($subtotal, 2) . ').';
+            $this->promotionWarning = 'Esta promoción requiere un pedido mínimo de Bs. '
+                . number_format((float) $minOrder, 2) . ' (subtotal actual: Bs. ' . number_format($subtotal, 2) . ').';
             return;
         }
 
@@ -149,8 +149,22 @@ class OrderBuilder extends Component
         $this->variants = [];
         $this->products = Product::where('category_id', $categoryId)
             ->where('is_active', true)
-            ->with('variants')
+            ->with('variants.prices')
             ->get();
+    }
+
+    /**
+     * Precio a mostrar/cobrar para una variante según la sucursal activa.
+     * Usa el precio de la sucursal; si no existe, cae al precio base.
+     */
+    public function priceFor($variant)
+    {
+        $branchId = auth()->user()?->activeBranchId() ?? 1;
+        $branchPrice = $variant->relationLoaded('prices')
+            ? $variant->prices->firstWhere('branch_id', $branchId)
+            : null;
+
+        return $branchPrice ? $branchPrice->price : $variant->price;
     }
 
     public function selectProduct($productId)
