@@ -161,11 +161,12 @@ class OrderBuilder extends Component
     public function priceFor($variant)
     {
         $branchId = auth()->user()?->activeBranchId() ?? 1;
-        $branchPrice = $variant->relationLoaded('prices')
-            ? $variant->prices->firstWhere('branch_id', $branchId)
-            : null;
+        // Consulta directa: la relación 'prices' no sobrevive al re-render de Livewire.
+        $branchPrice = \App\Models\ProductPrice::where('product_variant_id', $variant->id)
+            ->where('branch_id', $branchId)
+            ->value('price');
 
-        return $branchPrice ? $branchPrice->price : $variant->price;
+        return $branchPrice !== null ? $branchPrice : $variant->price;
     }
 
     public function selectProduct($productId)
@@ -409,6 +410,15 @@ class OrderBuilder extends Component
                 'notes' => $item['notes'] ?? null,
                 'sauces' => $saucesData
             ]);
+        }
+
+        // Descontar inventario al enviar a cocina (helados, bebidas, etc.).
+        // Las alitas se ignoran (usan su propio control de stock).
+        try {
+            app(\App\Modules\Inventory\Services\InventoryService::class)
+                ->decrementOnSale($order->load('items'));
+        } catch (\Throwable $e) {
+            Log::warning('Inventario no descontado: ' . $e->getMessage());
         }
 
         // Cambiar estado a mesa

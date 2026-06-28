@@ -88,10 +88,8 @@ class CheckoutService
                 'closed_at'      => now(),
             ]);
 
-            // MODIFICADO: Descontar inventario (sin try-catch para garantizar rollback atómico si falla)
-            $inventoryService = app(\App\Modules\Inventory\Services\InventoryService::class);
-            $inventoryService->decrementOnSale($order);
-            // FIN MODIFICADO
+            // NOTA: el inventario se descuenta al ENVIAR A COCINA (submitOrder),
+            // no aquí, para que el stock refleje el consumo apenas se hace el pedido.
         });
     }
 }
