@@ -162,7 +162,7 @@ class OrderBuilder extends Component
     {
         $branchId = auth()->user()?->activeBranchId() ?? 1;
         // Consulta directa: la relación 'prices' no sobrevive al re-render de Livewire.
-        $branchPrice = \App\Models\ProductPrice::where('product_variant_id', $variant->id)
+        $branchPrice = \App\Modules\Menu\Models\ProductPrice::where('product_variant_id', $variant->id)
             ->where('branch_id', $branchId)
             ->value('price');
 

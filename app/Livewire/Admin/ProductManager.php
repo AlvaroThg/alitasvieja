@@ -141,7 +141,7 @@ class ProductManager extends Component
         }
 
         foreach ($product->variants as $variant) {
-            \App\Models\ProductPrice::where('product_variant_id', $variant->id)->delete();
+            ProductPrice::where('product_variant_id', $variant->id)->delete();
             \App\Modules\Inventory\Models\Inventory::where('product_variant_id', $variant->id)->delete();
             \App\Modules\Inventory\Models\InventoryMovement::where('product_variant_id', $variant->id)->delete();
             $variant->delete();
