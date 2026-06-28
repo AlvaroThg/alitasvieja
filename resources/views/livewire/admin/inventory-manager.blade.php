@@ -286,15 +286,31 @@
                 </div>
 
                 <div class="inv-form-group">
-                    <label class="inv-form-label">Producto / Variante</label>
-                    <select wire:model="formVariantId" class="inv-form-select">
-                        <option value="">Seleccionar variante...</option>
-                        @foreach($variants as $variant)
-                            <option value="{{ $variant->id }}">{{ $variant->product->name ?? '' }} — {{ $variant->name }} (Bs. {{ number_format($variant->price, 2) }})</option>
+                    <label class="inv-form-label">Producto</label>
+                    <select wire:model.live="formProductId" class="inv-form-select">
+                        <option value="">Seleccionar producto...</option>
+                        @foreach($products as $p)
+                            <option value="{{ $p->id }}">{{ $p->name }}</option>
                         @endforeach
                     </select>
-                    @error('formVariantId') <p class="inv-error">{{ $message }}</p> @enderror
+                    @error('formProductId') <p class="inv-error">{{ $message }}</p> @enderror
                 </div>
+
+                @php $selProduct = $products->firstWhere('id', (int) $formProductId); @endphp
+                @if($selProduct && $selProduct->variants->count() > 1)
+                    <div class="inv-form-group">
+                        <label class="inv-form-label">Variante</label>
+                        <select wire:model="formVariantId" class="inv-form-select">
+                            <option value="">Seleccionar variante...</option>
+                            @foreach($selProduct->variants as $v)
+                                <option value="{{ $v->id }}">{{ $v->name }}</option>
+                            @endforeach
+                        </select>
+                        @error('formVariantId') <p class="inv-error">{{ $message }}</p> @enderror
+                    </div>
+                @else
+                    @error('formVariantId') <p class="inv-error">{{ $message }}</p> @enderror
+                @endif
 
                 <div class="inv-form-row">
                     <div class="inv-form-group">

@@ -67,14 +67,15 @@ class PosStagingSeeder extends Seeder
         $prodId = DB::table('products')->insertGetId([
             'category_id' => $catId,
             'name' => 'Alitas Clásicas',
+            'is_wings' => true,
             'has_sauces' => true,
             'max_sauces' => 2,
             'created_at' => now()
         ]);
 
         DB::table('product_variants')->insert([
-            ['product_id' => $prodId, 'name' => '5 Piezas', 'price' => 80.00, 'created_at' => now()],
-            ['product_id' => $prodId, 'name' => '10 Piezas', 'price' => 150.00, 'created_at' => now()]
+            ['product_id' => $prodId, 'name' => '5 Piezas', 'price' => 80.00, 'wings_count' => 5, 'max_sauces' => 2, 'created_at' => now()],
+            ['product_id' => $prodId, 'name' => '10 Piezas', 'price' => 150.00, 'wings_count' => 10, 'max_sauces' => 3, 'created_at' => now()]
         ]);
         
         $this->command->info('¡Datos de Staging (Usuario, Salsas y Mesas) cargados correctamente!');

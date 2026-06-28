@@ -5,6 +5,7 @@ namespace App\Livewire\Admin;
 use App\Models\Branch;
 use App\Modules\Inventory\Models\Inventory;
 use App\Modules\Inventory\Models\InventoryMovement;
+use App\Modules\Menu\Models\Product;
 use App\Modules\Menu\Models\ProductVariant;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
@@ -30,6 +31,7 @@ class InventoryManager extends Component
     public $isEdit = false;
     public $editInventoryId = null;
     public $formBranchId = '';
+    public $formProductId = '';
     public $formVariantId = '';
     public $formStockQuantity = 0;
     public $formMinimumAlert = 0;
@@ -63,6 +65,7 @@ class InventoryManager extends Component
         $this->editInventoryId = null;
         // Si no es Owner, solo puede registrar en su propia sucursal.
         $this->formBranchId = Auth::user()->isOwner() ? '' : (string) Auth::user()->activeBranchId();
+        $this->formProductId = '';
         $this->formVariantId = '';
         $this->formStockQuantity = 0;
         $this->formMinimumAlert = 0;
@@ -144,10 +147,26 @@ class InventoryManager extends Component
         $this->isEdit = true;
         $this->editInventoryId = $inv->id;
         $this->formBranchId = $inv->branch_id;
+        $this->formProductId = (string) ($inv->productVariant->product_id ?? '');
         $this->formVariantId = $inv->product_variant_id;
         $this->formStockQuantity = $inv->stock_quantity;
         $this->formMinimumAlert = $inv->minimum_alert;
         $this->showCreateModal = true;
+    }
+
+    /**
+     * Al elegir un producto: si tiene una sola variante, se autoselecciona;
+     * si tiene varias, se limpia para que el usuario elija.
+     */
+    public function updatedFormProductId($value): void
+    {
+        $this->formVariantId = '';
+        if ($value) {
+            $product = Product::with('variants')->find($value);
+            if ($product && $product->variants->count() === 1) {
+                $this->formVariantId = (string) $product->variants->first()->id;
+            }
+        }
     }
 
     // ─── ELIMINAR ──────────────────────────────────────────────
@@ -244,10 +263,11 @@ class InventoryManager extends Component
             ? Branch::active()->get()
             : Branch::where('id', $userBranchId)->get();
 
-        // Solo variantes de productos que NO son alitas (las alitas usan su propio
-        // control de stock por kilos). El inventario aquí es para helados, bebidas, etc.
-        $variants = ProductVariant::with('product')
-            ->whereHas('product', fn($q) => $q->where('is_wings', false))
+        // Solo productos que NO son alitas (las alitas usan su propio control de
+        // stock por kilos). El inventario aquí es para helados, bebidas, etc.
+        $products = Product::where('is_wings', false)
+            ->with('variants')
+            ->orderBy('name')
             ->get();
 
         $inventoryList = Inventory::with(['productVariant.product', 'branch'])
@@ -263,7 +283,7 @@ class InventoryManager extends Component
         return view('livewire.admin.inventory-manager', [
             'branches' => $branches,
             'inventoryList' => $inventoryList,
-            'variants' => $variants,
+            'products' => $products,
             'isOwner' => $isOwner,
         ]);
     }
