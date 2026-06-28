@@ -61,7 +61,8 @@ class InventoryManager extends Component
         $this->resetValidation();
         $this->isEdit = false;
         $this->editInventoryId = null;
-        $this->formBranchId = '';
+        // Si no es Owner, solo puede registrar en su propia sucursal.
+        $this->formBranchId = Auth::user()->isOwner() ? '' : (string) Auth::user()->activeBranchId();
         $this->formVariantId = '';
         $this->formStockQuantity = 0;
         $this->formMinimumAlert = 0;
@@ -80,6 +81,11 @@ class InventoryManager extends Component
             'formStockQuantity' => 'required|integer|min:0',
             'formMinimumAlert' => 'required|integer|min:0',
         ]);
+
+        // Seguridad: los no-Owner solo pueden registrar en su propia sucursal.
+        if (!Auth::user()->isOwner()) {
+            $this->formBranchId = (string) Auth::user()->activeBranchId();
+        }
 
         if ($this->isEdit) {
             $inv = Inventory::find($this->editInventoryId);
@@ -229,7 +235,15 @@ class InventoryManager extends Component
 
     public function render()
     {
-        $branches = Branch::active()->get();
+        $user = Auth::user();
+        $isOwner = $user->isOwner();
+        $userBranchId = $user->activeBranchId();
+
+        // Los no-Owner solo ven/registran su propia sucursal.
+        $branches = $isOwner
+            ? Branch::active()->get()
+            : Branch::where('id', $userBranchId)->get();
+
         // Solo variantes de productos que NO son alitas (las alitas usan su propio
         // control de stock por kilos). El inventario aquí es para helados, bebidas, etc.
         $variants = ProductVariant::with('product')
@@ -237,9 +251,8 @@ class InventoryManager extends Component
             ->get();
 
         $inventoryList = Inventory::with(['productVariant.product', 'branch'])
-            ->when($this->branchId, function ($query) {
-                $query->where('branch_id', $this->branchId);
-            })
+            ->when(!$isOwner, fn($q) => $q->where('branch_id', $userBranchId))
+            ->when($isOwner && $this->branchId, fn($q) => $q->where('branch_id', $this->branchId))
             ->when($this->search, function ($query) {
                 $query->whereHas('productVariant.product', function ($q) {
                     $q->where('name', 'like', '%' . $this->search . '%');
@@ -251,6 +264,7 @@ class InventoryManager extends Component
             'branches' => $branches,
             'inventoryList' => $inventoryList,
             'variants' => $variants,
+            'isOwner' => $isOwner,
         ]);
     }
 }

@@ -275,7 +275,7 @@
                     <label class="inv-form-label">Sucursal</label>
                     <select wire:model="formBranchId" class="inv-form-select">
                         <option value="">Seleccionar sucursal...</option>
-                        @if(!$isEdit)
+                        @if(!$isEdit && $isOwner)
                             <option value="all">— Todas las sucursales —</option>
                         @endif
                         @foreach($branches as $branch)
@@ -290,7 +290,7 @@
                     <select wire:model="formVariantId" class="inv-form-select">
                         <option value="">Seleccionar variante...</option>
                         @foreach($variants as $variant)
-                            <option value="{{ $variant->id }}">{{ $variant->product->name ?? '' }} — {{ $variant->name }} (${{ number_format($variant->price, 2) }})</option>
+                            <option value="{{ $variant->id }}">{{ $variant->product->name ?? '' }} — {{ $variant->name }} (Bs. {{ number_format($variant->price, 2) }})</option>
                         @endforeach
                     </select>
                     @error('formVariantId') <p class="inv-error">{{ $message }}</p> @enderror
