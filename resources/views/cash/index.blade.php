@@ -97,7 +97,7 @@
     <nav class="pos-navbar">
         <div class="nav-brand">
             <div class="nav-brand-icon">🍗</div>
-            <div class="nav-brand-text">Alitas <span>La Vieja</span> — Caja</div>
+            <div class="nav-brand-text">Alitas <span>La Vieja</span> — Caja de Venta</div>
         </div>
         <div style="color: var(--text-strong); font-weight: 600;">
             {{ auth()->user()->name }}

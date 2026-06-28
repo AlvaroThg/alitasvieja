@@ -122,7 +122,7 @@
             <h2 class="cash-title">Apertura de Caja</h2>
             <form wire:submit.prevent="openSession">
                 <div class="cash-form-group">
-                    <label class="cash-label">Monto Inicial ($)</label>
+                    <label class="cash-label">Monto Inicial (Bs.)</label>
                     <input type="number" step="0.01" wire:model="opening_amount" class="cash-input" placeholder="Ej. 1500.00">
                     @error('opening_amount') <span class="error-message">{{ $message }}</span> @enderror
                 </div>
@@ -132,23 +132,29 @@
     @else
         <!-- Gestión de Movimientos -->
         <div class="cash-card" style="max-width: 800px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                <h2 class="cash-title" style="margin-bottom: 0;">Caja Activa</h2>
-                <span style="color: var(--text-secondary); font-size: 0.9rem;">
-                    Abierta por: {{ $session->opener->name ?? 'Usuario' }} | Monto Inicial: ${{ number_format($session->opening_amount, 2) }}
-                </span>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h2 class="cash-title" style="margin-bottom: 0;">Caja de Venta</h2>
+                    <span style="color: var(--text-muted); font-size: 0.82rem;">
+                        Abierta por: {{ $session->opener->name ?? 'Usuario' }} | Monto Inicial: Bs. {{ number_format($session->opening_amount, 2) }}
+                    </span>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted);">Saldo actual</div>
+                    <div style="font-size: 1.6rem; font-weight: 800; color: #22c55e;">Bs. {{ number_format($session->calculateExpected(), 2) }}</div>
+                </div>
             </div>
 
             {{-- ═══ CAJA CHICA ═══ --}}
             <div style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between; background: var(--bg-base); border: 1px solid var(--border); border-radius: 14px; padding: 1rem 1.25rem; margin-bottom: 1.5rem;">
                 <div>
                     <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted);">Caja Chica</div>
-                    <div style="font-size: 1.6rem; font-weight: 800; color: {{ $pettyBalance > 0 ? '#22c55e' : 'var(--text-muted)' }};">${{ number_format($pettyBalance, 2) }}</div>
+                    <div style="font-size: 1.6rem; font-weight: 800; color: {{ $pettyBalance > 0 ? '#22c55e' : 'var(--text-muted)' }};">Bs. {{ number_format($pettyBalance, 2) }}</div>
                     <div style="font-size: 0.72rem; color: var(--text-muted); max-width: 320px;">Los egresos se pagan de aquí. Si no alcanza, se repone automáticamente desde la Caja de Venta.</div>
                 </div>
                 <form wire:submit.prevent="loadPettyCash" style="display: flex; gap: 0.5rem; align-items: flex-end;">
                     <div class="cash-form-group" style="margin: 0;">
-                        <label class="cash-label" style="font-size: 0.7rem;">Cargar a Caja Chica ($)</label>
+                        <label class="cash-label" style="font-size: 0.7rem;">Cargar a Caja Chica (Bs.)</label>
                         <input type="number" step="0.01" wire:model="petty_amount" class="cash-input" placeholder="0.00" style="max-width: 150px;">
                         @error('petty_amount') <span class="error-message">{{ $message }}</span> @enderror
                     </div>
@@ -171,7 +177,7 @@
                         </div>
 
                         <div class="cash-form-group">
-                            <label class="cash-label">Monto ($)</label>
+                            <label class="cash-label">Monto (Bs.)</label>
                             <input type="number" step="0.01" wire:model="amount" class="cash-input" placeholder="0.00">
                             @error('amount') <span class="error-message">{{ $message }}</span> @enderror
                         </div>
@@ -209,7 +215,7 @@
                                     <p>{{ $mov->created_at->format('H:i') }} - {{ $mov->reference ?? 'Sin ref.' }}</p>
                                 </div>
                                 <div class="movement-amount {{ $mov->type }}">
-                                    {{ $mov->type === 'income' ? '+' : '-' }} ${{ number_format($mov->amount, 2) }}
+                                    {{ $mov->type === 'income' ? '+' : '-' }} Bs. {{ number_format($mov->amount, 2) }}
                                 </div>
                             </div>
                         @empty
