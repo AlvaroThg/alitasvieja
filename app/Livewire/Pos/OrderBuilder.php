@@ -91,8 +91,19 @@ class OrderBuilder extends Component
         $promo = $this->availablePromotions->firstWhere('id', $promoId);
         if (!$promo) return;
 
+        // No permitir aplicar la promoción si no se cumple el pedido mínimo.
+        $subtotal = collect($this->cart)->sum(fn($item) => $item['price'] * $item['quantity']);
+        $minOrder = $promo->conditions['min_order_total'] ?? null;
+        if ($minOrder !== null && $subtotal < (float) $minOrder) {
+            $this->promotionWarning = 'No se puede aplicar "' . $promo->name . '": requiere un pedido mínimo de Bs. '
+                . number_format((float) $minOrder, 2) . ' (subtotal actual: Bs. ' . number_format($subtotal, 2) . ').';
+            $this->showPromoModal = false;
+            return; // no se selecciona la promoción
+        }
+
         $this->selectedPromotionId = $promo->id;
         $this->selectedPromotionName = $promo->name;
+        $this->promotionWarning = '';
         $this->recalculateDiscount();
         $this->showPromoModal = false;
         $this->saveCartToSession();
@@ -111,7 +122,7 @@ class OrderBuilder extends Component
     {
         if (!$this->selectedPromotionId) {
             $this->discountAmount = 0;
-            $this->promotionWarning = '';
+            // No se limpia el aviso: puede venir de una promoción que se quitó por no cumplir el mínimo.
             return;
         }
 
@@ -123,12 +134,15 @@ class OrderBuilder extends Component
 
         $subtotal = collect($this->cart)->sum(fn($item) => $item['price'] * $item['quantity']);
 
-        // Condición: pedido mínimo. Si no se cumple, no se aplica el descuento.
+        // Condición: pedido mínimo. Si no se cumple, se QUITA la promoción (no queda aplicada con error).
         $minOrder = $promo->conditions['min_order_total'] ?? null;
         if ($minOrder !== null && $subtotal < (float) $minOrder) {
             $this->discountAmount = 0;
-            $this->promotionWarning = 'Esta promoción requiere un pedido mínimo de Bs. '
+            $this->selectedPromotionId = null;
+            $this->selectedPromotionName = '';
+            $this->promotionWarning = 'No se aplicó "' . $promo->name . '": requiere un pedido mínimo de Bs. '
                 . number_format((float) $minOrder, 2) . ' (subtotal actual: Bs. ' . number_format($subtotal, 2) . ').';
+            $this->saveCartToSession();
             return;
         }
 
