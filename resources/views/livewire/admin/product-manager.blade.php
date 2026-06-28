@@ -113,10 +113,14 @@
             </div>
 
             <div class="variants-section">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <h4 style="color: var(--text-strong);">Variantes y Precios por Sucursal</h4>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                    <h4 style="color: var(--text-strong);">Precio y Variantes</h4>
                     <button wire:click="addVariant" class="btn-add-variant">+ Agregar Variante</button>
                 </div>
+                <p style="color: var(--text-muted); font-size: 0.78rem; margin-bottom: 1rem;">
+                    Si es un producto simple (un solo precio), deja <strong>una sola fila</strong> y el Nombre en blanco.
+                    Agrega más filas solo si tiene variantes (ej. "5 Piezas", "10 Piezas").
+                </p>
                 
                 @php
                     // Las columnas Piezas y Max Salsas solo aplican a productos de alitas.
@@ -132,7 +136,7 @@
                             <span class="form-label">Piezas</span>
                             <span class="form-label">Max Salsas</span>
                         @endif
-                        <span class="form-label" style="color: #f97316;">Precio Base</span>
+                        <span class="form-label" style="color: #f97316;" title="Se usa cuando una sucursal no tiene precio propio. Si pones precio por sucursal, ese manda.">Precio general</span>
                         @foreach($branches as $b)
                             <span class="form-label" style="color: #38bdf8;">{{ $b->name }}</span>
                         @endforeach
@@ -142,7 +146,7 @@
 
                     @foreach($variants as $index => $variant)
                     <div wire:key="variant-{{ $variant['id'] ?? 'new-'.$index }}" style="display: grid; grid-template-columns: {{ $gridCols }}; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem; background: var(--bg-elevated); padding: 0.5rem; border-radius: 10px;">
-                        <input type="text" wire:model="variants.{{ $index }}.name" class="form-input" placeholder="Ej. 10 Piezas">
+                        <input type="text" wire:model="variants.{{ $index }}.name" class="form-input" placeholder="Opcional (ej. 10 Piezas)">
                         @if($is_wings)
                             <input type="number" wire:model="variants.{{ $index }}.wings_count" class="form-input" placeholder="0">
                             <input type="number" wire:model="variants.{{ $index }}.max_sauces" class="form-input" placeholder="0">

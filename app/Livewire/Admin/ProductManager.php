@@ -47,6 +47,9 @@ class ProductManager extends Component
     {
         $this->resetFields();
         $this->isEdit = false;
+        // Una fila de precio por defecto: el producto puede tener un solo precio
+        // (sin variantes). Si necesita variantes, se agregan con "+ Agregar Variante".
+        $this->addVariant();
         $this->showModal = true;
     }
 
@@ -107,8 +110,10 @@ class ProductManager extends Component
         $this->validate([
             'category_id' => 'required|exists:categories,id',
             'name' => 'required|string|max:255',
-            'variants.*.name' => 'required|string|max:255',
-            'variants.*.price' => 'required|numeric|min:0',
+            'variants' => 'required|array|min:1',
+            // El nombre de la variante es opcional (un producto simple no necesita nombre de variante).
+            'variants.*.name' => 'nullable|string|max:255',
+            'variants.*.price' => 'nullable|numeric|min:0',
         ]);
 
         $productData = [
@@ -124,30 +129,48 @@ class ProductManager extends Component
         if ($this->isEdit) {
             $product = Product::find($this->productId);
             $product->update($productData);
-            
+
             // Sync variants
             $existingVariantIds = collect($this->variants)->pluck('id')->filter()->toArray();
             $product->variants()->whereNotIn('id', $existingVariantIds)->delete();
-            
+
             foreach ($this->variants as $variantData) {
+                $clean = $this->cleanVariant($variantData);
                 if ($variantData['id']) {
                     $variant = $product->variants()->find($variantData['id']);
-                    $variant->update($variantData);
+                    $variant->update($clean);
                 } else {
-                    $variant = $product->variants()->create($variantData);
+                    $variant = $product->variants()->create($clean);
                 }
                 $this->saveBranchPrices($variant, $variantData['branch_prices'] ?? []);
             }
         } else {
             $product = Product::create($productData);
             foreach ($this->variants as $variantData) {
-                $variant = $product->variants()->create($variantData);
+                $variant = $product->variants()->create($this->cleanVariant($variantData));
                 $this->saveBranchPrices($variant, $variantData['branch_prices'] ?? []);
             }
         }
 
         $this->showModal = false;
         $this->loadData();
+    }
+
+    /**
+     * Normaliza los datos de una variante: nombre por defecto "Único" (para
+     * productos simples sin variantes) y precio 0 si se deja en blanco.
+     */
+    private function cleanVariant(array $variantData): array
+    {
+        $name = trim((string) ($variantData['name'] ?? ''));
+        $price = $variantData['price'];
+
+        return [
+            'name'        => $name !== '' ? $name : 'Único',
+            'wings_count' => (int) ($variantData['wings_count'] ?? 0),
+            'max_sauces'  => (int) ($variantData['max_sauces'] ?? 0),
+            'price'       => ($price === '' || $price === null) ? 0 : (float) $price,
+        ];
     }
 
     private function saveBranchPrices($variant, $branchPrices)
