@@ -77,6 +77,9 @@ Route::middleware(['auth', 'role:owner'])->prefix('admin')->name('admin.')->grou
     // Gestión de Categorías
     Route::get('/categories', function () { return view('admin.categories'); })->name('categories.index');
 
+    // Gestión de Salsas
+    Route::get('/sauces', function () { return view('admin.sauces'); })->name('sauces.index');
+
     // Usuarios y roles (Migrado a Livewire)
     Route::get('/users', function () { return view('admin.users'); })->name('users.index');
 

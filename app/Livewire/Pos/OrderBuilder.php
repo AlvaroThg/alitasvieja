@@ -16,12 +16,14 @@ class OrderBuilder extends Component
 {
     public $tableId = null;
     public $tableName = null;
+    public $orderType = 'dine_in';
 
     #[On('table-selected')]
     public function setTable($id = null)
     {
         $this->tableId = $id;
         $this->tableName = $id ? (\App\Models\Table::find($id)->name ?? null) : null;
+        $this->orderType = $id ? 'dine_in' : 'takeaway';
         // Reiniciar carrito o cargar carrito de mesa existente
         $this->cart = [];
         $this->saveCartToSession();
@@ -53,12 +55,15 @@ class OrderBuilder extends Component
     public $showSauceModal = false;
     public $tempCartIndex = null;
     public $tempProductMaxSauces = 0;
-    public $tempSelectedSauces = []; // [sauce_id => quantity]
+    public $tempProductWingsCount = 0;
+    public $sauceStep = 1;
+    public $tempSelectedSauceIds = [];
+    public $tempSauceWingCounts = [];
 
     public function mount()
     {
         $this->categories = Category::where('is_active', true)->get();
-        $this->allSauces = Sauce::all();
+        $this->allSauces = Sauce::where('is_active', true)->get();
         
         if ($this->categories->count() > 0) {
             $this->selectCategory($this->categories->first()->id);
@@ -315,56 +320,82 @@ class OrderBuilder extends Component
     {
         $this->tempCartIndex = $cartIndex;
         $item = $this->cart[$cartIndex];
-        // El tope es la cantidad de alitas de la variante (no se puede bañar más
-        // alitas de las que existen). Si no hay nº de alitas, cae a max_sauces.
-        $this->tempProductMaxSauces = (int) (($item['wings_count'] ?? 0) ?: ($item['max_sauces'] ?? 0));
         
-        $this->tempSelectedSauces = [];
-        foreach ($item['sauces'] as $s) {
-            $this->tempSelectedSauces[$s['id']] = $s['qty'];
+        $this->tempProductMaxSauces = (int) ($item['max_sauces'] ?? 0);
+        $this->tempProductWingsCount = (int) ($item['wings_count'] ?? 0);
+        
+        // Reset state
+        $this->sauceStep = 1;
+        $this->tempSelectedSauceIds = [];
+        $this->tempSauceWingCounts = [];
+        
+        // Pre-fill si ya tenía salsas
+        if (!empty($item['sauces'])) {
+            foreach ($item['sauces'] as $s) {
+                $this->tempSelectedSauceIds[] = $s['id'];
+                $this->tempSauceWingCounts[$s['id']] = $s['qty'];
+            }
         }
         
         $this->showSauceModal = true;
     }
 
-    public function getTempSaucesTotal()
+    public function toggleSauceSelection($sauceId)
     {
-        return array_sum($this->tempSelectedSauces);
-    }
-
-    public function incrementSauce($sauceId)
-    {
-        if ($this->getTempSaucesTotal() < $this->tempProductMaxSauces) {
-            $this->tempSelectedSauces[$sauceId] = ($this->tempSelectedSauces[$sauceId] ?? 0) + 1;
+        if (in_array($sauceId, $this->tempSelectedSauceIds)) {
+            $this->tempSelectedSauceIds = array_diff($this->tempSelectedSauceIds, [$sauceId]);
+        } else {
+            if (count($this->tempSelectedSauceIds) < $this->tempProductMaxSauces) {
+                $this->tempSelectedSauceIds[] = $sauceId;
+            }
         }
     }
 
-    public function decrementSauce($sauceId)
+    public function goToSauceStep2()
     {
-        if (isset($this->tempSelectedSauces[$sauceId]) && $this->tempSelectedSauces[$sauceId] > 0) {
-            $this->tempSelectedSauces[$sauceId]--;
-            if ($this->tempSelectedSauces[$sauceId] === 0) {
-                unset($this->tempSelectedSauces[$sauceId]);
-            }
+        $this->sauceStep = 2;
+        $newCounts = [];
+        foreach ($this->tempSelectedSauceIds as $id) {
+            $newCounts[$id] = $this->tempSauceWingCounts[$id] ?? 0;
+        }
+        $this->tempSauceWingCounts = $newCounts;
+    }
+    
+    public function goToSauceStep1()
+    {
+        $this->sauceStep = 1;
+    }
+
+    public function incrementSauceWings($sauceId)
+    {
+        $currentSum = array_sum($this->tempSauceWingCounts);
+        if ($currentSum < $this->tempProductWingsCount) {
+            $this->tempSauceWingCounts[$sauceId] = ($this->tempSauceWingCounts[$sauceId] ?? 0) + 1;
+        }
+    }
+
+    public function decrementSauceWings($sauceId)
+    {
+        if (isset($this->tempSauceWingCounts[$sauceId]) && $this->tempSauceWingCounts[$sauceId] > 0) {
+            $this->tempSauceWingCounts[$sauceId]--;
         }
     }
 
     public function confirmSauces()
     {
-        // Se permite dejar vacío (sin cantidad). Solo se guardan las salsas elegidas.
         $mappedSauces = [];
-        foreach ($this->tempSelectedSauces as $id => $qty) {
-            if ($qty > 0) {
-                $sauce = $this->allSauces->firstWhere('id', $id);
-                if ($sauce) {
-                    $mappedSauces[] = [
-                        'id' => $sauce->id,
-                        'name' => $sauce->name,
-                        'qty' => $qty,
-                    ];
-                }
+        
+        foreach ($this->tempSelectedSauceIds as $id) {
+            $sauce = $this->allSauces->firstWhere('id', $id);
+            if ($sauce) {
+                $mappedSauces[] = [
+                    'id' => $sauce->id,
+                    'name' => $sauce->name,
+                    'qty' => $this->tempSauceWingCounts[$id] ?? 0,
+                ];
             }
         }
+        
         $this->cart[$this->tempCartIndex]['sauces'] = $mappedSauces;
         $this->showSauceModal = false;
         $this->saveCartToSession();
@@ -397,12 +428,21 @@ class OrderBuilder extends Component
 
         $orderService = app(\App\Modules\Orders\Services\OrderService::class);
 
+        $finalNotes = $this->orderNotes;
+        if (!$this->tableId) {
+            if ($this->orderType === 'delivery') {
+                $finalNotes = $finalNotes ? "[DELIVERY] " . $finalNotes : "[DELIVERY]";
+            } elseif ($this->orderType === 'takeaway') {
+                $finalNotes = $finalNotes ? "[RECOGER EN LOCAL] " . $finalNotes : "[RECOGER EN LOCAL]";
+            }
+        }
+
         // Crear la orden
         $order = $orderService->createOrder(
             $branchId,
             $this->tableId,
             $user->id,
-            $this->orderNotes
+            $finalNotes
         );
 
         // Añadir items
@@ -410,10 +450,13 @@ class OrderBuilder extends Component
             $saucesData = [];
             if (!empty($item['sauces'])) {
                 foreach ($item['sauces'] as $sauce) {
+                    $wingsCount = $sauce['qty'];
+                    $isCoated = $wingsCount > 0;
+                    
                     $saucesData[] = [
                         'sauce_id' => $sauce['id'],
-                        'quantity' => $sauce['qty'],
-                        'is_coated' => true,
+                        'quantity' => $isCoated ? $wingsCount : 1,
+                        'is_coated' => $isCoated,
                     ];
                 }
             }
