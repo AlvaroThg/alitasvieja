@@ -58,6 +58,12 @@ class ProductionSeeder extends Seeder
             DB::table('sauces')->updateOrInsert(['name' => $sauce['name']], $sauce);
         }
 
+        // 3.5. Crear Categoría Inicial "Bebidas"
+        DB::table('categories')->updateOrInsert(
+            ['name' => 'Bebidas'],
+            ['is_active' => true, 'created_at' => now(), 'updated_at' => now()]
+        );
+
         // 4. Cargar Mesas (Tables) iniciales
         for ($i = 1; $i <= 10; $i++) {
             DB::table('tables')->updateOrInsert(

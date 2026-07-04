@@ -16,6 +16,7 @@ class Order extends Model
         'table_id',
         'user_id',
         'order_number',
+        'order_type',
         'daily_number',     // MODIFICADO: correlativo diario (OBS 1)
         'status',
         'subtotal',

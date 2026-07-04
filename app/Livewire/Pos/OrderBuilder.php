@@ -167,25 +167,34 @@ class OrderBuilder extends Component
         $this->activeCategoryId = $categoryId;
         $this->activeProductId = null;
         $this->variants = [];
-        $this->products = Product::where('category_id', $categoryId)
+        
+        $branchId = auth()->user()?->activeBranchId() ?? 1;
+        
+        $allProducts = Product::where('category_id', $categoryId)
             ->where('is_active', true)
-            ->with('variants.prices')
+            ->with('variants')
             ->get();
+            
+        // Filtrar variantes con precio <= 0 en la sucursal activa
+        // y descartar productos que se queden sin variantes
+        $filteredProducts = $allProducts->filter(function ($product) use ($branchId) {
+            $product->setRelation('variants', $product->variants->filter(function ($variant) use ($branchId) {
+                return $variant->priceForBranch($branchId) > 0;
+            })->values());
+            
+            return $product->variants->count() > 0;
+        })->values();
+
+        $this->products = $filteredProducts;
     }
 
     /**
      * Precio a mostrar/cobrar para una variante según la sucursal activa.
-     * Usa el precio de la sucursal; si no existe, cae al precio base.
      */
     public function priceFor($variant)
     {
         $branchId = auth()->user()?->activeBranchId() ?? 1;
-        // Consulta directa: la relación 'prices' no sobrevive al re-render de Livewire.
-        $branchPrice = \App\Modules\Menu\Models\ProductPrice::where('product_variant_id', $variant->id)
-            ->where('branch_id', $branchId)
-            ->value('price');
-
-        return $branchPrice !== null ? $branchPrice : $variant->price;
+        return $variant->priceForBranch($branchId);
     }
 
     public function selectProduct($productId)
@@ -428,21 +437,13 @@ class OrderBuilder extends Component
 
         $orderService = app(\App\Modules\Orders\Services\OrderService::class);
 
-        $finalNotes = $this->orderNotes;
-        if (!$this->tableId) {
-            if ($this->orderType === 'delivery') {
-                $finalNotes = $finalNotes ? "[DELIVERY] " . $finalNotes : "[DELIVERY]";
-            } elseif ($this->orderType === 'takeaway') {
-                $finalNotes = $finalNotes ? "[RECOGER EN LOCAL] " . $finalNotes : "[RECOGER EN LOCAL]";
-            }
-        }
-
         // Crear la orden
         $order = $orderService->createOrder(
             $branchId,
             $this->tableId,
             $user->id,
-            $finalNotes
+            $this->orderNotes,
+            $this->tableId ? 'dine_in' : $this->orderType
         );
 
         // Añadir items
