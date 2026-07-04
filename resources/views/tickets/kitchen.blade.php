@@ -67,6 +67,11 @@
     <div class="center bold" style="font-size: 14px; margin: 2px 0;">
         Pedido #{{ $order->daily_number }}
     </div>
+    @if($order->order_type !== 'dine_in')
+        <div class="center bold" style="font-size: 14px; margin: 2px 0; border: 1px solid black; padding: 2px;">
+            {{ $order->order_type === 'delivery' ? 'DELIVERY' : 'PARA RECOGER' }}
+        </div>
+    @endif
     <div style="font-size: 9px; text-align: center; color: #666;">
         Ref: {{ $order->order_number }}
     </div>

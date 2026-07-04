@@ -21,6 +21,11 @@
         <p class="text-xs" style="margin: 2px 0;">Ticket de Venta</p>
         <p class="font-bold" style="font-size: 16px;">Turno: #{{ $order->daily_number }}</p>
         <p class="text-xs">Orden {{ $order->order_number }}</p>
+        @if($order->order_type !== 'dine_in')
+            <p class="font-bold" style="font-size: 14px; margin: 4px 0; border: 1px solid #000; display: inline-block; padding: 2px 5px;">
+                {{ $order->order_type === 'delivery' ? 'DELIVERY' : 'PARA RECOGER' }}
+            </p>
+        @endif
     </div>
 
     <div class="divider"></div>
@@ -93,6 +98,11 @@
     <div class="text-center mb-2">
         <h2 class="font-bold" style="margin: 0; font-size: 18px;">*** COCINA ***</h2>
         <p class="font-bold" style="font-size: 16px;">Pedido: #{{ $order->daily_number }}</p>
+        @if($order->order_type !== 'dine_in')
+            <p class="font-bold" style="font-size: 14px; margin: 4px 0; border: 1px solid #000; display: inline-block; padding: 2px 5px;">
+                {{ $order->order_type === 'delivery' ? 'DELIVERY' : 'PARA RECOGER' }}
+            </p>
+        @endif
         <p class="text-xs">Mesa: {{ $order->table ? $order->table->name : 'N/A' }} | Hora: {{ $order->opened_at ? $order->opened_at->format('H:i') : '' }}</p>
     </div>
 

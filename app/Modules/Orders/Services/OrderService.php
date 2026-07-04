@@ -17,10 +17,10 @@ class OrderService
         $this->sauceValidator = $sauceValidator;
     }
 
-    // MODIFICADO: asignar daily_number del generador (OBS 1)
-    public function createOrder(int $branchId, ?int $tableId, int $userId, ?string $notes = null): Order
+    // MODIFICADO: asignar daily_number del generador (OBS 1) y order_type
+    public function createOrder(int $branchId, ?int $tableId, int $userId, ?string $notes = null, string $orderType = 'dine_in'): Order
     {
-        return DB::transaction(function () use ($branchId, $tableId, $userId, $notes) {
+        return DB::transaction(function () use ($branchId, $tableId, $userId, $notes, $orderType) {
             $numbers = Order::generateOrderNumber($branchId);
 
             return Order::create([
@@ -28,6 +28,7 @@ class OrderService
                 'table_id'     => $tableId,
                 'user_id'      => $userId,
                 'order_number' => $numbers['order_number'],
+                'order_type'   => $orderType,
                 'daily_number' => $numbers['daily_number'],
                 'status'       => 'open',
                 'notes'        => $notes,
@@ -70,8 +71,8 @@ class OrderService
             // Obtener el variant con su producto (para verificar is_wings)
             $variant = \App\Modules\Menu\Models\ProductVariant::with('product')->findOrFail($variantId);
 
-            // Usar el precio base de la variante (ya que la tabla product_prices no existe en el esquema base)
-            $unitPrice = (float) $variant->price;
+            // Usar el precio efectivo para la sucursal activa
+            $unitPrice = $variant->priceForBranch($order->branch_id);
             $extraSauceCharge = 0.0;
 
             // Si el producto es de alitas, validar y calcular cargo de salsas

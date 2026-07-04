@@ -39,4 +39,17 @@ class ProductVariant extends Model
     {
         return $this->hasMany(ProductPrice::class);
     }
+
+    /**
+     * Retorna el precio efectivo para la variante en una sucursal específica.
+     * Si no existe un precio específico, devuelve el precio base.
+     */
+    public function priceForBranch(int $branchId): float
+    {
+        $branchPrice = \App\Modules\Menu\Models\ProductPrice::where('product_variant_id', $this->id)
+            ->where('branch_id', $branchId)
+            ->value('price');
+
+        return $branchPrice !== null ? (float) $branchPrice : (float) $this->price;
+    }
 }
