@@ -17,27 +17,25 @@ class OrderService
         $this->sauceValidator = $sauceValidator;
     }
 
-    // ─── Crear Pedido ─────────────────────────────────────────
-
-    /**
-     * Crea un nuevo pedido en estado 'open'.
-     */
+    // MODIFICADO: asignar daily_number del generador (OBS 1)
     public function createOrder(int $branchId, ?int $tableId, int $userId, ?string $notes = null): Order
     {
         return DB::transaction(function () use ($branchId, $tableId, $userId, $notes) {
-            $orderNumber = Order::generateOrderNumber($branchId);
+            $numbers = Order::generateOrderNumber($branchId);
 
             return Order::create([
                 'branch_id'    => $branchId,
                 'table_id'     => $tableId,
                 'user_id'      => $userId,
-                'order_number' => $orderNumber,
+                'order_number' => $numbers['order_number'],
+                'daily_number' => $numbers['daily_number'],
                 'status'       => 'open',
                 'notes'        => $notes,
                 'opened_at'    => now(),
             ]);
         });
     }
+    // FIN MODIFICADO
 
     // ─── Agregar Ítem ─────────────────────────────────────────
 
@@ -72,19 +70,8 @@ class OrderService
             // Obtener el variant con su producto (para verificar is_wings)
             $variant = \App\Modules\Menu\Models\ProductVariant::with('product')->findOrFail($variantId);
 
-            // Obtener precio desde product_prices para esta sucursal
-            $productPrice = DB::table('product_prices')
-                ->where('product_variant_id', $variantId)
-                ->where('branch_id', $order->branch_id)
-                ->first();
-
-            if (!$productPrice) {
-                throw ValidationException::withMessages([
-                    'product_variant_id' => "No se encontró un precio configurado para este producto en esta sucursal.",
-                ]);
-            }
-
-            $unitPrice = (float) $productPrice->price;
+            // Usar el precio base de la variante (ya que la tabla product_prices no existe en el esquema base)
+            $unitPrice = (float) $variant->price;
             $extraSauceCharge = 0.0;
 
             // Si el producto es de alitas, validar y calcular cargo de salsas

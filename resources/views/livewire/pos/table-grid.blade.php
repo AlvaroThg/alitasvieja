@@ -1,0 +1,426 @@
+<div>
+    <style>
+        .table-grid-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        .table-grid-header svg {
+            color: #dc2626;
+        }
+        .table-grid-header h2 {
+            color: var(--text-strong);
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+        .table-grid-header h2 span {
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 1rem;
+            margin-left: 0.5rem;
+        }
+        .table-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+        @media (min-width: 768px) { .table-grid { grid-template-columns: repeat(4, 1fr); } }
+        @media (min-width: 1024px) { .table-grid { grid-template-columns: repeat(5, 1fr); } }
+
+        .table-card {
+            position: relative;
+            overflow: hidden;
+            padding: 1.5rem;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 140px;
+            border: 1px solid transparent;
+        }
+        .table-card:hover {
+            transform: translateY(-4px);
+        }
+        .table-card:active {
+            transform: scale(0.96);
+        }
+        /* Available */
+        .table-available {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            border-color: rgba(220, 38, 38, 0.5);
+            box-shadow: 0 4px 20px rgba(220, 38, 38, 0.15);
+        }
+        .table-available:hover {
+            box-shadow: 0 8px 30px rgba(220, 38, 38, 0.3);
+        }
+        .table-available .table-number {
+            color: var(--text-strong);
+        }
+        .table-available .table-status-badge {
+            background: rgba(0,0,0,0.2);
+            color: rgba(255,255,255,0.9);
+        }
+        /* Occupied */
+        .table-occupied {
+            background: var(--bg-surface);
+            border-color: var(--border);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .table-occupied:hover {
+            border-color: #f97316;
+            box-shadow: 0 8px 30px rgba(249, 115, 22, 0.15);
+        }
+        .table-occupied .table-number {
+            color: #f97316;
+        }
+        .table-occupied .table-status-badge {
+            background: rgba(249, 115, 22, 0.1);
+            color: #f97316;
+            border: 1px solid rgba(249, 115, 22, 0.15);
+        }
+        /* Reserved */
+        .table-reserved {
+            background: transparent;
+            border: 2px dashed #dc2626;
+        }
+        .table-reserved:hover {
+            background: rgba(220, 38, 38, 0.05);
+        }
+        .table-reserved .table-number {
+            color: #dc2626;
+        }
+        .table-reserved .table-status-badge {
+            background: rgba(220, 38, 38, 0.08);
+            color: #dc2626;
+        }
+        /* Default / other */
+        .table-default {
+            background: var(--bg-surface);
+            border-color: var(--border);
+        }
+        .table-default:hover {
+            border-color: var(--border-strong);
+        }
+        .table-default .table-number {
+            color: var(--text-muted);
+        }
+        .table-default .table-status-badge {
+            background: var(--bg-elevated);
+            color: var(--text-faint);
+        }
+
+        .table-number {
+            font-size: 2.25rem;
+            font-weight: 900;
+            margin-bottom: 0.5rem;
+            z-index: 1;
+            letter-spacing: -0.03em;
+        }
+        .table-status-badge {
+            position: relative;
+            z-index: 1;
+            padding: 0.2rem 0.65rem;
+            border-radius: 50px;
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+        }
+        /* Hover overlay */
+        .table-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 60%);
+            border-radius: 16px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .table-card:hover::after {
+            opacity: 1;
+        }
+
+        /* Modal Styles */
+        .table-modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px);
+        }
+        .table-modal {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            width: 100%;
+            max-width: 380px;
+            border-radius: 20px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .table-modal-header {
+            padding: 1.25rem 1.5rem;
+            background: var(--bg-base);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .table-modal-header h3 {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--text-strong);
+        }
+        .table-modal-close {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .table-modal-close:hover {
+            color: #dc2626;
+            border-color: #dc2626;
+        }
+        .table-modal-body {
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .btn-action {
+            width: 100%;
+            padding: 1rem;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #f97316, #dc2626);
+            color: var(--text-strong);
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #fb923c, #ef4444);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(220, 38, 38, 0.3);
+        }
+        .btn-secondary {
+            background: var(--bg-elevated);
+            color: var(--text-strong);
+            border: 1px solid var(--border-strong);
+        }
+        .btn-secondary:hover {
+            background: var(--border);
+            border-color: var(--text-faint);
+        }
+        .btn-warning {
+            background: transparent;
+            color: #f97316;
+            border: 1px solid rgba(249, 115, 22, 0.3);
+        }
+        .btn-warning:hover {
+            background: rgba(249, 115, 22, 0.1);
+        }
+    </style>
+
+    <div class="table-grid-header">
+        <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+        <h2>Mapa de Mesas <span>· Selecciona una mesa</span></h2>
+        <button wire:click="openCreateTableModal" style="margin-left: auto; background: linear-gradient(135deg, #10b981, #047857); color: var(--text-strong); border: none; padding: 0.6rem 1.25rem; border-radius: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem;">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            Nueva Mesa
+        </button>
+    </div>
+    
+    <div class="table-grid">
+        @foreach($tables as $table)
+            <div 
+                wire:click="manageTable({{ $table->id }})"
+                class="table-card 
+                @if($table->status === 'available') table-available
+                @elseif($table->status === 'occupied') table-occupied
+                @elseif($table->status === 'reserved') table-reserved
+                @else table-default @endif"
+            >
+                <span class="table-number">
+                    {{ $table->name }}
+                </span>
+                
+                <span class="table-status-badge">
+                    {{ function_exists('__') ? __($table->status) : $table->status }}
+                </span>
+            </div>
+        @endforeach
+    </div>
+
+    <!-- Modal Acción Mesa -->
+    @if($showActionModal && $selectedTableForAction)
+    <div class="table-modal-overlay">
+        <div class="table-modal">
+            <div class="table-modal-header">
+                <h3>Opciones de Mesa {{ $selectedTableForAction->name }}</h3>
+                <button wire:click="$set('showActionModal', false)" class="table-modal-close">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="table-modal-body">
+                @if($selectedTableForAction->status !== 'occupied')
+                    <button wire:click="createOrder" class="btn-action btn-primary">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        Tomar Pedido
+                    </button>
+                @endif
+                
+                @if($selectedTableForAction->status === 'occupied')
+                    <button wire:click="openCheckout" class="btn-action btn-secondary">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        Liberar Mesa (Realizar Pago)
+                    </button>
+                    <!-- Opcional si permites añadir a orden existente -->
+                    <!-- <button wire:click="createOrder" class="btn-action btn-primary">Añadir al Pedido Actual</button> -->
+                @endif
+
+                @if($selectedTableForAction->status === 'available')
+                    <button wire:click="changeStatus('reserved')" class="btn-action btn-warning">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Marcar como Reservada
+                    </button>
+                @endif
+
+                @if($selectedTableForAction->status === 'reserved')
+                    <button wire:click="changeStatus('available')" class="btn-action btn-secondary">Quitar Reserva</button>
+                @endif
+
+                {{-- Botón eliminar siempre visible --}}
+                <button wire:click="confirmDeleteTable({{ $selectedTableForAction->id }})" class="btn-action" style="background: transparent; color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); margin-top: 0.5rem;">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    Eliminar Mesa
+                </button>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <!-- Modal de Checkout Rápid -->
+    @if($showCheckoutModal && $selectedTableForAction)
+    <div class="table-modal-overlay">
+        <div class="table-modal" style="max-width: 400px;">
+            <div class="table-modal-header">
+                <h3>Cobrar Mesa {{ $selectedTableForAction->name }}</h3>
+                <button wire:click="$set('showCheckoutModal', false)" class="table-modal-close">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="table-modal-body">
+                <div style="background: var(--bg-elevated); padding: 1rem; border-radius: 10px; text-align: center; margin-bottom: 1rem;">
+                    <span style="color: var(--text-muted); font-size: 0.9rem;">Total a Pagar</span>
+                    <div style="font-size: 2rem; font-weight: 800; color: var(--text-strong);">Bs {{ number_format($checkoutOrderTotal, 2) }}</div>
+                </div>
+
+                <div style="margin-bottom: 1rem;">
+                    <label style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.5rem; display: block;">Método de Pago</label>
+                    <select wire:model="checkoutPaymentMethod" style="width: 100%; padding: 0.75rem; border-radius: 8px; background: var(--border); border: 1px solid var(--border-strong); color: var(--text-strong); outline: none;">
+                        <option value="cash">Efectivo</option>
+                        <option value="card">Tarjeta / POS</option>
+                        <option value="qr">Pago QR</option>
+                        <option value="transfer">Transferencia</option>
+                    </select>
+                </div>
+
+                <button wire:click="processCheckout" class="btn-action btn-primary" style="margin-top: 0.5rem;">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Confirmar y Liberar Mesa
+                </button>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- Modal: Crear Mesa --}}
+    @if($showCreateTableModal)
+    <div class="table-modal-overlay">
+        <div class="table-modal" style="max-width: 380px;">
+            <div class="table-modal-header">
+                <h3>Nueva Mesa</h3>
+                <button wire:click="$set('showCreateTableModal', false)" class="table-modal-close">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="table-modal-body">
+                <div style="margin-bottom: 1rem;">
+                    <label style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.5rem; display: block;">Nombre o Número de Mesa</label>
+                    <input
+                        type="text"
+                        wire:model="newTableName"
+                        placeholder="Ej: Mesa 7, Terraza 2, Barra..."
+                        style="width: 100%; background: var(--bg-base); border: 1px solid var(--border-strong); color: var(--text-strong); padding: 0.75rem; border-radius: 10px; font-size: 1rem; outline: none;"
+                    >
+                    @error('newTableName')
+                        <span style="color: #ef4444; font-size: 0.8rem; margin-top: 0.4rem; display: block;">{{ $message }}</span>
+                    @enderror
+                </div>
+                <button wire:click="createTable" class="btn-action btn-primary">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    Crear Mesa
+                </button>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- Modal: Confirmar / Error Eliminar Mesa --}}
+    @if($showDeleteTableModal)
+    <div class="table-modal-overlay">
+        <div class="table-modal" style="max-width: 380px;">
+            <div class="table-modal-header">
+                <h3 style="color: {{ $deleteErrorMessage ? '#ef4444' : '#f97316' }};">
+                    {{ $deleteErrorMessage ? 'No se puede eliminar' : 'Eliminar Mesa' }}
+                </h3>
+                <button wire:click="$set('showDeleteTableModal', false)" class="table-modal-close">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="table-modal-body">
+                @if($deleteErrorMessage)
+                    <div style="background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.3); border-radius: 10px; padding: 1rem; color: #ef4444; font-size: 0.9rem;">
+                        {{ $deleteErrorMessage }}
+                    </div>
+                    <button wire:click="$set('showDeleteTableModal', false)" class="btn-action btn-secondary" style="margin-top: 0.5rem;">Entendido</button>
+                @else
+                    <div style="background: var(--bg-elevated); border-radius: 10px; padding: 1rem; color: var(--text-secondary); font-size: 0.9rem; text-align: center;">
+                        ¿Estás seguro de que quieres eliminar esta mesa? Esta acción no se puede deshacer.
+                    </div>
+                    <div style="display: flex; gap: 0.75rem; margin-top: 0.5rem;">
+                        <button wire:click="$set('showDeleteTableModal', false)" class="btn-action btn-secondary" style="flex: 1;">Cancelar</button>
+                        <button wire:click="deleteTable" class="btn-action" style="flex: 1; background: #ef4444; color: var(--text-strong); border: none;">Sí, Eliminar</button>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+    @endif
+
+</div>

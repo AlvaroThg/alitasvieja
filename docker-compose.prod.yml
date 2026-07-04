@@ -1,0 +1,95 @@
+services:
+
+  # ─── Base de datos MySQL ──────────────────────────────────────────────────────
+  mysql:
+    image: mysql:8.0
+    container_name: alitas_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${DB_DATABASE:-alitas_pos}
+      MYSQL_USER: ${DB_USERNAME:-alitas}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-alitas_secret}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./.docker/mysql/my.cnf:/etc/mysql/conf.d/my.cnf:ro
+    ports:
+      - "3306:3306"          # Solo para debug local, quitar en producción
+    networks:
+      - alitas_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD:-rootpassword}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Aplicación Laravel (PHP-FPM) ────────────────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: alitas_app
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    env_file:
+      - .env.docker
+    volumes:
+      - storage_data:/var/www/html/storage/app
+      - logs_data:/var/www/html/storage/logs
+    networks:
+      - alitas_network
+
+  # ─── Web server Nginx ────────────────────────────────────────────────────────
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: alitas_nginx
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./.docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./public:/var/www/html/public:ro
+      - ./public/build:/var/www/html/public/build:ro
+      - ssl_data:/etc/nginx/ssl
+    networks:
+      - alitas_network
+
+  # ─── Redis (sesiones, cache, colas) ─────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: alitas_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis_secret}
+    volumes:
+      - redis_data:/data
+    networks:
+      - alitas_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redis_secret}", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+# ─── Volúmenes persistentes ───────────────────────────────────────────────────
+volumes:
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
+  storage_data:
+    driver: local
+  logs_data:
+    driver: local
+  ssl_data:
+    driver: local
+
+# ─── Red interna ──────────────────────────────────────────────────────────────
+networks:
+  alitas_network:
+    driver: bridge

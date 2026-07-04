@@ -26,6 +26,29 @@ class TicketController extends Controller
 
         return response(Storage::get($path), 200)
             ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'inline; filename="' . $order->order_number . '.pdf"');
+            ->header('Content-Disposition', 'inline; filename="kitchen_' . $order->order_number . '.pdf"');
+    }
+
+    /**
+     * GET /pos/tickets/{order}/cashier
+     * Genera el ticket final para el cliente y activa impresión de 80mm
+     */
+    public function cashier(Order $order)
+    {
+        $order->load([
+            'items.productVariant.product',
+            'items.sauces.sauce',
+            'table',
+            'branch',
+            'appliedPromotion.promotion'
+        ]);
+
+        // Setup dinámico de hoja 80mm (226.77 pt) con longitud auto-expandible (1000 pt de margen)
+        $customPaper = array(0, 0, 226.77, 1000); 
+        
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('tickets.cashier', compact('order'))
+            ->setPaper($customPaper, 'portrait');
+
+        return $pdf->stream('ticket_' . $order->order_number . '.pdf', ['Attachment' => false]);
     }
 }
