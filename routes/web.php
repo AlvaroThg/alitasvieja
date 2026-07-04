@@ -103,10 +103,15 @@ Route::middleware(['auth', 'role:owner,branch_admin'])->prefix('admin')->name('a
     Route::get('/reports/payments', [AdminReportController::class, 'paymentMethods'])->name('reports.payments');
     Route::get('/reports/wings', [AdminReportController::class, 'wingStats'])->name('reports.wings');
 
-    // NOTA: /export se define ANTES de /{session} para que Laravel no
-    // interprete "export" como un ID de CashSession (route model binding).
+    // NOTA: /export y /movements se definen ANTES de /{session} para que Laravel
+    // no los interprete como un ID de CashSession (route model binding).
     Route::get('/reports/cash', [CashReportController::class, 'index'])->name('reports.cash.index');
     Route::get('/reports/cash/export', [CashReportController::class, 'export'])->name('reports.cash.export');
+
+    // Reporte de Movimientos de Caja (pantalla + PDF)
+    Route::get('/reports/cash/movements', fn () => view('admin.cash-movements'))->name('reports.cash.movements');
+    Route::get('/reports/cash/movements/export', [CashReportController::class, 'movementsExport'])->name('reports.cash.movements.export');
+
     Route::get('/reports/cash/{session}', [CashReportController::class, 'show'])->name('reports.cash.show');
 });
 

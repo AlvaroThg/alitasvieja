@@ -20,6 +20,11 @@ class CashManager extends Component
 
     public $petty_amount = '';
 
+    // Cierre de caja
+    public $showCloseModal = false;
+    public $closing_amount = '';
+    public $closing_notes = '';
+
     public function mount(CashService $cashService)
     {
         $this->loadSession($cashService);
@@ -37,6 +42,10 @@ class CashManager extends Component
     {
         $this->validate([
             'opening_amount' => 'required|numeric|min:0'
+        ], [
+            'opening_amount.required' => 'Debe ingresar el monto inicial de la caja.',
+            'opening_amount.numeric' => 'El monto inicial debe ser un número.',
+            'opening_amount.min' => 'El monto inicial no puede ser negativo.',
         ]);
 
         $branchId = Auth::user()->activeBranchId();
@@ -58,6 +67,11 @@ class CashManager extends Component
             'amount' => 'required|numeric|min:0.01',
             'concept' => 'required|string|max:255',
             'reference' => 'nullable|string|max:100',
+        ], [
+            'amount.required' => 'Debe ingresar el monto del movimiento.',
+            'amount.numeric' => 'El monto debe ser un número.',
+            'amount.min' => 'El monto debe ser mayor a 0. No se permiten montos negativos.',
+            'concept.required' => 'Debe ingresar el concepto del movimiento.',
         ]);
 
         if ($this->session) {
@@ -82,13 +96,59 @@ class CashManager extends Component
 
     public function loadPettyCash(CashService $cashService)
     {
-        $this->validate(['petty_amount' => 'required|numeric|min:0.01']);
+        $this->validate([
+            'petty_amount' => 'required|numeric|min:0.01',
+        ], [
+            'petty_amount.required' => 'Debe ingresar el monto a cargar.',
+            'petty_amount.numeric' => 'El monto debe ser un número.',
+            'petty_amount.min' => 'El monto debe ser mayor a 0. No se permiten montos negativos.',
+        ]);
 
         if ($this->session) {
             $cashService->loadPettyCash($this->session, Auth::id(), (float) $this->petty_amount);
             $this->petty_amount = '';
             $this->loadSession($cashService);
         }
+    }
+
+    public function openCloseModal()
+    {
+        $this->resetValidation();
+        $this->closing_amount = '';
+        $this->closing_notes = '';
+        $this->showCloseModal = true;
+    }
+
+    public function closeSession(CashService $cashService)
+    {
+        $this->validate([
+            'closing_amount' => 'required|numeric|min:0',
+            'closing_notes' => 'nullable|string|max:255',
+        ], [
+            'closing_amount.required' => 'Debe ingresar el monto contado en caja.',
+            'closing_amount.numeric' => 'El monto debe ser un número.',
+            'closing_amount.min' => 'El monto no puede ser negativo.',
+        ]);
+
+        if (!$this->session) return;
+
+        $closed = $cashService->closeSession(
+            $this->session,
+            Auth::id(),
+            (float) $this->closing_amount,
+            $this->closing_notes ?: null
+        );
+
+        $this->showCloseModal = false;
+        $this->session = null;
+
+        $diff = (float) $closed->difference;
+        $resumen = 'Caja cerrada. Esperado: Bs. ' . number_format((float) $closed->expected_amount, 2)
+            . ' | Contado: Bs. ' . number_format((float) $closed->closing_amount, 2)
+            . ' | Diferencia: Bs. ' . number_format($diff, 2)
+            . ($diff == 0.0 ? ' (cuadre exacto)' : ($diff > 0 ? ' (sobrante)' : ' (faltante)'));
+
+        session()->flash('message', $resumen);
     }
 
     public function render()

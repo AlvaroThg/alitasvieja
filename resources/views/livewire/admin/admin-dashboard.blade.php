@@ -115,6 +115,7 @@
                             <th style="padding: 0.4rem 0.6rem; font-weight: 700; text-align: right;">Cant.</th>
                             <th style="padding: 0.4rem 0.6rem; font-weight: 700;">Sucursal</th>
                             <th style="padding: 0.4rem 0.6rem; font-weight: 700;">Usuario</th>
+                            <th style="padding: 0.4rem 0.6rem; font-weight: 700;">Motivo</th>
                             <th style="padding: 0.4rem 0.6rem; font-weight: 700;">Fecha</th>
                         </tr>
                     </thead>
@@ -126,7 +127,8 @@
                                 <td style="padding: 0.5rem 0.6rem; text-align: right; font-weight: 700;">{{ $m->quantity }}</td>
                                 <td style="padding: 0.5rem 0.6rem;">{{ $m->branch->name ?? '—' }}</td>
                                 <td style="padding: 0.5rem 0.6rem;">{{ $m->user->name ?? 'Sistema' }}</td>
-                                <td style="padding: 0.5rem 0.6rem; color: var(--text-muted);">{{ $m->created_at->format('d/m H:i') }}</td>
+                                <td style="padding: 0.5rem 0.6rem; color: var(--text-muted); max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ $m->reason }}">{{ $m->reason ?? '—' }}</td>
+                                <td style="padding: 0.5rem 0.6rem; color: var(--text-muted); white-space: nowrap;">{{ $m->created_at->format('d/m H:i') }}</td>
                             </tr>
                         @endforeach
                     </tbody>
