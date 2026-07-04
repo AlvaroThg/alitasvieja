@@ -116,6 +116,12 @@
         }
     </style>
 
+    @if(session()->has('message'))
+        <div style="max-width: 800px; background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); color: #22c55e; padding: 0.85rem 1.1rem; border-radius: 12px; font-size: 0.88rem; font-weight: 600; margin-bottom: 1.25rem;">
+            {{ session('message') }}
+        </div>
+    @endif
+
     @if(!$session)
         <!-- Apertura de Caja -->
         <div class="cash-card">
@@ -139,9 +145,15 @@
                         Abierta por: {{ $session->opener->name ?? 'Usuario' }} | Monto Inicial: Bs. {{ number_format($session->opening_amount, 2) }}
                     </span>
                 </div>
-                <div style="text-align: right;">
-                    <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted);">Saldo actual</div>
-                    <div style="font-size: 1.6rem; font-weight: 800; color: #22c55e;">Bs. {{ number_format($session->calculateExpected(), 2) }}</div>
+                <div style="display: flex; align-items: center; gap: 1.25rem;">
+                    <div style="text-align: right;">
+                        <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted);">Saldo actual</div>
+                        <div style="font-size: 1.6rem; font-weight: 800; color: #22c55e;">Bs. {{ number_format($session->calculateExpected(), 2) }}</div>
+                    </div>
+                    <button wire:click="openCloseModal"
+                            style="background: transparent; color: #ef4444; border: 1px solid rgba(239,68,68,0.4); padding: 0.6rem 1.1rem; border-radius: 12px; font-weight: 700; font-size: 0.82rem; cursor: pointer; white-space: nowrap;">
+                        Cerrar Caja
+                    </button>
                 </div>
             </div>
 
@@ -227,5 +239,39 @@
                 </div>
             </div>
         </div>
+
+        {{-- ═══ MODAL: CERRAR CAJA ═══ --}}
+        @if($showCloseModal)
+        <div style="position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.7); backdrop-filter: blur(6px);">
+            <div style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: 20px; width: 100%; max-width: 440px; padding: 1.5rem;">
+                <h3 style="color: var(--text-strong); font-size: 1.15rem; font-weight: 800; margin-bottom: 0.5rem;">Cerrar Caja</h3>
+                <p style="color: var(--text-muted); font-size: 0.82rem; margin-bottom: 1.25rem;">
+                    Cuenta el dinero físico de la Caja de Venta e ingresa el total.
+                    El sistema espera <strong style="color: var(--text);">Bs. {{ number_format($session->calculateExpected(), 2) }}</strong> y calculará la diferencia.
+                </p>
+
+                <form wire:submit.prevent="closeSession">
+                    <div class="cash-form-group">
+                        <label class="cash-label">Monto contado (Bs.)</label>
+                        <input type="number" step="0.01" wire:model="closing_amount" class="cash-input" placeholder="0.00">
+                        @error('closing_amount') <span class="error-message">{{ $message }}</span> @enderror
+                    </div>
+                    <div class="cash-form-group">
+                        <label class="cash-label">Notas (opcional)</label>
+                        <input type="text" wire:model="closing_notes" class="cash-input" placeholder="Ej. Faltó cambio de Bs. 5">
+                        @error('closing_notes') <span class="error-message">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.25rem;">
+                        <button type="button" wire:click="$set('showCloseModal', false)"
+                                style="background: var(--bg-elevated); color: var(--text-muted); border: 1px solid var(--border); padding: 0.7rem 1.4rem; border-radius: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn-submit" style="margin-top: 0; background: #ef4444;">Confirmar Cierre</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        @endif
     @endif
 </div>
