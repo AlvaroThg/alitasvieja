@@ -3,21 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <style>
-        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 12px; margin: 0; padding: 10px; color: #000; }
+        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 11px; margin: 0; padding: 0; color: #000; }
         .text-center { text-align: center; }
         .text-right { text-align: right; }
         .font-bold { font-weight: bold; }
-        .mb-2 { margin-bottom: 8px; }
-        .mt-2 { margin-top: 8px; }
-        .divider { border-bottom: 1px dashed #000; margin: 10px 0; }
-        table { w-full; width: 100%; border-collapse: collapse; }
-        td, th { text-align: left; vertical-align: top; }
-        .text-xs { font-size: 10px; }
+        .mb-2 { margin-bottom: 4px; }
+        .mt-2 { margin-top: 4px; }
+        .divider { border-bottom: 1px dashed #000; margin: 4px 0; }
+        table { width: 100%; border-collapse: collapse; margin: 0; padding: 0; }
+        td, th { text-align: left; vertical-align: top; padding: 0; margin: 0; }
+        p { margin: 0; padding: 0; }
+        .text-xs { font-size: 9px; }
     </style>
 </head>
 <body>
     <div class="text-center mb-2">
-        <h2 class="font-bold" style="margin: 0; font-size: 18px;">Alitas La Vieja</h2>
+        <h2 class="font-bold" style="margin: 0; font-size: 16px;">Alitas de la Vieja</h2>
         <p class="text-xs" style="margin: 2px 0;">Ticket de Venta</p>
         <p class="font-bold" style="font-size: 16px;">Turno: #{{ $order->daily_number }}</p>
         <p class="text-xs">Orden {{ $order->order_number }}</p>
@@ -89,14 +90,11 @@
     </div>
 
     <!-- SEPARADOR PARA CORTAR -->
-    <div style="border-top: 1px dashed #000; margin: 20px 0;"></div>
-    <div class="text-center">
-        <p class="text-xs" style="margin: -10px 0 15px 0; background: #fff; display: inline-block; padding: 0 10px;">--- CORTAR AQUI ---</p>
-    </div>
+    <div style="page-break-before: always;"></div>
 
     <!-- TICKET DE COCINA -->
     <div class="text-center mb-2">
-        <h2 class="font-bold" style="margin: 0; font-size: 18px;">*** COCINA ***</h2>
+        <h2 class="font-bold" style="margin: 0; font-size: 16px;">*** COCINA ***</h2>
         <p class="font-bold" style="font-size: 16px;">Pedido: #{{ $order->daily_number }}</p>
         @if($order->order_type !== 'dine_in')
             <p class="font-bold" style="font-size: 14px; margin: 4px 0; border: 1px solid #000; display: inline-block; padding: 2px 5px;">
