@@ -13,8 +13,8 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
       - ./.docker/mysql/my.cnf:/etc/mysql/conf.d/my.cnf:ro
-    ports:
-    # - "3306:3306"          # Solo para debug local, quitar en producción
+    # ports:
+    #   - "3306:3306"          # Solo para debug local, quitar en producción
     networks:
       - alitas_network
     healthcheck:
