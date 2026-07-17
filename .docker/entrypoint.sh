@@ -1,6 +1,15 @@
 #!/bin/bash
 set -e
 
+echo "==> [entrypoint] Creando directorios de storage..."
+mkdir -p storage/framework/cache/data \
+         storage/framework/sessions \
+         storage/framework/views \
+         storage/app/public \
+         storage/logs
+chmod -R 775 storage bootstrap/cache
+chown -R www-data:www-data storage bootstrap/cache
+
 echo "==> [entrypoint] Esperando MySQL..."
 until php artisan db:monitor --databases=mysql 2>/dev/null; do
     sleep 2
