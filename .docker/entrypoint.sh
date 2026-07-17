@@ -10,6 +10,10 @@ mkdir -p storage/framework/cache/data \
 chmod -R 775 storage bootstrap/cache
 chown -R www-data:www-data storage bootstrap/cache
 
+echo "==> [entrypoint] Sincronizando archivos públicos al volumen compartido..."
+cp -rn /var/www/html/public-static/. /var/www/html/public/
+chown -R www-data:www-data /var/www/html/public
+
 echo "==> [entrypoint] Esperando MySQL..."
 until php artisan db:monitor --databases=mysql 2>/dev/null; do
     sleep 2

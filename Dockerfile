@@ -67,6 +67,9 @@ COPY --from=vendor /var/www/html/vendor ./vendor
 # Copiar assets compilados (public/build)
 COPY --from=frontend /app/public/build ./public/build
 
+# Staging de archivos públicos (para compartir con nginx via volumen)
+RUN cp -r /var/www/html/public /var/www/html/public-static
+
 # Permisos de Laravel
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 storage bootstrap/cache
