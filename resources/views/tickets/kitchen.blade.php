@@ -63,9 +63,19 @@
     </div>
     <div class="separator">--------------------------------</div>
 
-    <div>
-        <span class="bold">Pedido:</span> {{ $order->order_number }}
+    {{-- MODIFICADO: daily_number prominente para cocina (OBS 1) --}}
+    <div class="center bold" style="font-size: 14px; margin: 2px 0;">
+        Pedido #{{ $order->daily_number }}
     </div>
+    @if($order->order_type !== 'dine_in')
+        <div class="center bold" style="font-size: 14px; margin: 2px 0; border: 1px solid black; padding: 2px;">
+            {{ $order->order_type === 'delivery' ? 'DELIVERY' : 'PARA RECOGER' }}
+        </div>
+    @endif
+    <div style="font-size: 9px; text-align: center; color: #666;">
+        Ref: {{ $order->order_number }}
+    </div>
+    {{-- FIN MODIFICADO --}}
     <div>
         <span class="bold">Mesa:</span> {{ $order->table->number ?? 'Sin mesa' }}
     </div>
@@ -86,9 +96,13 @@
                 @foreach($item->sauces as $sauce)
                     @if($sauce->is_coated && $sauce->quantity > 0)
                         <div class="sauce-line">
-                            → {{ $sauce->quantity }}pz {{ $sauce->sauce->name ?? 'Salsa' }} [bañada]
+                            → {{ $sauce->quantity }} {{ $sauce->quantity == 1 ? 'alita' : 'alitas' }} con {{ $sauce->sauce->name ?? 'Salsa' }}
                         </div>
-                    @elseif(!$sauce->is_coated)
+                    @elseif($sauce->is_coated)
+                        <div class="sauce-line">
+                            → {{ $sauce->sauce->name ?? 'Salsa' }}
+                        </div>
+                    @else
                         <div class="sauce-line">
                             → {{ $sauce->sauce->name ?? 'Salsa' }} [aparte]
                         </div>

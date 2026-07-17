@@ -1,0 +1,50 @@
+services:
+
+  # ─── Base de datos MySQL (Local) ────────────────────────────────────────────
+  mysql:
+    image: mysql:8.0
+    container_name: alitas_mysql_local
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: alitas_pos
+      MYSQL_USER: alitas
+      MYSQL_PASSWORD: password
+    volumes:
+      # Volumen local persistente
+      - mysql_local_data:/var/lib/mysql
+      # Opcional: si quieres usar la misma config estricta que en prod
+      - ./.docker/mysql/my.cnf:/etc/mysql/conf.d/my.cnf:ro
+    ports:
+      # Exponemos el puerto para conectarnos desde la PC anfitriona
+      # (127.0.0.1:3306 apuntará a este contenedor)
+      - "127.0.0.1:3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Redis (Local) ──────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: alitas_redis_local
+    restart: unless-stopped
+    # Para local podemos omitir la contraseña para mayor simplicidad
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_local_data:/data
+    ports:
+      - "127.0.0.1:6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+# ─── Volúmenes locales ────────────────────────────────────────────────────────
+volumes:
+  mysql_local_data:
+    driver: local
+  redis_local_data:
+    driver: local

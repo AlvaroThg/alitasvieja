@@ -1,0 +1,42 @@
+# ─── Docker ignore — no copiar al contenedor ──────────────────────────────────
+
+# Dependencias locales (se instalan dentro del contenedor)
+node_modules/
+vendor/
+
+# Archivos de entorno sensibles
+.env
+.env.*
+!.env.docker
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Logs y cachés locales
+storage/logs/
+storage/framework/cache/
+storage/framework/sessions/
+storage/framework/views/
+
+# Assets sin compilar (se compilan dentro del contenedor)
+resources/css/
+resources/js/
+
+# Tests y herramientas de desarrollo
+tests/
+phpunit.xml
+.phpunit.result.cache
+
+# Documentación
+*.md
+!README.md
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/

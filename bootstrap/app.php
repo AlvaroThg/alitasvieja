@@ -3,7 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use App\Modules\Auth\Http\Middleware\CheckRole;
+use App\Http\Middleware\CheckRole;
 use App\Modules\Branch\Http\Middleware\EnsureActiveBranch;
 
 return Application::configure(basePath: dirname(__DIR__))

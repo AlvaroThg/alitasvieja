@@ -1,6 +1,6 @@
-# Alitas Vieja — Sistema POS
+# Alitas La Vieja — Sistema POS
 
-> Sistema de Punto de Venta (POS) interno para el restaurante **Alitas Vega**,
+> Sistema de Punto de Venta (POS) interno para el restaurante **Alitas La Vieja**,
 > con soporte para dos sucursales: **Cochabamba** y **Tarija**.
 
 ---
@@ -46,7 +46,7 @@ cd alitasvega
 composer install
 
 # 3. Instalar dependencias JS
-npm install && npm run dev
+pnpm install && pnpm run dev
 
 # 4. Configurar el entorno
 cp .env.example .env

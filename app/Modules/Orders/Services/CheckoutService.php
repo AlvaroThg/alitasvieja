@@ -87,6 +87,9 @@ class CheckoutService
                 'status'         => 'paid',
                 'closed_at'      => now(),
             ]);
+
+            // NOTA: el inventario se descuenta al ENVIAR A COCINA (submitOrder),
+            // no aquí, para que el stock refleje el consumo apenas se hace el pedido.
         });
     }
 }

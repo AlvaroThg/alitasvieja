@@ -42,6 +42,8 @@ class OrderController extends Controller
             return response()->json([
                 'order_id'     => $order->id,
                 'order_number' => $order->order_number,
+                'daily_number' => $order->daily_number,    // MODIFICADO (OBS 1)
+                'daily_label'  => $order->daily_label,     // MODIFICADO (OBS 1)
                 'status'       => $order->status,
             ], 201);
         } catch (ValidationException $e) {

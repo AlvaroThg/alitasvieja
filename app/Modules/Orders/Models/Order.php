@@ -16,6 +16,8 @@ class Order extends Model
         'table_id',
         'user_id',
         'order_number',
+        'order_type',
+        'daily_number',     // MODIFICADO: correlativo diario (OBS 1)
         'status',
         'subtotal',
         'discount',
@@ -29,6 +31,7 @@ class Order extends Model
     protected function casts(): array
     {
         return [
+            'daily_number'   => 'integer',  // MODIFICADO (OBS 1)
             'subtotal'       => 'decimal:2',
             'discount'       => 'decimal:2',
             'total'          => 'decimal:2',
@@ -50,7 +53,7 @@ class Order extends Model
      */
     public function table(): BelongsTo
     {
-        return $this->belongsTo(\App\Modules\Tables\Models\Table::class, 'table_id');
+        return $this->belongsTo(\App\Models\Table::class, 'table_id');
     }
 
     public function user(): BelongsTo
@@ -66,6 +69,11 @@ class Order extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(OrderPayment::class);
+    }
+
+    public function appliedPromotion()
+    {
+        return $this->hasOne(\App\Modules\Promotions\Models\OrderPromotion::class);
     }
 
     // ─── Scopes ───────────────────────────────────────────────
@@ -85,6 +93,16 @@ class Order extends Model
         return $query->where('branch_id', $branchId);
     }
 
+    // MODIFICADO: nuevo scope (OBS 1)
+    /**
+     * Filtra pedidos abiertos hoy según opened_at.
+     */
+    public function scopeToday($query)
+    {
+        return $query->whereDate('opened_at', today());
+    }
+    // FIN MODIFICADO
+
     // ─── Accessors ────────────────────────────────────────────
 
     /**
@@ -95,14 +113,25 @@ class Order extends Model
         return $this->status === 'open';
     }
 
+    // MODIFICADO: nuevo accessor (OBS 1)
+    /**
+     * Etiqueta legible para cocina/POS: "Pedido #3".
+     */
+    public function getDailyLabelAttribute(): string
+    {
+        return "Pedido #{$this->daily_number}";
+    }
+    // FIN MODIFICADO
+
     // ─── Métodos estáticos ────────────────────────────────────
 
+    // MODIFICADO: retorna array con order_number + daily_number (OBS 1)
     /**
-     * Genera un número de pedido correlativo por sucursal.
-     * Formato: CBB-0001, TJA-0001, etc.
-     * Usa lockForUpdate() dentro de transacción para evitar colisiones.
+     * Genera el número de pedido histórico y el correlativo diario.
+     *
+     * @return array{order_number: string, daily_number: int}
      */
-    public static function generateOrderNumber(int $branchId): string
+    public static function generateOrderNumber(int $branchId): array
     {
         return DB::transaction(function () use ($branchId) {
             $branch = Branch::findOrFail($branchId);
@@ -111,21 +140,34 @@ class Order extends Model
             // cbba → CBB, tja → TJA
             $prefix = strtoupper(substr($branch->slug, 0, 3));
 
-            // Obtener el último pedido de esta sucursal con lock
+            // ── Correlativo histórico (nunca se reinicia) ──
             $lastOrder = static::where('branch_id', $branchId)
                 ->lockForUpdate()
                 ->orderByDesc('id')
                 ->first();
 
             if ($lastOrder) {
-                // Extraer el número del último order_number (ej: "CBB-0042" → 42)
                 $lastNumber = (int) substr($lastOrder->order_number, strlen($prefix) + 1);
                 $nextNumber = $lastNumber + 1;
             } else {
                 $nextNumber = 1;
             }
 
-            return $prefix . '-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+            $orderNumber = $prefix . '-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+
+            // ── Correlativo diario (reinicia cada día) ──
+            $todayCount = static::where('branch_id', $branchId)
+                ->whereDate('opened_at', today())
+                ->lockForUpdate()
+                ->count();
+
+            $dailyNumber = $todayCount + 1;
+
+            return [
+                'order_number' => $orderNumber,
+                'daily_number' => $dailyNumber,
+            ];
         });
     }
+    // FIN MODIFICADO
 }

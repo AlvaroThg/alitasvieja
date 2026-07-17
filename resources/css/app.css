@@ -9,3 +9,64 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+/* ════════════════════════════════════════════════════════════════
+   Sistema de Temas (Claro / Oscuro)
+   Las vistas usan estas variables en lugar de colores fijos.
+   El tema se controla con el atributo data-theme en <html> (ver app.js).
+   ════════════════════════════════════════════════════════════════ */
+
+/* Tema Oscuro (por defecto) */
+:root,
+html[data-theme="dark"] {
+    --bg-base: #0a0a0a;
+    --bg-surface: #111111;
+    --bg-elevated: #1a1a1a;
+    --border: #222222;
+    --border-strong: #333333;
+    --text-strong: #ffffff;
+    --text: #e5e5e5;
+    --text-secondary: #cccccc;
+    --text-muted: #888888;
+    --text-faint: #555555;
+}
+
+/* Tema Claro */
+html[data-theme="light"] {
+    --bg-base: #eef0f4;
+    --bg-surface: #ffffff;
+    --bg-elevated: #f5f6f9;
+    --border: #e1e3ea;
+    --border-strong: #cdd0da;
+    --text-strong: #14161c;
+    --text: #2a2d36;
+    --text-secondary: #4c505b;
+    --text-muted: #71757f;
+    --text-faint: #9aa0ac;
+}
+
+/* Transición suave al cambiar de tema */
+html, body { transition: background-color 0.25s ease, color 0.25s ease; }
+
+/* Botón flotante de cambio de tema (inyectado por app.js) */
+#theme-toggle {
+    position: fixed;
+    bottom: 1.25rem;
+    right: 1.25rem;
+    z-index: 9999;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    border: 1px solid var(--border-strong);
+    background: var(--bg-elevated);
+    color: var(--text-strong);
+    font-size: 1.25rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    transition: transform 0.15s ease, background 0.2s ease;
+}
+#theme-toggle:hover { transform: translateY(-2px) scale(1.05); }
