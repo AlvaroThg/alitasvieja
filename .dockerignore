@@ -20,9 +20,6 @@ storage/framework/cache/
 storage/framework/sessions/
 storage/framework/views/
 
-# Assets sin compilar (se compilan dentro del contenedor)
-resources/css/
-resources/js/
 
 # Tests y herramientas de desarrollo
 tests/
