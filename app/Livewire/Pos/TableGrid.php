@@ -91,6 +91,15 @@ class TableGrid extends Component
         }
     }
 
+    /**
+     * Pedido para llevar / delivery: sin mesa. El OrderBuilder lo interpreta
+     * como 'takeaway' (id null) y su ticket muestra "Cocina" en vez de mesa.
+     */
+    public function createTakeawayOrder()
+    {
+        $this->dispatch('table-selected', id: null);
+    }
+
     // ─── CREAR MESA ──────────────────────────────────────────
 
     public function openCreateTableModal()

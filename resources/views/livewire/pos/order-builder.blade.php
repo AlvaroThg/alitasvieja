@@ -686,7 +686,7 @@
     <div class="ticket-panel">
         <div class="ticket-header" style="{{ !$tableId ? 'flex-direction: column; align-items: stretch; gap: 0.5rem;' : '' }}">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h2 class="ticket-title">Ticket {{ $tableName ?? ($tableId ? 'Mesa #'.$tableId : '') }}</h2>
+                <h2 class="ticket-title">{{ $tableId ? 'Ticket '.($tableName ?? 'Mesa #'.$tableId) : 'Ticket — Cocina' }}</h2>
                 <span class="ticket-count">{{ count($cart) }} Items</span>
             </div>
             
