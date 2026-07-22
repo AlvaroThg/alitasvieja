@@ -981,4 +981,38 @@
     </div>
     @endif
 
+    {{-- ═══ MODAL DE PAGO: pedido de cocina (para llevar / delivery) ═══ --}}
+    @if($showPaymentModal)
+    <div style="position: fixed; inset: 0; z-index: 90; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.7); backdrop-filter: blur(6px);">
+        <div style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: 20px; width: 100%; max-width: 420px; overflow: hidden;">
+            <div style="padding: 1.25rem 1.5rem; background: var(--bg-base); border-bottom: 1px solid var(--border);">
+                <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--text-strong);">Cobrar pedido de cocina</h3>
+                <p style="color: var(--text-muted); font-size: 0.82rem; margin-top: 0.25rem;">
+                    {{ $orderType === 'delivery' ? 'Delivery' : 'Para llevar' }} — se cobra al enviar a cocina.
+                </p>
+            </div>
+            <div style="padding: 1.5rem;">
+                <div style="text-align: center; margin-bottom: 1.25rem;">
+                    <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted);">Total a pagar</div>
+                    <div style="font-size: 2rem; font-weight: 900; color: #f97316;">Bs. {{ number_format($this->total, 2) }}</div>
+                </div>
+                <label style="display:block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">Método de pago</label>
+                <select wire:model="paymentMethod" style="width: 100%; background: var(--bg-base); border: 1px solid var(--border); color: var(--text-strong); padding: 0.7rem 1rem; border-radius: 12px; font-size: 0.95rem; outline: none; font-family: inherit;">
+                    <option value="cash">Efectivo</option>
+                    <option value="qr">QR</option>
+                    <option value="card">Tarjeta</option>
+                </select>
+                <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+                    <button wire:click="$set('showPaymentModal', false)" style="flex: 1; background: var(--bg-elevated); color: var(--text-muted); border: 1px solid var(--border); padding: 0.85rem; border-radius: 12px; font-weight: 700; font-size: 0.9rem; cursor: pointer;">
+                        Cancelar
+                    </button>
+                    <button wire:click="confirmTakeawayPayment" style="flex: 2; background: linear-gradient(135deg, #f97316, #dc2626); color: #fff; border: none; padding: 0.85rem; border-radius: 12px; font-weight: 800; font-size: 0.9rem; cursor: pointer;">
+                        Cobrar y enviar a cocina
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
 </div>

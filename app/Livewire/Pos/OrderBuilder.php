@@ -60,6 +60,10 @@ class OrderBuilder extends Component
     public $tempSelectedSauceIds = [];
     public $tempSauceWingCounts = [];
 
+    // Modal de Pago (pedidos de cocina: para llevar / delivery, se cobran al momento)
+    public $showPaymentModal = false;
+    public $paymentMethod = 'cash';
+
     public function mount()
     {
         $this->categories = Category::where('is_active', true)->get();
@@ -428,10 +432,13 @@ class OrderBuilder extends Component
     }
 
     // --- Persistencia DB ---
-    public function submitOrder()
-    {
-        if (empty($this->cart)) return;
 
+    /**
+     * Crea la orden con sus items, descuenta inventario, ocupa la mesa (si aplica)
+     * y aplica la promoción. Devuelve la orden ya persistida.
+     */
+    protected function persistOrder(): \App\Modules\Orders\Models\Order
+    {
         $user = auth()->user();
         $branchId = $user->activeBranchId() ?? 1;
 
@@ -495,19 +502,76 @@ class OrderBuilder extends Component
             }
         }
 
-        $orderId = $order->id;
+        return $order;
+    }
 
-        // 4. Limpiar sesión y notificar a la vista
+    protected function resetCartState(): void
+    {
         $this->cart = [];
         $this->orderNotes = '';
         $this->selectedPromotionId = null;
         $this->selectedPromotionName = '';
         $this->discountAmount = 0;
+        $this->promotionWarning = '';
         $this->saveCartToSession();
+    }
 
-        $ticketUrl = route('pos.tickets.cashier', ['order' => $orderId]);
-        
-        $this->dispatch('order-saved', url: $ticketUrl);
+    public function submitOrder()
+    {
+        if (empty($this->cart)) return;
+
+        // Pedido de cocina (para llevar / delivery): se cobra al momento.
+        if (!$this->tableId) {
+            $this->paymentMethod = 'cash';
+            $this->showPaymentModal = true;
+            return;
+        }
+
+        // Pedido en salón: se envía a cocina; el pago se hace luego en la mesa.
+        $order = $this->persistOrder();
+        $orderId = $order->id;
+        $this->resetCartState();
+        $this->dispatch('order-saved', url: route('pos.tickets.cashier', ['order' => $orderId]));
+    }
+
+    /**
+     * Confirma el pago de un pedido de cocina (para llevar/delivery): crea la
+     * orden, la cobra con el método elegido e imprime cocina + caja.
+     */
+    public function confirmTakeawayPayment()
+    {
+        if (empty($this->cart)) {
+            $this->showPaymentModal = false;
+            return;
+        }
+
+        $order = $this->persistOrder();
+
+        try {
+            if ((float) $order->total > 0) {
+                app(\App\Modules\Orders\Services\CheckoutService::class)
+                    ->processPayment($order, [
+                        ['method' => $this->paymentMethod, 'amount' => (float) $order->total],
+                    ]);
+            } else {
+                $order->update([
+                    'status'         => 'paid',
+                    'closed_at'      => now(),
+                    'payment_method' => $this->paymentMethod,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Cobro de pedido de cocina falló: ' . $e->getMessage());
+        }
+
+        $orderId = $order->id;
+        $this->showPaymentModal = false;
+        $this->resetCartState();
+
+        $this->dispatch('order-saved', urls: [
+            route('pos.tickets.kitchen', ['order' => $orderId]),
+            route('pos.tickets.cashier', ['order' => $orderId]),
+        ]);
     }
 
     // --- Persistencia Sesión ---
