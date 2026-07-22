@@ -13,6 +13,13 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // La app corre detrás de Cloudflare + Traefik (que terminan el HTTPS y
+        // reenvían por HTTP al contenedor). Confiar en el proxy para que Laravel
+        // respete X-Forwarded-Proto: https y genere URLs https; si no, Livewire
+        // pide /update por http y el navegador lo bloquea (mixed content) o lo
+        // convierte en GET -> 405.
+        $middleware->trustProxies(at: '*');
+
         $middleware->alias([
             'role'   => CheckRole::class,
             'branch' => EnsureActiveBranch::class,
