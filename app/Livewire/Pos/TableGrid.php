@@ -27,6 +27,9 @@ class TableGrid extends Component
     public $tableToDeleteId = null;
     public $deleteErrorMessage = '';
 
+    // Modal de reimprimir tickets
+    public $showReprintModal = false;
+
     // ─── ACCIONES SOBRE MESA ──────────────────────────────────
 
     public function manageTable($id)
@@ -178,10 +181,26 @@ class TableGrid extends Component
 
     // ─── RENDER ──────────────────────────────────────────────
 
+    // ─── REIMPRIMIR TICKETS ──────────────────────────────────
+
+    public function openReprintModal()
+    {
+        $this->showReprintModal = true;
+    }
+
     public function render()
     {
         $branchId = auth()->user()->activeBranchId() ?? 1;
         $tables = Table::where('branch_id', $branchId)->get();
-        return view('livewire.pos.table-grid', compact('tables'));
+
+        // Últimos pedidos de la sucursal, para reimprimir un ticket que se cerró
+        // por error. Se cargan siempre (son pocos) para no complicar el modal.
+        $recentOrders = \App\Modules\Orders\Models\Order::where('branch_id', $branchId)
+            ->with('table')
+            ->latest('id')
+            ->limit(15)
+            ->get();
+
+        return view('livewire.pos.table-grid', compact('tables', 'recentOrders'));
     }
 }

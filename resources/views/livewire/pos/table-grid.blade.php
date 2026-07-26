@@ -250,6 +250,10 @@
         <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
         <h2>Mapa de Mesas <span>· Selecciona una mesa</span></h2>
         <div style="margin-left: auto; display: flex; gap: 0.6rem;">
+            <button wire:click="openReprintModal" title="Reimprimir un ticket" style="background: var(--bg-surface); color: var(--text-secondary); border: 1px solid var(--border-strong); padding: 0.6rem 1.1rem; border-radius: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem;">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                Reimprimir
+            </button>
             <button wire:click="createTakeawayOrder" style="background: linear-gradient(135deg, #f97316, #dc2626); color: var(--text-strong); border: none; padding: 0.6rem 1.25rem; border-radius: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem;">
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
                 Crear Pedido
@@ -424,6 +428,61 @@
                         <button wire:click="deleteTable" class="btn-action" style="flex: 1; background: #ef4444; color: var(--text-strong); border: none;">Sí, Eliminar</button>
                     </div>
                 @endif
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- ═══ MODAL: REIMPRIMIR TICKETS ═══ --}}
+    @if($showReprintModal)
+    <div class="table-modal-overlay">
+        <div class="table-modal" style="max-width: 640px;">
+            <div class="table-modal-header">
+                <h3>Reimprimir ticket</h3>
+                <button wire:click="$set('showReprintModal', false)" class="table-modal-close">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div style="padding: 1rem 1.25rem;">
+                <p style="color: var(--text-muted); font-size: 0.82rem; margin-bottom: 1rem;">
+                    Últimos pedidos de esta sucursal. Elige si quieres el ticket de caja o el de cocina.
+                </p>
+
+                @forelse($recentOrders as $order)
+                    @php
+                        $tipo = match($order->order_type ?? 'dine_in') {
+                            'delivery' => 'Delivery',
+                            'takeaway' => 'Para llevar',
+                            default    => $order->table->name ?? 'Mesa',
+                        };
+                    @endphp
+                    <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.7rem 0.5rem; border-bottom: 1px solid var(--border);">
+                        <div style="min-width: 0; flex: 1;">
+                            <div style="font-weight: 700; color: var(--text-strong); font-size: 0.9rem;">
+                                #{{ $order->daily_number ?? $order->id }} · {{ $tipo }}
+                                @if($order->status === 'paid')
+                                    <span style="font-size: 0.62rem; font-weight: 700; color: #22c55e; border: 1px solid rgba(34,197,94,0.4); border-radius: 6px; padding: 0.05rem 0.3rem; margin-left: 0.25rem;">PAGADO</span>
+                                @elseif($order->status === 'open')
+                                    <span style="font-size: 0.62rem; font-weight: 700; color: #f97316; border: 1px solid rgba(249,115,22,0.4); border-radius: 6px; padding: 0.05rem 0.3rem; margin-left: 0.25rem;">ABIERTO</span>
+                                @endif
+                            </div>
+                            <div style="color: var(--text-muted); font-size: 0.75rem;">
+                                {{ $order->opened_at ? $order->opened_at->format('d/m H:i') : $order->created_at->format('d/m H:i') }}
+                                · Bs. {{ number_format($order->total, 2) }}
+                            </div>
+                        </div>
+                        <button onclick="window.open('{{ route('pos.tickets.cashier', ['order' => $order->id]) }}', 'PrintTicketCaja', 'width=400,height=600')"
+                                class="btn-action" style="width: auto; padding: 0.4rem 0.75rem; font-size: 0.75rem; background: var(--bg-elevated); color: var(--text-secondary); border: 1px solid var(--border-strong);">
+                            Caja
+                        </button>
+                        <button onclick="window.open('{{ route('pos.tickets.kitchen', ['order' => $order->id]) }}', 'PrintTicketCocina', 'width=400,height=600')"
+                                class="btn-action" style="width: auto; padding: 0.4rem 0.75rem; font-size: 0.75rem; background: var(--bg-elevated); color: #f97316; border: 1px solid rgba(249,115,22,0.4);">
+                            Cocina
+                        </button>
+                    </div>
+                @empty
+                    <p style="text-align: center; color: var(--text-muted); padding: 2rem 0;">Aún no hay pedidos en esta sucursal.</p>
+                @endforelse
             </div>
         </div>
     </div>

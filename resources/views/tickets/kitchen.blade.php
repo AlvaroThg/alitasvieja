@@ -76,9 +76,11 @@
         Ref: {{ $order->order_number }}
     </div>
     {{-- FIN MODIFICADO --}}
+    @if($order->table)
     <div>
-        <span class="bold">Mesa:</span> {{ $order->table->number ?? 'Sin mesa' }}
+        <span class="bold">Mesa:</span> {{ $order->table->name }}
     </div>
+    @endif
     <div>
         <span class="bold">Hora:</span> {{ $order->opened_at->format('H:i') }}
     </div>
