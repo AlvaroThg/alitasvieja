@@ -78,7 +78,7 @@
             
             <div class="form-group">
                 <label class="form-label">Email (Usuario de acceso)</label>
-                <input type="email" wire:model="email" class="form-input" placeholder="ejemplo@alitasvega.com">
+                <input type="email" wire:model="email" class="form-input" placeholder="ejemplo@alitasdelavieja.com">
                 @error('email') <span style="color: red; font-size: 0.8rem;">{{ $message }}</span> @enderror
             </div>
 
