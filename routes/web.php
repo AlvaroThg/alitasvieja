@@ -15,7 +15,17 @@ use App\Modules\Tickets\Http\Controllers\TicketController;
 use Illuminate\Support\Facades\Route;
 
 // ─── Públicas ─────────────────────────────────────────────────────────────────
-Route::get('/', fn() => redirect()->route('login'));
+// Landing pública del sistema. Si ya hay sesión, va directo a la sección
+// que corresponde al rol en vez de mostrar la presentación.
+Route::get('/', function () {
+    if (auth()->check()) {
+        return auth()->user()->isOwner()
+            ? redirect()->route('admin.dashboard')
+            : redirect()->route('pos.index');
+    }
+
+    return view('landing');
+})->name('home');
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
