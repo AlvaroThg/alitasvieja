@@ -62,7 +62,7 @@ class UserManager extends Component
         $rules = [
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . ($this->userId ?? 'NULL'),
-            'role' => 'required|in:owner,cashier',
+            'role' => 'required|in:owner,branch_admin,cashier,waiter',
             'branch_id' => 'required|exists:branches,id',
         ];
 

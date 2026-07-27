@@ -20,7 +20,9 @@
         .btn-save { background: #3b82f6; color: var(--text-strong); border: none; padding: 0.75rem 1.5rem; border-radius: 10px; cursor: pointer; font-weight: 700; }
         
         .badge-owner { background: #f97316; color: var(--text-strong); padding: 0.2rem 0.5rem; border-radius: 5px; font-size: 0.75rem; }
+        .badge-branch-admin { background: #a855f7; color: var(--text-strong); padding: 0.2rem 0.5rem; border-radius: 5px; font-size: 0.75rem; }
         .badge-cashier { background: #3b82f6; color: var(--text-strong); padding: 0.2rem 0.5rem; border-radius: 5px; font-size: 0.75rem; }
+        .badge-waiter { background: var(--border-strong); color: var(--text-strong); padding: 0.2rem 0.5rem; border-radius: 5px; font-size: 0.75rem; }
     </style>
 
     <div class="um-header">
@@ -45,9 +47,13 @@
                 <td>{{ $user->email }}</td>
                 <td>
                     @if($user->role === 'owner')
-                        <span class="badge-owner">Administrador</span>
-                    @else
+                        <span class="badge-owner">Dueño / Super Admin</span>
+                    @elseif($user->role === 'branch_admin')
+                        <span class="badge-branch-admin">Admin de Sucursal</span>
+                    @elseif($user->role === 'cashier')
                         <span class="badge-cashier">Cajero</span>
+                    @else
+                        <span class="badge-waiter">Mozo</span>
                     @endif
                 </td>
                 <td>{{ $user->branch->name ?? 'N/A' }}</td>
@@ -85,8 +91,10 @@
             <div class="form-group">
                 <label class="form-label">Rol</label>
                 <select wire:model="role" class="form-select">
-                    <option value="cashier">Cajero (Solo POS)</option>
-                    <option value="owner">Administrador (Acceso Total)</option>
+                    <option value="waiter">Mozo (Solo pedidos)</option>
+                    <option value="cashier">Cajero (POS + Caja)</option>
+                    <option value="branch_admin">Administrador de Sucursal (Caja + reportes de su sucursal)</option>
+                    <option value="owner">Dueño / Super Admin (Acceso total a todas las sucursales)</option>
                 </select>
                 @error('role') <span style="color: red; font-size: 0.8rem;">{{ $message }}</span> @enderror
             </div>
