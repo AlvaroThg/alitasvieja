@@ -14,6 +14,9 @@ RUN apk add --no-cache \
         oniguruma-dev \
         icu-dev \
         git \
+    # Las herramientas de compilación deben estar ANTES de compilar cualquier
+    # extensión (docker-php-ext-install y pecl las necesitan).
+    && apk add --no-cache --virtual .build-deps $PHPIZE_DEPS linux-headers \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) \
         pdo \
@@ -26,8 +29,10 @@ RUN apk add --no-cache \
         zip \
         intl \
         opcache \
-    && apk add --no-cache --virtual .build-deps $PHPIZE_DEPS linux-headers \
-    && pecl install redis \
+    # pecl pregunta por igbinary/lzf/zstd: sin TTY hay que responder por stdin
+    # o el build aborta. Se fija la versión por compatibilidad con PHP 8.4.
+    && pecl channel-update pecl.php.net \
+    && printf "\n\n\n\n" | pecl install redis-6.1.0 \
     && docker-php-ext-enable redis \
     && apk del .build-deps
 
