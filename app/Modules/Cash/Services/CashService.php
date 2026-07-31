@@ -218,6 +218,30 @@ class CashService
     }
 
     /**
+     * Registra en la Caja de Venta el efectivo cobrado por una venta.
+     *
+     * Solo el efectivo entra a la caja física: QR, tarjeta y transferencia no
+     * afectan el arqueo. Se marca como 'sales' para distinguirlo de la Caja Chica.
+     */
+    public function registerSaleIncome(
+        CashSession $session,
+        float $amount,
+        string $concept,
+        ?string $reference,
+        int $userId
+    ): CashMovement {
+        return CashMovement::create([
+            'cash_session_id' => $session->id,
+            'user_id'         => $userId,
+            'type'            => 'income',
+            'cash_box'        => 'sales',
+            'amount'          => $amount,
+            'concept'         => $concept,
+            'reference'       => $reference,
+        ]);
+    }
+
+    /**
      * Retorna la sesión abierta del branch, o null.
      */
     public function getActiveSession(int $branchId): ?CashSession

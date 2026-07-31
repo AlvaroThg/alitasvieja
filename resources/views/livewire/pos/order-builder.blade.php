@@ -817,10 +817,12 @@
         }
 
         document.addEventListener('livewire:init', () => {
-            Livewire.on('stock-alert', (e) => {
+            const showAlert = (e) => {
                 const msg = Array.isArray(e) ? (e[0]?.message) : e?.message;
                 if (msg) window.alert(msg);
-            });
+            };
+            Livewire.on('stock-alert', showAlert);
+            Livewire.on('pos-error', showAlert);
         });
     </script>
 

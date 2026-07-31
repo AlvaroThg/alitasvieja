@@ -17,6 +17,7 @@ class TableGrid extends Component
     public $showCheckoutModal = false;
     public $checkoutPaymentMethod = 'cash';
     public $checkoutOrderTotal = 0;
+    public $checkoutError = '';
 
     // Modal de crear mesa
     public $showCreateTableModal = false;
@@ -54,12 +55,22 @@ class TableGrid extends Component
             ->where('status', 'open')
             ->first();
 
-        if ($openOrder) {
-            $this->checkoutOrderTotal = $openOrder->total;
-            $this->showActionModal = false;
-            $this->showCheckoutModal = true;
-        } else {
+        if (!$openOrder) {
             $this->changeStatus('available');
+            return;
+        }
+
+        $this->checkoutError = '';
+        $this->checkoutOrderTotal = $openOrder->total;
+        $this->showActionModal = false;
+        $this->showCheckoutModal = true;
+
+        // Aviso temprano: sin caja abierta no se podrá cobrar.
+        try {
+            app(\App\Modules\Orders\Services\CheckoutService::class)
+                ->requireOpenSession($openOrder->branch_id);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->checkoutError = collect($e->errors())->flatten()->first();
         }
     }
 
@@ -69,21 +80,33 @@ class TableGrid extends Component
             ->where('status', 'open')
             ->first();
 
-        if ($openOrder && $openOrder->total > 0) {
-            $checkoutService = app(\App\Modules\Orders\Services\CheckoutService::class);
-            $checkoutService->processPayment($openOrder, [
-                ['method' => $this->checkoutPaymentMethod, 'amount' => $openOrder->total]
-            ]);
-        } elseif ($openOrder) {
-            $openOrder->update([
-                'status' => 'paid',
-                'closed_at' => now(),
-                'payment_method' => $this->checkoutPaymentMethod
-            ]);
+        try {
+            if ($openOrder && $openOrder->total > 0) {
+                $checkoutService = app(\App\Modules\Orders\Services\CheckoutService::class);
+                $checkoutService->processPayment($openOrder, [
+                    ['method' => $this->checkoutPaymentMethod, 'amount' => $openOrder->total]
+                ]);
+            } elseif ($openOrder) {
+                // Pedido sin monto: igual exige caja abierta, para no cerrar mesas
+                // fuera de un turno de caja.
+                app(\App\Modules\Orders\Services\CheckoutService::class)
+                    ->requireOpenSession($openOrder->branch_id);
+
+                $openOrder->update([
+                    'status' => 'paid',
+                    'closed_at' => now(),
+                    'payment_method' => $this->checkoutPaymentMethod
+                ]);
+            }
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // La mesa no se libera: el cobro no ocurrió.
+            $this->checkoutError = collect($e->errors())->flatten()->first();
+            return;
         }
 
         $this->selectedTableForAction->update(['status' => 'available']);
         $this->showCheckoutModal = false;
+        $this->checkoutError = '';
     }
 
     public function createOrder()

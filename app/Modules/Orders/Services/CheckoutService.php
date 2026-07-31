@@ -2,6 +2,8 @@
 
 namespace App\Modules\Orders\Services;
 
+use App\Modules\Cash\Models\CashSession;
+use App\Modules\Cash\Services\CashService;
 use App\Modules\Orders\Models\Order;
 use App\Modules\Orders\Models\OrderPayment;
 use Illuminate\Support\Facades\DB;
@@ -9,6 +11,32 @@ use Illuminate\Validation\ValidationException;
 
 class CheckoutService
 {
+    public function __construct(private CashService $cashService)
+    {
+    }
+
+    /**
+     * Devuelve la caja abierta de la sucursal o falla.
+     *
+     * No se puede cobrar con la caja cerrada: el dinero entraría al negocio sin
+     * quedar reflejado en ningún arqueo. Se expone público para que el POS pueda
+     * avisar al cajero ANTES de armar el cobro.
+     *
+     * @throws ValidationException
+     */
+    public function requireOpenSession(int $branchId): CashSession
+    {
+        $session = $this->cashService->getActiveSession($branchId);
+
+        if (!$session) {
+            throw ValidationException::withMessages([
+                'cash_session' => 'No hay una caja abierta en esta sucursal. Abre la caja antes de cobrar.',
+            ]);
+        }
+
+        return $session;
+    }
+
     /**
      * Procesa el pago de un pedido.
      *
@@ -61,9 +89,12 @@ class CheckoutService
             ]);
         }
 
+        // Regla de negocio: solo se cobra con la caja abierta.
+        $session = $this->requireOpenSession($order->branch_id);
+
         // ─── Proceso de pago ──────────────────────────────────────
 
-        DB::transaction(function () use ($order, $payments) {
+        DB::transaction(function () use ($order, $payments, $session) {
             // Determinar payment_method del pedido
             if (count($payments) > 1) {
                 $paymentMethod = 'mixed';
@@ -87,6 +118,26 @@ class CheckoutService
                 'status'         => 'paid',
                 'closed_at'      => now(),
             ]);
+
+            // El efectivo cobrado entra a la Caja de Venta para que el arqueo
+            // del cierre incluya las ventas del día, no solo los movimientos
+            // manuales. QR/tarjeta/transferencia no tocan la caja física.
+            $cashAmount = 0.0;
+            foreach ($payments as $payment) {
+                if (($payment['method'] ?? null) === 'cash') {
+                    $cashAmount += (float) $payment['amount'];
+                }
+            }
+
+            if ($cashAmount > 0) {
+                $this->cashService->registerSaleIncome(
+                    $session,
+                    $cashAmount,
+                    'Venta ' . $order->order_number,
+                    $order->order_number,
+                    auth()->id() ?? $order->user_id
+                );
+            }
 
             // NOTA: el inventario se descuenta al ENVIAR A COCINA (submitOrder),
             // no aquí, para que el stock refleje el consumo apenas se hace el pedido.

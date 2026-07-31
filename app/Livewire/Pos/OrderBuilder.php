@@ -520,8 +520,12 @@ class OrderBuilder extends Component
     {
         if (empty($this->cart)) return;
 
-        // Pedido de cocina (para llevar / delivery): se cobra al momento.
+        // Pedido de cocina (para llevar / delivery): se cobra al momento, así que
+        // se exige caja abierta antes de armar el cobro.
         if (!$this->tableId) {
+            if (!$this->cashIsOpen()) {
+                return;
+            }
             $this->paymentMethod = 'cash';
             $this->showPaymentModal = true;
             return;
@@ -538,10 +542,33 @@ class OrderBuilder extends Component
      * Confirma el pago de un pedido de cocina (para llevar/delivery): crea la
      * orden, la cobra con el método elegido e imprime cocina + caja.
      */
+    /**
+     * ¿Hay caja abierta en la sucursal? Si no, avisa al cajero y devuelve false.
+     * Se consulta antes de registrar nada, para no dejar pedidos sin cobrar.
+     */
+    protected function cashIsOpen(): bool
+    {
+        $branchId = auth()->user()->activeBranchId() ?? 1;
+
+        try {
+            app(\App\Modules\Orders\Services\CheckoutService::class)->requireOpenSession($branchId);
+            return true;
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->showPaymentModal = false;
+            $this->dispatch('pos-error', message: collect($e->errors())->flatten()->first());
+            return false;
+        }
+    }
+
     public function confirmTakeawayPayment()
     {
         if (empty($this->cart)) {
             $this->showPaymentModal = false;
+            return;
+        }
+
+        // Se verifica ANTES de crear el pedido: sin caja abierta no se registra nada.
+        if (!$this->cashIsOpen()) {
             return;
         }
 

@@ -350,6 +350,12 @@
                     <div style="font-size: 2rem; font-weight: 800; color: var(--text-strong);">Bs {{ number_format($checkoutOrderTotal, 2) }}</div>
                 </div>
 
+                @if($checkoutError)
+                    <div style="background: rgba(220,38,38,0.1); border: 1px solid rgba(220,38,38,0.35); color: #f87171; padding: 0.75rem 0.9rem; border-radius: 10px; font-size: 0.82rem; font-weight: 600; margin-bottom: 1rem;">
+                        {{ $checkoutError }}
+                    </div>
+                @endif
+
                 <div style="margin-bottom: 1rem;">
                     <label style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.5rem; display: block;">Método de Pago</label>
                     <select wire:model="checkoutPaymentMethod" style="width: 100%; padding: 0.75rem; border-radius: 8px; background: var(--border); border: 1px solid var(--border-strong); color: var(--text-strong); outline: none;">
