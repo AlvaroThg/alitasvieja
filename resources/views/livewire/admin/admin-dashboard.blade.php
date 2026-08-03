@@ -91,6 +91,22 @@
                 <span class="kpi-label">Cancelados</span>
             </div>
         </div>
+
+        {{-- Ingreso Neto: ventas menos gastos (los traspasos internos no cuentan) --}}
+        @php
+            $neto = (float) ($summary['net_income'] ?? 0);
+            $gastos = (float) ($summary['total_expenses'] ?? 0);
+        @endphp
+        <div class="kpi-card">
+            <div class="kpi-icon" style="background: linear-gradient(135deg, rgba(34,197,94,0.15), rgba(34,197,94,0.05)); color: #22c55e;">
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+            </div>
+            <div class="kpi-content">
+                <span class="kpi-value" style="color: {{ $neto >= 0 ? 'inherit' : '#dc2626' }};">Bs. {{ number_format($neto, 2) }}</span>
+                <span class="kpi-label">Ingreso Neto</span>
+                <span style="font-size: 0.7rem; color: var(--text-muted);">Ventas − Bs. {{ number_format($gastos, 2) }} en gastos</span>
+            </div>
+        </div>
     </div>
 
     {{-- ═══ ÚLTIMOS MOVIMIENTOS DE INVENTARIO ═══ --}}
@@ -250,12 +266,14 @@
                             <tr>
                                 <th>Sucursal</th>
                                 <th class="text-right">Pedidos</th>
-                                <th class="text-right">Ingresos</th>
-                                <th class="text-right">Ticket Prom.</th>
+                                <th class="text-right">Ventas</th>
+                                <th class="text-right">Gastos</th>
+                                <th class="text-right">Neto</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach ($revenueByBranch as $branch)
+                                @php $bNeto = (float) ($branch['net'] ?? $branch['revenue']); @endphp
                                 <tr>
                                     <td>
                                         <span class="branch-dot"></span>
@@ -263,8 +281,11 @@
                                     </td>
                                     <td class="text-right font-mono">{{ number_format($branch['orders']) }}</td>
                                     <td class="text-right font-mono">Bs. {{ number_format($branch['revenue'], 2) }}</td>
-                                    <td class="text-right font-mono">
-                                        Bs. {{ $branch['orders'] > 0 ? number_format($branch['revenue'] / $branch['orders'], 2) : '0.00' }}
+                                    <td class="text-right font-mono" style="color: {{ ($branch['expenses'] ?? 0) > 0 ? '#dc2626' : 'inherit' }};">
+                                        Bs. {{ number_format($branch['expenses'] ?? 0, 2) }}
+                                    </td>
+                                    <td class="text-right font-mono" style="font-weight: 700; color: {{ $bNeto >= 0 ? '#15803d' : '#dc2626' }};">
+                                        Bs. {{ number_format($bNeto, 2) }}
                                     </td>
                                 </tr>
                             @endforeach
@@ -273,13 +294,15 @@
                             <tr>
                                 <td><strong>Total</strong></td>
                                 <td class="text-right font-mono"><strong>{{ number_format(array_sum(array_column($revenueByBranch, 'orders'))) }}</strong></td>
-                                <td class="text-right font-mono"><strong>Bs. {{ number_format(array_sum(array_column($revenueByBranch, 'revenue')), 2) }}</strong></td>
-                                <td class="text-right font-mono">
-                                    @php
-                                        $totalOrders = array_sum(array_column($revenueByBranch, 'orders'));
-                                        $totalRev = array_sum(array_column($revenueByBranch, 'revenue'));
-                                    @endphp
-                                    <strong>Bs. {{ $totalOrders > 0 ? number_format($totalRev / $totalOrders, 2) : '0.00' }}</strong>
+                                @php
+                                    $totalRev = array_sum(array_column($revenueByBranch, 'revenue'));
+                                    $totalExp = array_sum(array_column($revenueByBranch, 'expenses'));
+                                    $totalNet = $totalRev - $totalExp;
+                                @endphp
+                                <td class="text-right font-mono"><strong>Bs. {{ number_format($totalRev, 2) }}</strong></td>
+                                <td class="text-right font-mono"><strong>Bs. {{ number_format($totalExp, 2) }}</strong></td>
+                                <td class="text-right font-mono" style="color: {{ $totalNet >= 0 ? '#15803d' : '#dc2626' }};">
+                                    <strong>Bs. {{ number_format($totalNet, 2) }}</strong>
                                 </td>
                             </tr>
                         </tfoot>

@@ -160,8 +160,20 @@ class ReportService
         // ── Query del período anterior ──
         $previousData = $this->buildDashboardQuery($branchId, $previousFrom, $previousTo);
 
-        // ── Revenue por sucursal ──
+        // ── Revenue y gastos por sucursal ──
         $revenueByBranch = $this->getRevenueByBranch($branchId, $currentFrom, $currentTo);
+        $expensesByBranch = $this->getExpensesByBranch($branchId, $currentFrom, $currentTo);
+
+        // Se cruzan para obtener el neto de cada sucursal.
+        $revenueByBranch = array_map(function (array $row) use ($expensesByBranch) {
+            $expenses = (float) ($expensesByBranch[$row['branch_id']] ?? 0);
+            $row['expenses'] = $expenses;
+            $row['net'] = $row['revenue'] - $expenses;
+
+            return $row;
+        }, $revenueByBranch);
+
+        $totalExpenses = (float) array_sum($expensesByBranch);
 
         // ── Variación porcentual ──
         $previousRevenue = (float) $previousData['total_revenue'];
@@ -181,7 +193,41 @@ class ReportService
             'cancelled_orders'    => (int) $currentData['cancelled_orders'],
             'revenue_by_branch'   => $revenueByBranch,
             'revenue_vs_previous' => $revenueVsPrevious,
+            'total_expenses'      => $totalExpenses,
+            'net_income'          => $currentRevenue - $totalExpenses,
         ];
+    }
+
+    /**
+     * Gastos reales por sucursal (para el ingreso neto).
+     *
+     * Se cuentan los egresos de caja EXCEPTO los traspasos: un traspaso de la
+     * Caja de Venta a la Caja Chica no es un gasto, solo mueve dinero dentro
+     * del negocio; contarlo haría que el neto se vea más bajo de lo real.
+     *
+     * @return array<int, float>  [branch_id => gastos]
+     */
+    public function getExpensesByBranch(?int $branchId, Carbon $from, Carbon $to): array
+    {
+        $query = DB::table('cash_movements')
+            ->join('cash_sessions', 'cash_movements.cash_session_id', '=', 'cash_sessions.id')
+            ->where('cash_movements.type', 'expense')
+            ->where('cash_movements.cash_box', '!=', 'transfer')
+            ->whereBetween('cash_movements.created_at', [$from, $to]);
+
+        if ($branchId) {
+            $query->where('cash_sessions.branch_id', $branchId);
+        }
+
+        return $query
+            ->groupBy('cash_sessions.branch_id')
+            ->select([
+                'cash_sessions.branch_id',
+                DB::raw('COALESCE(SUM(cash_movements.amount), 0) as expenses'),
+            ])
+            ->pluck('expenses', 'branch_id')
+            ->map(fn ($v) => (float) $v)
+            ->toArray();
     }
 
     /**

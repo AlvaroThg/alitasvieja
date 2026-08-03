@@ -41,6 +41,13 @@
         <span>Sobrante/Faltante: <strong class="{{ $totalDifference < 0 ? 'expense' : 'income' }}">Bs. {{ number_format($totalDifference, 2) }}</strong></span>
     </div>
 
+    <div class="totals" style="border-top: 1px solid #ddd; padding-top: 6px;">
+        <span>Ventas del período: <strong>Bs. {{ number_format($sales, 2) }}</strong></span>
+        <span>Gastos: <strong class="expense">Bs. {{ number_format($realExpenses, 2) }}</strong></span>
+        <span>INGRESO NETO: <strong class="{{ $netIncome < 0 ? 'expense' : 'income' }}" style="font-size: 12px;">Bs. {{ number_format($netIncome, 2) }}</strong></span>
+        <span class="muted" style="font-size: 8.5px;">(ventas de todos los métodos de pago menos gastos; los traspasos internos no cuentan)</span>
+    </div>
+
     @if($sessions->isNotEmpty())
         <div style="font-size: 11px; font-weight: bold; margin-bottom: 4px;">Cierres de caja del período</div>
         <table style="margin-bottom: 14px;">

@@ -73,10 +73,37 @@ class CashMovements extends Component
             ->when($branchId, fn ($q) => $q->where('branch_id', $branchId));
     }
 
+    /**
+     * Ingreso neto del período: ventas (todos los métodos de pago) menos gastos.
+     * Las ventas se toman de los pedidos pagados, no de la caja, porque los
+     * cobros por QR/tarjeta nunca pasan por el efectivo.
+     */
+    protected function netIncome(): array
+    {
+        $branchId = $this->scopedBranchId();
+
+        $sales = (float) \App\Modules\Orders\Models\Order::where('status', 'paid')
+            ->when($this->dateFrom, fn ($q) => $q->whereDate('closed_at', '>=', $this->dateFrom))
+            ->when($this->dateTo, fn ($q) => $q->whereDate('closed_at', '<=', $this->dateTo))
+            ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+            ->sum('total');
+
+        // Los traspasos a Caja Chica no son gasto: solo mueven dinero interno.
+        $expenses = (float) CashMovement::where('type', 'expense')
+            ->where('cash_box', '!=', 'transfer')
+            ->when($this->dateFrom, fn ($q) => $q->whereDate('created_at', '>=', $this->dateFrom))
+            ->when($this->dateTo, fn ($q) => $q->whereDate('created_at', '<=', $this->dateTo))
+            ->when($branchId, fn ($q) => $q->whereHas('cashSession', fn ($s) => $s->where('branch_id', $branchId)))
+            ->sum('amount');
+
+        return ['sales' => $sales, 'expenses' => $expenses, 'net' => $sales - $expenses];
+    }
+
     public function render()
     {
         $movements = $this->baseQuery()->latest('id')->paginate(20);
         $sessions = $this->closedSessionsQuery()->latest('closed_at')->get();
+        $net = $this->netIncome();
 
         // Totales del filtro actual (sobre todo el rango, no solo la página)
         $totals = [
@@ -91,6 +118,7 @@ class CashMovements extends Component
         return view('livewire.admin.cash-movements', [
             'movements' => $movements,
             'sessions' => $sessions,
+            'net' => $net,
             'branches' => $isOwner
                 ? Branch::active()->get()
                 : Branch::where('id', Auth::user()->activeBranchId())->get(),

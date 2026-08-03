@@ -107,6 +107,13 @@
             @php $balance = $totals['income'] - $totals['expense']; @endphp
             <div class="cm-total-value" style="color: {{ $balance >= 0 ? '#22c55e' : '#ef4444' }};">Bs. {{ number_format($balance, 2) }}</div>
         </div>
+        <div class="cm-total-card" style="border-color: rgba(34,197,94,0.4);">
+            <div class="cm-total-label">Ingreso Neto</div>
+            <div class="cm-total-value" style="color: {{ $net['net'] >= 0 ? '#22c55e' : '#ef4444' }};">Bs. {{ number_format($net['net'], 2) }}</div>
+            <div style="font-size: 0.68rem; color: var(--text-muted); margin-top: 0.15rem;">
+                Ventas Bs. {{ number_format($net['sales'], 2) }} − Gastos Bs. {{ number_format($net['expenses'], 2) }}
+            </div>
+        </div>
         <div class="cm-total-card">
             <div class="cm-total-label">Sobrante / Faltante</div>
             <div class="cm-total-value" style="color: {{ $totals['difference'] == 0 ? 'var(--text-muted)' : ($totals['difference'] > 0 ? '#22c55e' : '#ef4444') }};">

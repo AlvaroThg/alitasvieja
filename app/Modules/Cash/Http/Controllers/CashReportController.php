@@ -161,6 +161,16 @@ class CashReportController extends Controller
         $totalExpense = (float) $movements->where('type', 'expense')->sum('amount');
         $totalDifference = (float) $sessions->sum(fn ($s) => (float) $s->difference);
 
+        // Ingreso neto: ventas de todos los métodos de pago menos gastos reales
+        // (los traspasos a Caja Chica no son gasto, solo mueven dinero interno).
+        $sales = (float) \App\Modules\Orders\Models\Order::where('status', 'paid')
+            ->when($from, fn ($q) => $q->whereDate('closed_at', '>=', $from))
+            ->when($to, fn ($q) => $q->whereDate('closed_at', '<=', $to))
+            ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+            ->sum('total');
+        $realExpenses = (float) $movements->where('type', 'expense')
+            ->where('cash_box', '!=', 'transfer')->sum('amount');
+
         $pdf = Pdf::loadView('reports.cash-movements-pdf', [
             'movements'       => $movements,
             'sessions'        => $sessions,
@@ -170,6 +180,9 @@ class CashReportController extends Controller
             'totalIncome'     => $totalIncome,
             'totalExpense'    => $totalExpense,
             'totalDifference' => $totalDifference,
+            'sales'           => $sales,
+            'realExpenses'    => $realExpenses,
+            'netIncome'       => $sales - $realExpenses,
         ])->setPaper('a4', 'landscape');
 
         return $pdf->download('movimientos_caja.pdf');
