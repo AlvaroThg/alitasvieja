@@ -115,7 +115,7 @@
         .foot a:hover { color: #f97316; }
     </style>
 </head>
-<body x-data="{ sucursal: {{ $sucursales->first()->id ?? 'null' }} }">
+<body>
 
     <nav class="nav">
         <div class="wrap nav-in">
@@ -192,7 +192,7 @@
             @if($sucursales->count() > 1)
                 <div class="branch-tabs">
                     @foreach($sucursales as $s)
-                        <button class="branch-tab" :class="{ 'on': sucursal === {{ $s->id }} }" @click="sucursal = {{ $s->id }}">
+                        <button type="button" class="branch-tab" data-tab="{{ $s->id }}">
                             {{ $s->city ?: $s->name }}
                         </button>
                     @endforeach
@@ -211,10 +211,9 @@
                                     $disponibleEn[$s->id] = collect($p['variantes'])
                                         ->contains(fn ($v) => ($v['precios'][$s->id] ?? 0) > 0);
                                 }
-                                $cond = collect($disponibleEn)->filter()->keys()
-                                    ->map(fn ($id) => "sucursal === $id")->implode(' || ');
+                                $sucProducto = collect($disponibleEn)->filter()->keys()->implode(',');
                             @endphp
-                            <div class="item" @if($cond) x-show="{{ $cond }}" x-cloak @endif>
+                            <div class="item" data-sucursales="{{ $sucProducto }}">
                                 <div class="item-main">
                                     <div class="item-name">{{ $p['nombre'] }}</div>
                                     @if($p['descripcion'])
@@ -224,16 +223,15 @@
                                 <div class="variants">
                                     @foreach($p['variantes'] as $v)
                                         @php
-                                            $condV = collect($v['precios'])->filter(fn ($pr) => $pr > 0)->keys()
-                                                ->map(fn ($id) => "sucursal === $id")->implode(' || ');
+                                            $sucVariante = collect($v['precios'])->filter(fn ($pr) => $pr > 0)->keys()->implode(',');
                                         @endphp
-                                        <div class="variant" @if($condV) x-show="{{ $condV }}" x-cloak @endif>
+                                        <div class="variant" data-sucursales="{{ $sucVariante }}">
                                             @if(count($p['variantes']) > 1 || $v['nombre'] !== 'Único')
                                                 <span class="variant-name">{{ $v['nombre'] }}</span>
                                             @endif
                                             <span class="variant-price">
                                                 @foreach($v['precios'] as $bid => $precio)
-                                                    <span x-show="sucursal === {{ $bid }}" x-cloak>Bs {{ number_format($precio, 0) }}</span>
+                                                    <span data-precio="{{ $bid }}">Bs {{ number_format($precio, 0) }}</span>
                                                 @endforeach
                                             </span>
                                         </div>
@@ -345,6 +343,40 @@
             </span>
         </div>
     </footer>
+
+    {{-- Selector de sucursal en JS plano: esta página no carga Livewire (y con él
+         Alpine), así que no se puede depender de x-show. --}}
+    <script>
+        (function () {
+            var inicial = {{ $sucursales->first()->id ?? 'null' }};
+            if (!inicial) return;
+
+            function mostrarSucursal(id) {
+                id = String(id);
+
+                // Precios: solo el de la sucursal elegida.
+                document.querySelectorAll('[data-precio]').forEach(function (el) {
+                    el.style.display = el.dataset.precio === id ? '' : 'none';
+                });
+
+                // Productos y variantes que no se venden en esa sucursal.
+                document.querySelectorAll('[data-sucursales]').forEach(function (el) {
+                    var ids = el.dataset.sucursales.split(',').filter(Boolean);
+                    el.style.display = ids.indexOf(id) !== -1 ? '' : 'none';
+                });
+
+                document.querySelectorAll('[data-tab]').forEach(function (el) {
+                    el.classList.toggle('on', el.dataset.tab === id);
+                });
+            }
+
+            document.querySelectorAll('[data-tab]').forEach(function (el) {
+                el.addEventListener('click', function () { mostrarSucursal(el.dataset.tab); });
+            });
+
+            mostrarSucursal(inicial);
+        })();
+    </script>
 
 </body>
 </html>
