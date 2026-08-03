@@ -22,8 +22,8 @@ return [
     'logo' => 'img/logo.png',
 
     'whatsapp' => env('RESTAURANTE_WHATSAPP', ''), // solo dígitos, ej. 59171234567
-    'instagram' => env('RESTAURANTE_INSTAGRAM', ''), // URL completa
-    'facebook'  => env('RESTAURANTE_FACEBOOK', ''),  // URL completa
+    'instagram' => env('RESTAURANTE_INSTAGRAM', 'https://www.instagram.com/alitasdelavieja/'), // URL completa
+    'facebook'  => env('RESTAURANTE_FACEBOOK', 'https://www.facebook.com/alitasdelavieja/?locale=es_LA'),  // URL completa
 
     'horarios' => 'Lunes a domingo · 17:00 a 23:00',
 
@@ -31,14 +31,14 @@ return [
         [
             'ciudad'    => 'Tarija',
             'direccion' => 'Calle Eulogio Ruiz casi Avenida Belgrano',
-            'maps'      => '', // link de Google Maps (opcional)
-            'telefono'  => '',
+            'maps'      => 'https://maps.app.goo.gl/4gM4D3imcxEGFTda6', // link de Google Maps (opcional)
+            'telefono'  => '+59160260608',
         ],
         [
             'ciudad'    => 'Cochabamba',
-            'direccion' => '', // ← completar dirección
-            'maps'      => '',
-            'telefono'  => '',
+            'direccion' => 'Pando, Cochabamba, Cochabamba, Bolivia', // ← completar dirección
+            'maps'      => 'https://maps.app.goo.gl/XJw8DZuZVqYQxuSW7',
+            'telefono'  => '+59169684282',
         ],
     ],
 
@@ -48,15 +48,15 @@ return [
         'resumen'  => 'Punto de venta a medida para Alitas La Vieja: pedidos en salón y delivery, control de caja por sucursal, inventario y reportes en tiempo real.',
         'personas' => [
             [
-                'nombre'   => 'Álvaro Baldiviezo',
+                'nombre'   => 'Alvaro Baldiviezo',
                 'rol'      => 'Desarrollo full-stack · Arquitectura del sistema',
-                'github'   => '',   // ej. https://github.com/usuario
-                'linkedin' => '',
+                'github'   => 'https://github.com/AlvaroThg',   // ej. https://github.com/usuario
+                'linkedin' => 'www.linkedin.com/in/alvarofabianbaldiviezorodriguez',
             ],
             [
                 'nombre'   => 'Marcelo Sanguino',
                 'rol'      => 'Desarrollo full-stack · Módulos de POS y menú',
-                'github'   => '',
+                'github'   => 'https://github.com/Chelo-sanguino',
                 'linkedin' => '',
             ],
         ],

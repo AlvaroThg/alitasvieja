@@ -2,6 +2,12 @@
     $r = config('restaurante');
     $logo = public_path($r['logo'] ?? '') && file_exists(public_path($r['logo'])) ? asset($r['logo']) : null;
     $wa = $r['whatsapp'] ? 'https://wa.me/' . preg_replace('/\D/', '', $r['whatsapp']) : null;
+
+    // Un enlace sin esquema (ej. "www.linkedin.com/in/...") el navegador lo trata
+    // como ruta interna: se le antepone https:// para que salga del sitio.
+    $link = fn (?string $u) => $u
+        ? (preg_match('#^https?://#i', $u) ? $u : 'https://' . ltrim($u, '/'))
+        : null;
 @endphp
 <!DOCTYPE html>
 <html lang="es">
@@ -284,7 +290,7 @@
                             <p>{{ $suc['direccion'] ?: 'Dirección próximamente' }}</p>
                             @if($suc['telefono'])<p>{{ $suc['telefono'] }}</p>@endif
                             @if($suc['maps'])
-                                <a href="{{ $suc['maps'] }}" target="_blank" rel="noopener">Cómo llegar →</a>
+                                <a href="{{ $link($suc['maps']) }}" target="_blank" rel="noopener">Cómo llegar →</a>
                             @endif
                         </div>
                     @endif
@@ -312,8 +318,8 @@
                             <div class="dev-role">{{ $dev['rol'] }}</div>
                             @if($dev['github'] || $dev['linkedin'])
                                 <div class="dev-links">
-                                    @if($dev['github'])<a href="{{ $dev['github'] }}" target="_blank" rel="noopener">GitHub</a>@endif
-                                    @if($dev['linkedin'])<a href="{{ $dev['linkedin'] }}" target="_blank" rel="noopener">LinkedIn</a>@endif
+                                    @if($dev['github'])<a href="{{ $link($dev['github']) }}" target="_blank" rel="noopener">GitHub</a>@endif
+                                    @if($dev['linkedin'])<a href="{{ $link($dev['linkedin']) }}" target="_blank" rel="noopener">LinkedIn</a>@endif
                                 </div>
                             @endif
                         </div>
@@ -333,8 +339,8 @@
         <div class="wrap foot">
             <span>© {{ date('Y') }} {{ $r['nombre'] }} · Cochabamba y Tarija</span>
             <span style="display: flex; gap: 1.25rem;">
-                @if($r['instagram'])<a href="{{ $r['instagram'] }}" target="_blank" rel="noopener">Instagram</a>@endif
-                @if($r['facebook'])<a href="{{ $r['facebook'] }}" target="_blank" rel="noopener">Facebook</a>@endif
+                @if($r['instagram'])<a href="{{ $link($r['instagram']) }}" target="_blank" rel="noopener">Instagram</a>@endif
+                @if($r['facebook'])<a href="{{ $link($r['facebook']) }}" target="_blank" rel="noopener">Facebook</a>@endif
                 <a href="{{ url('/acceso') }}">Acceso al sistema</a>
             </span>
         </div>
