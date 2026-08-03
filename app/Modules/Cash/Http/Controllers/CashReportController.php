@@ -22,6 +22,17 @@ class CashReportController extends Controller
         $this->cashReportService = $cashReportService;
     }
 
+    /**
+     * Aislamiento por sucursal: el Owner consulta la que pida (o todas); el
+     * resto queda limitado a la suya, aunque mande otro branch_id.
+     */
+    protected function scopedBranchId(Request $request, ?int $requested): ?int
+    {
+        $user = $request->user();
+
+        return $user->isOwner() ? $requested : $user->activeBranchId();
+    }
+
     // MÉTODO NUEVO — Fase 4
     /**
      * GET /admin/reports/cash
@@ -38,7 +49,7 @@ class CashReportController extends Controller
             'to'        => 'required|date_format:Y-m-d',
         ]);
 
-        $branchId = $validated['branch_id'] ?? null;
+        $branchId = $this->scopedBranchId($request, $validated['branch_id'] ?? null);
         $from     = Carbon::parse($validated['from']);
         $to       = Carbon::parse($validated['to']);
 
@@ -61,6 +72,14 @@ class CashReportController extends Controller
      */
     public function show(CashSession $session): JsonResponse
     {
+        // Un admin de sucursal no puede abrir el detalle de una caja ajena.
+        $user = auth()->user();
+        abort_unless(
+            $user->isOwner() || $session->branch_id === $user->activeBranchId(),
+            403,
+            'Esta caja pertenece a otra sucursal.'
+        );
+
         $data = $this->cashReportService->getSessionDetail($session);
 
         return response()->json($data);
@@ -85,7 +104,7 @@ class CashReportController extends Controller
             'to'        => 'required|date_format:Y-m-d',
         ]);
 
-        $branchId = $validated['branch_id'] ?? null;
+        $branchId = $this->scopedBranchId($request, $validated['branch_id'] ?? null);
         $from     = Carbon::parse($validated['from']);
         $to       = Carbon::parse($validated['to']);
 
@@ -108,9 +127,15 @@ class CashReportController extends Controller
     {
         $from = $request->query('date_from');
         $to = $request->query('date_to');
-        $branchId = $request->query('branch_id');
         $type = $request->query('type');
         $cashBox = $request->query('cash_box');
+
+        // Aislamiento por sucursal: solo el Owner puede exportar otras sucursales;
+        // al resto se le fuerza la suya aunque cambie el branch_id de la URL.
+        $user = $request->user();
+        $branchId = $user->isOwner()
+            ? $request->query('branch_id')
+            : $user->activeBranchId();
 
         $movements = CashMovement::with(['cashSession.branch', 'user'])
             ->when($from, fn ($q) => $q->whereDate('created_at', '>=', $from))

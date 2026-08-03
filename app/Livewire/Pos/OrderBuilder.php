@@ -532,10 +532,14 @@ class OrderBuilder extends Component
         }
 
         // Pedido en salón: se envía a cocina; el pago se hace luego en la mesa.
+        // Se imprimen ambos tickets: cocina (para preparar) y caja (comanda de la mesa).
         $order = $this->persistOrder();
         $orderId = $order->id;
         $this->resetCartState();
-        $this->dispatch('order-saved', url: route('pos.tickets.cashier', ['order' => $orderId]));
+        $this->dispatch('order-saved', urls: [
+            route('pos.tickets.kitchen', ['order' => $orderId]),
+            route('pos.tickets.cashier', ['order' => $orderId]),
+        ]);
     }
 
     /**

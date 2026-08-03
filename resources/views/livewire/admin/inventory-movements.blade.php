@@ -57,6 +57,8 @@
             <label>Hasta</label>
             <input type="date" wire:model.live="dateTo" class="mov-input">
         </div>
+        {{-- Solo el Owner elige sucursal; los demás ven la suya, fijada en el backend. --}}
+        @if($isOwner)
         <div class="mov-field">
             <label>Sucursal</label>
             <select wire:model.live="branchId" class="mov-select">
@@ -66,6 +68,12 @@
                 @endforeach
             </select>
         </div>
+        @else
+        <div class="mov-field">
+            <label>Sucursal</label>
+            <div class="mov-input" style="opacity: 0.75;">{{ $branches->first()->name ?? '—' }}</div>
+        </div>
+        @endif
         <div class="mov-field">
             <label>Tipo</label>
             <select wire:model.live="type" class="mov-select">

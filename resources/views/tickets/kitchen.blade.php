@@ -59,7 +59,7 @@
         {{ $order->branch->city ?? $order->branch->name }}
     </div>
     <div class="center bold" style="font-size: 13px; margin: 4px 0;">
-        ★ COCINA ★
+        *** COCINA ***
     </div>
     <div class="separator">--------------------------------</div>
 
@@ -98,15 +98,15 @@
                 @foreach($item->sauces as $sauce)
                     @if($sauce->is_coated && $sauce->quantity > 0)
                         <div class="sauce-line">
-                            → {{ $sauce->quantity }} {{ $sauce->quantity == 1 ? 'alita' : 'alitas' }} con {{ $sauce->sauce->name ?? 'Salsa' }}
+                            - {{ $sauce->quantity }} {{ $sauce->quantity == 1 ? 'alita' : 'alitas' }} con {{ $sauce->sauce->name ?? 'Salsa' }}
                         </div>
                     @elseif($sauce->is_coated)
                         <div class="sauce-line">
-                            → {{ $sauce->sauce->name ?? 'Salsa' }}
+                            - {{ $sauce->sauce->name ?? 'Salsa' }}
                         </div>
                     @else
                         <div class="sauce-line">
-                            → {{ $sauce->sauce->name ?? 'Salsa' }} [aparte]
+                            - {{ $sauce->sauce->name ?? 'Salsa' }} [aparte]
                         </div>
                     @endif
                 @endforeach

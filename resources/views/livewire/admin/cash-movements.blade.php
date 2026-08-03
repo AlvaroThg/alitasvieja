@@ -57,6 +57,8 @@
             <label>Hasta</label>
             <input type="date" wire:model.live="dateTo" class="cm-input">
         </div>
+        {{-- Solo el Owner elige sucursal; los demás ven la suya, fijada en el backend. --}}
+        @if($isOwner)
         <div class="cm-field">
             <label>Sucursal</label>
             <select wire:model.live="branchId" class="cm-select">
@@ -66,6 +68,12 @@
                 @endforeach
             </select>
         </div>
+        @else
+        <div class="cm-field">
+            <label>Sucursal</label>
+            <div class="cm-input" style="opacity: 0.75;">{{ $branches->first()->name ?? '—' }}</div>
+        </div>
+        @endif
         <div class="cm-field">
             <label>Tipo</label>
             <select wire:model.live="type" class="cm-select">

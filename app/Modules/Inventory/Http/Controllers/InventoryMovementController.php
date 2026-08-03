@@ -18,8 +18,14 @@ class InventoryMovementController extends Controller
     {
         $from = $request->query('date_from');
         $to = $request->query('date_to');
-        $branchId = $request->query('branch_id');
         $type = $request->query('type');
+
+        // Aislamiento por sucursal: solo el Owner puede exportar otras sucursales;
+        // al resto se le fuerza la suya aunque cambie el branch_id de la URL.
+        $user = $request->user();
+        $branchId = $user->isOwner()
+            ? $request->query('branch_id')
+            : $user->activeBranchId();
 
         $movements = InventoryMovement::with(['productVariant.product', 'branch', 'user'])
             ->when($from, fn ($q) => $q->whereDate('created_at', '>=', $from))

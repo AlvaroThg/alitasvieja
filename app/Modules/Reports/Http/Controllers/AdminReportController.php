@@ -18,6 +18,17 @@ class AdminReportController extends Controller
     }
 
     /**
+     * Aislamiento por sucursal: el Owner consulta la que pida (o todas); el
+     * resto queda limitado a la suya, aunque mande otro branch_id.
+     */
+    protected function scopedBranchId(Request $request, ?int $requested): ?int
+    {
+        $user = $request->user();
+
+        return $user->isOwner() ? $requested : $user->activeBranchId();
+    }
+
+    /**
      * GET /admin/dashboard
      * Dashboard con KPIs — datos cargados por Livewire (AdminDashboard).
      */
@@ -39,7 +50,7 @@ class AdminReportController extends Controller
             'search'    => 'nullable|string|max:50',
         ]);
 
-        $branchId = $validated['branch_id'] ?? null;
+        $branchId = $this->scopedBranchId($request, $validated['branch_id'] ?? null);
 
         // Si hay búsqueda por order_number/daily_number
         if (!empty($validated['search'])) {
@@ -89,7 +100,7 @@ class AdminReportController extends Controller
         ]);
 
         $period   = $validated['period'] ?? 'today';
-        $branchId = $validated['branch_id'] ?? null;
+        $branchId = $this->scopedBranchId($request, $validated['branch_id'] ?? null);
         $from     = isset($validated['from']) ? Carbon::parse($validated['from']) : null;
         $to       = isset($validated['to'])   ? Carbon::parse($validated['to'])   : null;
 
@@ -116,7 +127,7 @@ class AdminReportController extends Controller
             'group_by'  => 'required|string|in:day,week,month',
         ]);
 
-        $branchId = $validated['branch_id'] ?? null;
+        $branchId = $this->scopedBranchId($request, $validated['branch_id'] ?? null);
         $from     = Carbon::parse($validated['from']);
         $to       = Carbon::parse($validated['to']);
         $groupBy  = $validated['group_by'];
@@ -155,7 +166,7 @@ class AdminReportController extends Controller
             'to'        => 'required|date_format:Y-m-d',
         ]);
 
-        $branchId = $validated['branch_id'] ?? null;
+        $branchId = $this->scopedBranchId($request, $validated['branch_id'] ?? null);
         $from     = Carbon::parse($validated['from']);
         $to       = Carbon::parse($validated['to']);
 
@@ -180,7 +191,7 @@ class AdminReportController extends Controller
             'to'        => 'required|date_format:Y-m-d',
         ]);
 
-        $branchId = $validated['branch_id'] ?? null;
+        $branchId = $this->scopedBranchId($request, $validated['branch_id'] ?? null);
         $from     = Carbon::parse($validated['from']);
         $to       = Carbon::parse($validated['to']);
 
@@ -205,7 +216,7 @@ class AdminReportController extends Controller
             'to'        => 'required|date_format:Y-m-d',
         ]);
 
-        $branchId = $validated['branch_id'] ?? null;
+        $branchId = $this->scopedBranchId($request, $validated['branch_id'] ?? null);
         $from     = Carbon::parse($validated['from']);
         $to       = Carbon::parse($validated['to']);
 
