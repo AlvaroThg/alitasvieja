@@ -59,11 +59,13 @@ class ResetTransactionalData extends Command
         $driver = DB::getDriverName();
         $borradas = [];
 
-        DB::transaction(function () use ($driver, &$borradas) {
-            if ($driver === 'mysql') {
-                DB::statement('SET FOREIGN_KEY_CHECKS=0');
-            }
+        // OJO: TRUNCATE hace commit implícito en MySQL, así que el borrado NO puede
+        // ir dentro de DB::transaction() (fallaría al cerrarla: "no active transaction").
+        if ($driver === 'mysql') {
+            DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        }
 
+        try {
             foreach (self::TABLAS as $tabla) {
                 if (!Schema::hasTable($tabla)) {
                     continue;
@@ -81,11 +83,14 @@ class ResetTransactionalData extends Command
                     }
                 }
             }
-
+        } finally {
             if ($driver === 'mysql') {
                 DB::statement('SET FOREIGN_KEY_CHECKS=1');
             }
+        }
 
+        // Los ajustes posteriores sí son transaccionales (no llevan DDL).
+        DB::transaction(function () {
             // Las mesas quedaban "ocupadas" apuntando a pedidos que ya no existen.
             if (Schema::hasTable('tables')) {
                 DB::table('tables')->update(['status' => 'available']);
