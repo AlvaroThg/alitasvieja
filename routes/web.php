@@ -2,6 +2,7 @@
 // routes/web.php — estructura base de rutas con roles
 
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\PublicSiteController;
 use App\Modules\Auth\Http\Controllers\Admin\UserController;
 use App\Modules\Cash\Http\Controllers\CashController;
 use App\Modules\Cash\Http\Controllers\CashReportController;
@@ -15,9 +16,10 @@ use App\Modules\Tickets\Http\Controllers\TicketController;
 use Illuminate\Support\Facades\Route;
 
 // ─── Públicas ─────────────────────────────────────────────────────────────────
-// Landing pública del sistema. Si ya hay sesión, va directo a la sección
-// que corresponde al rol en vez de mostrar la presentación.
-Route::get('/', function () {
+
+// Puerta de entrada al sistema: si ya hay sesión va a la sección del rol,
+// si no muestra la presentación del POS.
+$accesoSistema = function () {
     if (auth()->check()) {
         return auth()->user()->isOwner()
             ? redirect()->route('admin.dashboard')
@@ -25,7 +27,27 @@ Route::get('/', function () {
     }
 
     return view('landing');
+};
+
+// La raíz depende del dominio: alitasdelavieja.com muestra la web del
+// restaurante (clientes); pos.alitasdelavieja.com, el acceso al sistema.
+Route::get('/', function () use ($accesoSistema) {
+    $dominio = config('restaurante.dominio_publico');
+    $host = request()->getHost();
+
+    if ($dominio && ($host === $dominio || $host === 'www.' . $dominio)) {
+        return app(PublicSiteController::class)->home();
+    }
+
+    return $accesoSistema();
 })->name('home');
+
+// Acceso directo al sistema (enlace del pie de la web pública).
+Route::get('/acceso', $accesoSistema)->name('acceso');
+
+// Vista previa de la web del restaurante sin depender del DNS.
+Route::get('/restaurante', [PublicSiteController::class, 'home'])->name('publico.home');
+
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
