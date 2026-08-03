@@ -146,17 +146,30 @@ class CashReportController extends Controller
             ->latest('id')
             ->get();
 
+        // Cierres de caja del período: el arqueo (esperado vs. contado y su
+        // diferencia) vive en la sesión, no en los movimientos.
+        $sessions = CashSession::with(['branch', 'closedBy'])
+            ->whereNotNull('closed_at')
+            ->when($from, fn ($q) => $q->whereDate('closed_at', '>=', $from))
+            ->when($to, fn ($q) => $q->whereDate('closed_at', '<=', $to))
+            ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+            ->latest('closed_at')
+            ->get();
+
         $branchName = $branchId ? (Branch::find($branchId)->name ?? 'Todas') : 'Todas';
         $totalIncome = (float) $movements->where('type', 'income')->sum('amount');
         $totalExpense = (float) $movements->where('type', 'expense')->sum('amount');
+        $totalDifference = (float) $sessions->sum(fn ($s) => (float) $s->difference);
 
         $pdf = Pdf::loadView('reports.cash-movements-pdf', [
-            'movements'    => $movements,
-            'from'         => $from,
-            'to'           => $to,
-            'branchName'   => $branchName,
-            'totalIncome'  => $totalIncome,
-            'totalExpense' => $totalExpense,
+            'movements'       => $movements,
+            'sessions'        => $sessions,
+            'from'            => $from,
+            'to'              => $to,
+            'branchName'      => $branchName,
+            'totalIncome'     => $totalIncome,
+            'totalExpense'    => $totalExpense,
+            'totalDifference' => $totalDifference,
         ])->setPaper('a4', 'landscape');
 
         return $pdf->download('movimientos_caja.pdf');

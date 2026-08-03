@@ -38,7 +38,43 @@
         <span>Total Ingresos: <strong class="income">Bs. {{ number_format($totalIncome, 2) }}</strong></span>
         <span>Total Egresos: <strong class="expense">Bs. {{ number_format($totalExpense, 2) }}</strong></span>
         <span>Balance: <strong>Bs. {{ number_format($totalIncome - $totalExpense, 2) }}</strong></span>
+        <span>Sobrante/Faltante: <strong class="{{ $totalDifference < 0 ? 'expense' : 'income' }}">Bs. {{ number_format($totalDifference, 2) }}</strong></span>
     </div>
+
+    @if($sessions->isNotEmpty())
+        <div style="font-size: 11px; font-weight: bold; margin-bottom: 4px;">Cierres de caja del período</div>
+        <table style="margin-bottom: 14px;">
+            <thead>
+                <tr>
+                    <th>Cierre</th>
+                    <th>Sucursal</th>
+                    <th>Cerró</th>
+                    <th class="r">Inicial</th>
+                    <th class="r">Esperado</th>
+                    <th class="r">Contado</th>
+                    <th class="r">Diferencia</th>
+                    <th>Notas</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($sessions as $s)
+                    @php $dif = (float) $s->difference; @endphp
+                    <tr>
+                        <td>{{ $s->closed_at?->format('d/m/Y H:i') }}</td>
+                        <td>{{ $s->branch->name ?? '—' }}</td>
+                        <td>{{ $s->closedBy->name ?? '—' }}</td>
+                        <td class="r muted">{{ number_format($s->opening_amount, 2) }}</td>
+                        <td class="r">{{ number_format($s->expected_amount, 2) }}</td>
+                        <td class="r"><strong>{{ number_format($s->closing_amount, 2) }}</strong></td>
+                        <td class="r {{ $dif < 0 ? 'expense' : 'income' }}">{{ $dif > 0 ? '+' : '' }}{{ number_format($dif, 2) }}</td>
+                        <td class="muted">{{ $s->notes ?: '—' }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+
+        <div style="font-size: 11px; font-weight: bold; margin-bottom: 4px;">Movimientos</div>
+    @endif
 
     <table>
         <thead>

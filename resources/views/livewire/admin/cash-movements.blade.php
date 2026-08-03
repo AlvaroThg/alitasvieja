@@ -107,7 +107,54 @@
             @php $balance = $totals['income'] - $totals['expense']; @endphp
             <div class="cm-total-value" style="color: {{ $balance >= 0 ? '#22c55e' : '#ef4444' }};">Bs. {{ number_format($balance, 2) }}</div>
         </div>
+        <div class="cm-total-card">
+            <div class="cm-total-label">Sobrante / Faltante</div>
+            <div class="cm-total-value" style="color: {{ $totals['difference'] == 0 ? 'var(--text-muted)' : ($totals['difference'] > 0 ? '#22c55e' : '#ef4444') }};">
+                Bs. {{ number_format($totals['difference'], 2) }}
+            </div>
+            <div style="font-size: 0.68rem; color: var(--text-muted); margin-top: 0.15rem;">Según los cierres de caja</div>
+        </div>
     </div>
+
+    {{-- ═══ CIERRES DE CAJA (arqueo) ═══ --}}
+    @if($sessions->isNotEmpty())
+    <div style="margin-bottom: 1.5rem;">
+        <h2 style="font-size: 1rem; font-weight: 800; color: var(--text-strong); margin-bottom: 0.75rem;">Cierres de caja del período</h2>
+        <div class="cm-table-wrap">
+            <table class="cm-table">
+                <thead>
+                    <tr>
+                        <th>Cierre</th>
+                        <th>Sucursal</th>
+                        <th>Cerró</th>
+                        <th style="text-align:right;">Inicial</th>
+                        <th style="text-align:right;">Esperado</th>
+                        <th style="text-align:right;">Contado</th>
+                        <th style="text-align:right;">Diferencia</th>
+                        <th>Notas</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($sessions as $s)
+                        @php $dif = (float) $s->difference; @endphp
+                        <tr>
+                            <td style="color: var(--text-muted); white-space: nowrap;">{{ $s->closed_at?->format('d/m/Y H:i') }}</td>
+                            <td>{{ $s->branch->name ?? '—' }}</td>
+                            <td>{{ $s->closedBy->name ?? '—' }}</td>
+                            <td style="text-align:right; color: var(--text-muted);">Bs. {{ number_format($s->opening_amount, 2) }}</td>
+                            <td style="text-align:right;">Bs. {{ number_format($s->expected_amount, 2) }}</td>
+                            <td style="text-align:right; font-weight:700; color: var(--text);">Bs. {{ number_format($s->closing_amount, 2) }}</td>
+                            <td style="text-align:right; font-weight:800; color: {{ $dif == 0 ? '#22c55e' : ($dif > 0 ? '#22c55e' : '#ef4444') }};">
+                                {{ $dif > 0 ? '+' : '' }}Bs. {{ number_format($dif, 2) }}
+                            </td>
+                            <td style="color: var(--text-muted);">{{ $s->notes ?: '—' }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+    @endif
 
     <div class="cm-table-wrap">
         <table class="cm-table">
