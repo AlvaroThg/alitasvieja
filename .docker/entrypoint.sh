@@ -11,7 +11,10 @@ chmod -R 775 storage bootstrap/cache
 chown -R www-data:www-data storage bootstrap/cache
 
 echo "==> [entrypoint] Sincronizando archivos públicos al volumen compartido..."
-cp -rn /var/www/html/public-static/. /var/www/html/public/
+# El volumen persiste entre despliegues y tapa la carpeta public de la imagen:
+# hay que copiar SIEMPRE (sin -n), o los archivos nuevos o actualizados —logo,
+# favicon, assets— nunca llegan al volumen y nginx sigue sirviendo los viejos.
+cp -rf /var/www/html/public-static/. /var/www/html/public/
 chown -R www-data:www-data /var/www/html/public
 
 echo "==> [entrypoint] Esperando MySQL..."
