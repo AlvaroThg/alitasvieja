@@ -181,11 +181,23 @@
                     <form wire:submit.prevent="addMovement">
                         <div class="cash-form-group">
                             <label class="cash-label">Tipo de Movimiento</label>
-                            <select wire:model="type" class="cash-select">
+                            {{-- .live: el tipo se sincroniza al instante, y la vista
+                                 refleja de inmediato qué se va a registrar. --}}
+                            <select wire:model.live="type" class="cash-select"
+                                    style="border-color: {{ $type === 'expense' ? '#ef4444' : '#22c55e' }};">
                                 <option value="income">Entrada (Ingreso a Caja de Venta)</option>
                                 <option value="expense">Salida / Egreso (desde Caja Chica)</option>
                             </select>
                             @error('type') <span class="error-message">{{ $message }}</span> @enderror
+                        </div>
+
+                        {{-- Confirmación explícita: evita registrar un egreso como ingreso. --}}
+                        <div style="display: flex; align-items: center; gap: 0.5rem; background: {{ $type === 'expense' ? 'rgba(239,68,68,0.1)' : 'rgba(34,197,94,0.1)' }}; border: 1px solid {{ $type === 'expense' ? 'rgba(239,68,68,0.35)' : 'rgba(34,197,94,0.35)' }}; color: {{ $type === 'expense' ? '#ef4444' : '#22c55e' }}; padding: 0.6rem 0.8rem; border-radius: 10px; font-size: 0.8rem; font-weight: 700; margin-bottom: 1rem;">
+                            @if($type === 'expense')
+                                Se registrará una SALIDA de Bs. {{ number_format((float) ($amount ?: 0), 2) }} desde Caja Chica
+                            @else
+                                Se registrará una ENTRADA de Bs. {{ number_format((float) ($amount ?: 0), 2) }} a Caja de Venta
+                            @endif
                         </div>
 
                         <div class="cash-form-group">
@@ -206,7 +218,9 @@
                             @error('reference') <span class="error-message">{{ $message }}</span> @enderror
                         </div>
 
-                        <button type="submit" class="btn-submit" style="margin-top: 0;">Registrar Movimiento</button>
+                        <button type="submit" class="btn-submit" style="margin-top: 0; background: {{ $type === 'expense' ? '#ef4444' : '#22c55e' }};">
+                            {{ $type === 'expense' ? 'Registrar EGRESO' : 'Registrar INGRESO' }}
+                        </button>
                     </form>
                 </div>
 
