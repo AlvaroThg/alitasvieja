@@ -356,19 +356,14 @@
                     </div>
                 @endif
 
-                <div style="margin-bottom: 1rem;">
-                    <label style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.5rem; display: block;">Método de Pago</label>
-                    <select wire:model="checkoutPaymentMethod" style="width: 100%; padding: 0.75rem; border-radius: 8px; background: var(--border); border: 1px solid var(--border-strong); color: var(--text-strong); outline: none;">
-                        <option value="cash">Efectivo</option>
-                        <option value="card">Tarjeta / POS</option>
-                        <option value="qr">Pago QR</option>
-                        <option value="transfer">Transferencia</option>
-                    </select>
-                </div>
+                @include('partials.payment-lines')
 
-                <button wire:click="processCheckout" class="btn-action btn-primary" style="margin-top: 0.5rem;">
+                <button wire:click="processCheckout" class="btn-action btn-primary"
+                        @disabled(!$this->pagoCubierto)
+                        style="margin-top: 0.5rem; {{ $this->pagoCubierto ? '' : 'opacity: 0.6; cursor: not-allowed; background: var(--border-strong);' }}">
                     <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    Confirmar y Liberar Mesa
+                    <span wire:loading.remove wire:target="processCheckout">Confirmar y Liberar Mesa</span>
+                    <span wire:loading wire:target="processCheckout">Cobrando…</span>
                 </button>
             </div>
         </div>

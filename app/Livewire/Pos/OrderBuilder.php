@@ -4,6 +4,7 @@ namespace App\Livewire\Pos;
 
 use Livewire\Component;
 use Livewire\Attributes\On;
+use App\Livewire\Concerns\HandlesSplitPayments;
 use App\Modules\Menu\Models\Category;
 use App\Modules\Menu\Models\Product;
 use App\Modules\Menu\Models\ProductVariant;
@@ -14,6 +15,8 @@ use Illuminate\Support\Facades\Log;
 
 class OrderBuilder extends Component
 {
+    use HandlesSplitPayments;
+
     public $tableId = null;
     public $tableName = null;
     public $orderType = 'dine_in';
@@ -62,7 +65,12 @@ class OrderBuilder extends Component
 
     // Modal de Pago (pedidos de cocina: para llevar / delivery, se cobran al momento)
     public $showPaymentModal = false;
-    public $paymentMethod = 'cash';
+
+    /** El cobro puede repartirse entre varios métodos (efectivo + QR, etc.). */
+    protected function montoACobrar(): float
+    {
+        return (float) $this->total;
+    }
 
     public function mount()
     {
@@ -526,7 +534,9 @@ class OrderBuilder extends Component
             if (!$this->cashIsOpen()) {
                 return;
             }
-            $this->paymentMethod = 'cash';
+            // Arranca con una sola línea en efectivo por el total: el caso común
+            // se confirma sin tocar nada; si pagaron mixto, se agregan líneas.
+            $this->iniciarPagos();
             $this->showPaymentModal = true;
             return;
         }
@@ -576,23 +586,39 @@ class OrderBuilder extends Component
             return;
         }
 
-        $order = $this->persistOrder();
+        if (!$this->pagoCubierto) {
+            $this->paymentError = 'Los pagos no cubren el total del pedido.';
+            return;
+        }
 
+        $this->paymentError = '';
+        $order = null;
+
+        // El pedido y su cobro van juntos: si el cobro falla, no queda un pedido
+        // creado y sin pagar. Antes esto vivía fuera del try y un error dejaba
+        // la pantalla congelada sin explicar nada.
         try {
-            if ((float) $order->total > 0) {
-                app(\App\Modules\Orders\Services\CheckoutService::class)
-                    ->processPayment($order, [
-                        ['method' => $this->paymentMethod, 'amount' => (float) $order->total],
+            \Illuminate\Support\Facades\DB::transaction(function () use (&$order) {
+                $order = $this->persistOrder();
+
+                if ((float) $order->total > 0) {
+                    app(\App\Modules\Orders\Services\CheckoutService::class)
+                        ->processPayment($order, $this->pagosParaCobro());
+                } else {
+                    $order->update([
+                        'status'         => 'paid',
+                        'closed_at'      => now(),
+                        'payment_method' => $this->pagos[0]['method'] ?? 'cash',
                     ]);
-            } else {
-                $order->update([
-                    'status'         => 'paid',
-                    'closed_at'      => now(),
-                    'payment_method' => $this->paymentMethod,
-                ]);
-            }
+                }
+            });
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->paymentError = collect($e->errors())->flatten()->first();
+            return;
         } catch (\Throwable $e) {
-            Log::warning('Cobro de pedido de cocina falló: ' . $e->getMessage());
+            Log::error('Cobro de pedido de cocina falló: ' . $e->getMessage());
+            $this->paymentError = 'No se pudo registrar el pedido. Revisa e intenta de nuevo.';
+            return;
         }
 
         $orderId = $order->id;

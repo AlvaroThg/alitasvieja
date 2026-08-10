@@ -998,18 +998,17 @@
                     <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted);">Total a pagar</div>
                     <div style="font-size: 2rem; font-weight: 900; color: #f97316;">Bs. {{ number_format($this->total, 2) }}</div>
                 </div>
-                <label style="display:block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">Método de pago</label>
-                <select wire:model="paymentMethod" style="width: 100%; background: var(--bg-base); border: 1px solid var(--border); color: var(--text-strong); padding: 0.7rem 1rem; border-radius: 12px; font-size: 0.95rem; outline: none; font-family: inherit;">
-                    <option value="cash">Efectivo</option>
-                    <option value="qr">QR</option>
-                    <option value="card">Tarjeta</option>
-                </select>
-                <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+                @include('partials.payment-lines')
+
+                <div style="display: flex; gap: 0.75rem; margin-top: 1.25rem;">
                     <button wire:click="$set('showPaymentModal', false)" style="flex: 1; background: var(--bg-elevated); color: var(--text-muted); border: 1px solid var(--border); padding: 0.85rem; border-radius: 12px; font-weight: 700; font-size: 0.9rem; cursor: pointer;">
                         Cancelar
                     </button>
-                    <button wire:click="confirmTakeawayPayment" style="flex: 2; background: linear-gradient(135deg, #f97316, #dc2626); color: #fff; border: none; padding: 0.85rem; border-radius: 12px; font-weight: 800; font-size: 0.9rem; cursor: pointer;">
-                        Cobrar y enviar a cocina
+                    <button wire:click="confirmTakeawayPayment"
+                            @disabled(!$this->pagoCubierto)
+                            style="flex: 2; background: {{ $this->pagoCubierto ? 'linear-gradient(135deg, #f97316, #dc2626)' : 'var(--border-strong)' }}; color: #fff; border: none; padding: 0.85rem; border-radius: 12px; font-weight: 800; font-size: 0.9rem; cursor: {{ $this->pagoCubierto ? 'pointer' : 'not-allowed' }}; opacity: {{ $this->pagoCubierto ? '1' : '0.6' }};">
+                        <span wire:loading.remove wire:target="confirmTakeawayPayment">Cobrar y enviar a cocina</span>
+                        <span wire:loading wire:target="confirmTakeawayPayment">Registrando…</span>
                     </button>
                 </div>
             </div>

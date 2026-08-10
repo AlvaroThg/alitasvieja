@@ -3,10 +3,19 @@
 namespace App\Livewire\Pos;
 
 use Livewire\Component;
+use App\Livewire\Concerns\HandlesSplitPayments;
 use App\Models\Table;
 
 class TableGrid extends Component
 {
+    use HandlesSplitPayments;
+
+    /** El total de la mesa es lo que debe cubrirse entre los métodos de pago. */
+    protected function montoACobrar(): float
+    {
+        return (float) $this->checkoutOrderTotal;
+    }
+
     public $branchId = 1;
 
     // Modal de acciones sobre mesa existente
@@ -15,7 +24,6 @@ class TableGrid extends Component
 
     // Modal de checkout
     public $showCheckoutModal = false;
-    public $checkoutPaymentMethod = 'cash';
     public $checkoutOrderTotal = 0;
     public $checkoutError = '';
 
@@ -62,6 +70,7 @@ class TableGrid extends Component
 
         $this->checkoutError = '';
         $this->checkoutOrderTotal = $openOrder->total;
+        $this->iniciarPagos((float) $openOrder->total);
         $this->showActionModal = false;
         $this->showCheckoutModal = true;
 
@@ -80,12 +89,15 @@ class TableGrid extends Component
             ->where('status', 'open')
             ->first();
 
+        if ($openOrder && $openOrder->total > 0 && !$this->pagoCubierto) {
+            $this->checkoutError = 'Los pagos no cubren el total de la mesa.';
+            return;
+        }
+
         try {
             if ($openOrder && $openOrder->total > 0) {
                 $checkoutService = app(\App\Modules\Orders\Services\CheckoutService::class);
-                $checkoutService->processPayment($openOrder, [
-                    ['method' => $this->checkoutPaymentMethod, 'amount' => $openOrder->total]
-                ]);
+                $checkoutService->processPayment($openOrder, $this->pagosParaCobro());
             } elseif ($openOrder) {
                 // Pedido sin monto: igual exige caja abierta, para no cerrar mesas
                 // fuera de un turno de caja.
@@ -95,7 +107,7 @@ class TableGrid extends Component
                 $openOrder->update([
                     'status' => 'paid',
                     'closed_at' => now(),
-                    'payment_method' => $this->checkoutPaymentMethod
+                    'payment_method' => $this->pagos[0]['method'] ?? 'cash',
                 ]);
             }
         } catch (\Illuminate\Validation\ValidationException $e) {
