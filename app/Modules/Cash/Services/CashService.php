@@ -194,6 +194,17 @@ class CashService
             ]);
         }
 
+        // Bloquear cierre si hay pedidos abiertos
+        $hasOpenOrders = \App\Modules\Orders\Models\Order::where('branch_id', $session->branch_id)
+            ->where('status', 'open')
+            ->exists();
+
+        if ($hasOpenOrders) {
+            throw ValidationException::withMessages([
+                'session' => 'No se puede cerrar la caja. Aún existen pedidos abiertos (mesas o para llevar) sin cobrar.',
+            ]);
+        }
+
         if ($closingAmount < 0) {
             throw ValidationException::withMessages([
                 'closing_amount' => 'El monto de cierre no puede ser negativo.',

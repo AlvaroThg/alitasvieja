@@ -65,10 +65,19 @@ class OrderBuilder extends Component
 
     // Modal de Pago (pedidos de cocina: para llevar / delivery, se cobran al momento)
     public $showPaymentModal = false;
+    
+    // Pedidos pendientes (por cobrar)
+    public $showUnpaidOrdersModal = false;
+    public $unpaidOrders = [];
+    public $pendingOrderId = null;
+    public $pendingOrderTotal = 0;
 
     /** El cobro puede repartirse entre varios métodos (efectivo + QR, etc.). */
     protected function montoACobrar(): float
     {
+        if ($this->pendingOrderId) {
+            return (float) $this->pendingOrderTotal;
+        }
         return (float) $this->total;
     }
 
@@ -576,7 +585,7 @@ class OrderBuilder extends Component
 
     public function confirmTakeawayPayment()
     {
-        if (empty($this->cart)) {
+        if (empty($this->cart) && !$this->pendingOrderId) {
             $this->showPaymentModal = false;
             return;
         }
@@ -593,13 +602,18 @@ class OrderBuilder extends Component
 
         $this->paymentError = '';
         $order = null;
+        $isPendingOrder = (bool) $this->pendingOrderId;
 
         // El pedido y su cobro van juntos: si el cobro falla, no queda un pedido
         // creado y sin pagar. Antes esto vivía fuera del try y un error dejaba
         // la pantalla congelada sin explicar nada.
         try {
-            \Illuminate\Support\Facades\DB::transaction(function () use (&$order) {
-                $order = $this->persistOrder();
+            \Illuminate\Support\Facades\DB::transaction(function () use (&$order, $isPendingOrder) {
+                if ($isPendingOrder) {
+                    $order = \App\Modules\Orders\Models\Order::find($this->pendingOrderId);
+                } else {
+                    $order = $this->persistOrder();
+                }
 
                 if ((float) $order->total > 0) {
                     app(\App\Modules\Orders\Services\CheckoutService::class)
@@ -623,12 +637,78 @@ class OrderBuilder extends Component
 
         $orderId = $order->id;
         $this->showPaymentModal = false;
+        
+        $urls = [route('pos.tickets.cashier', ['order' => $orderId])];
+        if (!$isPendingOrder) {
+            $urls[] = route('pos.tickets.kitchen', ['order' => $orderId]);
+            $this->resetCartState();
+        } else {
+            $this->pendingOrderId = null;
+            $this->pendingOrderTotal = 0;
+            $this->loadUnpaidOrders(); // Refrescar lista
+        }
+
+        $this->dispatch('order-saved', urls: $urls);
+    }
+
+    public function confirmTakeawayUnpaid()
+    {
+        if (empty($this->cart)) {
+            $this->showPaymentModal = false;
+            return;
+        }
+
+        if (!$this->cashIsOpen()) {
+            return;
+        }
+
+        $order = null;
+        try {
+            \Illuminate\Support\Facades\DB::transaction(function () use (&$order) {
+                $order = $this->persistOrder();
+            });
+        } catch (\Throwable $e) {
+            Log::error('Registro de pedido de cocina (Por Cobrar) falló: ' . $e->getMessage());
+            $this->paymentError = 'No se pudo registrar el pedido. Revisa e intenta de nuevo.';
+            return;
+        }
+
+        $orderId = $order->id;
+        $this->showPaymentModal = false;
         $this->resetCartState();
 
         $this->dispatch('order-saved', urls: [
             route('pos.tickets.kitchen', ['order' => $orderId]),
-            route('pos.tickets.cashier', ['order' => $orderId]),
+            // No imprimos ticket de caja todavía, solo cocina
         ]);
+    }
+
+    public function loadUnpaidOrders()
+    {
+        $branchId = auth()->user()?->activeBranchId() ?? 1;
+        $this->unpaidOrders = \App\Modules\Orders\Models\Order::where('branch_id', $branchId)
+            ->where('status', 'open')
+            ->whereNull('table_id')
+            ->orderBy('id', 'asc')
+            ->get();
+        $this->showUnpaidOrdersModal = true;
+    }
+
+    public function payUnpaidOrder($orderId)
+    {
+        $order = \App\Modules\Orders\Models\Order::find($orderId);
+        if (!$order) return;
+
+        if (!$this->cashIsOpen()) {
+            return;
+        }
+
+        $this->pendingOrderId = $order->id;
+        $this->pendingOrderTotal = $order->total;
+        
+        $this->showUnpaidOrdersModal = false;
+        $this->iniciarPagos();
+        $this->showPaymentModal = true;
     }
 
     // --- Persistencia Sesión ---

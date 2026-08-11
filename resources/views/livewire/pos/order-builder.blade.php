@@ -800,10 +800,18 @@
                 <span class="ticket-total-value">Bs. {{ number_format($this->total, 2) }}</span>
             </div>
             
-            <button wire:click="submitOrder" class="btn-send-kitchen">
-                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                ENVIAR A COCINA
-            </button>
+            <div style="display: flex; gap: 0.5rem;">
+                @if(!$tableId)
+                    <button wire:click="loadUnpaidOrders" style="flex: 1; background: #3b82f6; color: white; border: none; padding: 1rem; border-radius: 12px; font-weight: 800; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.4rem;">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        PENDIENTES
+                    </button>
+                @endif
+                <button wire:click="submitOrder" class="btn-send-kitchen" style="{{ !$tableId ? 'flex: 2;' : 'width: 100%;' }}">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    ENVIAR A COCINA
+                </button>
+            </div>
         </div>
     </div>
 
@@ -996,7 +1004,7 @@
             <div style="padding: 1.5rem;">
                 <div style="text-align: center; margin-bottom: 1.25rem;">
                     <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted);">Total a pagar</div>
-                    <div style="font-size: 2rem; font-weight: 900; color: #f97316;">Bs. {{ number_format($this->total, 2) }}</div>
+                    <div style="font-size: 2rem; font-weight: 900; color: #f97316;">Bs. {{ number_format($this->pendingOrderId ? $this->pendingOrderTotal : $this->total, 2) }}</div>
                 </div>
                 @include('partials.payment-lines')
 
@@ -1004,13 +1012,54 @@
                     <button wire:click="$set('showPaymentModal', false)" style="flex: 1; background: var(--bg-elevated); color: var(--text-muted); border: 1px solid var(--border); padding: 0.85rem; border-radius: 12px; font-weight: 700; font-size: 0.9rem; cursor: pointer;">
                         Cancelar
                     </button>
+                    <button wire:click="confirmTakeawayUnpaid" style="flex: 1.5; background: #3b82f6; color: #fff; border: none; padding: 0.85rem; border-radius: 12px; font-weight: 800; font-size: 0.9rem; cursor: pointer;">
+                        <span wire:loading.remove wire:target="confirmTakeawayUnpaid">Por cobrar</span>
+                        <span wire:loading wire:target="confirmTakeawayUnpaid">Registrando…</span>
+                    </button>
                     <button wire:click="confirmTakeawayPayment"
                             @disabled(!$this->pagoCubierto)
-                            style="flex: 2; background: {{ $this->pagoCubierto ? 'linear-gradient(135deg, #f97316, #dc2626)' : 'var(--border-strong)' }}; color: #fff; border: none; padding: 0.85rem; border-radius: 12px; font-weight: 800; font-size: 0.9rem; cursor: {{ $this->pagoCubierto ? 'pointer' : 'not-allowed' }}; opacity: {{ $this->pagoCubierto ? '1' : '0.6' }};">
-                        <span wire:loading.remove wire:target="confirmTakeawayPayment">Cobrar y enviar a cocina</span>
+                            style="flex: 1.5; background: {{ $this->pagoCubierto ? 'linear-gradient(135deg, #f97316, #dc2626)' : 'var(--border-strong)' }}; color: #fff; border: none; padding: 0.85rem; border-radius: 12px; font-weight: 800; font-size: 0.9rem; cursor: {{ $this->pagoCubierto ? 'pointer' : 'not-allowed' }}; opacity: {{ $this->pagoCubierto ? '1' : '0.6' }};">
+                        <span wire:loading.remove wire:target="confirmTakeawayPayment">Cobrar ahora</span>
                         <span wire:loading wire:target="confirmTakeawayPayment">Registrando…</span>
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- ═══ MODAL DE PEDIDOS PENDIENTES ═══ --}}
+    @if($showUnpaidOrdersModal)
+    <div style="position: fixed; inset: 0; z-index: 90; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.7); backdrop-filter: blur(6px);">
+        <div style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: 20px; width: 100%; max-width: 500px; overflow: hidden; display: flex; flex-direction: column; max-height: 80vh;">
+            <div style="padding: 1.25rem 1.5rem; background: var(--bg-base); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--text-strong);">Pedidos por Cobrar</h3>
+                <button wire:click="$set('showUnpaidOrdersModal', false)" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer;">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div style="padding: 1.5rem; overflow-y: auto;">
+                @if(count($unpaidOrders) === 0)
+                    <div style="text-align: center; color: var(--text-muted); padding: 2rem 0;">
+                        No hay pedidos de delivery o local pendientes de cobro.
+                    </div>
+                @else
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        @foreach($unpaidOrders as $uo)
+                        <div style="background: var(--bg-base); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-weight: 800; color: var(--text-strong);">{{ $uo->daily_label }}</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.15rem;">
+                                    {{ $uo->order_type === 'delivery' ? '🛵 Delivery' : '🥡 Recoger' }} • Bs. {{ number_format($uo->total, 2) }}
+                                </div>
+                            </div>
+                            <button wire:click="payUnpaidOrder({{ $uo->id }})" style="background: #10b981; color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 700; font-size: 0.8rem; cursor: pointer;">
+                                Cobrar
+                            </button>
+                        </div>
+                        @endforeach
+                    </div>
+                @endif
             </div>
         </div>
     </div>
