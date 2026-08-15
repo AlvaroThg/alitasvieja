@@ -707,7 +707,7 @@
     {{-- ═══ CHART.JS INTEGRATION ═══ --}}
     @script
     <script>
-        // Chart instances
+        // Global variables for instances
         let salesByBranchChart = null;
         let paymentMethodsChart = null;
         let salesTrendChart = null;
@@ -729,18 +729,20 @@
             COLORS.pink, COLORS.cyan,
         ];
 
-        // Colores del tema (claro/oscuro) leídos desde las variables CSS
-        const _themeCss = getComputedStyle(document.documentElement);
-        const themeText = (_themeCss.getPropertyValue('--text-secondary') || '#ccc').trim();
-        const themeMuted = (_themeCss.getPropertyValue('--text-muted') || '#666').trim();
-        const themeSurface = (_themeCss.getPropertyValue('--bg-surface') || '#141414').trim();
-        const themeStrong = (_themeCss.getPropertyValue('--text-strong') || '#fff').trim();
-        const themeGrid = document.documentElement.getAttribute('data-theme') === 'light'
-            ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.06)';
+        // Función para obtener los colores del tema actual de manera dinámica.
+        // Evita el problema de inyección asíncrona de Vite donde el CSS aún no existe.
+        function getThemeColors() {
+            const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+            return {
+                text: isLight ? '#4c505b' : '#cccccc',
+                muted: isLight ? '#71757f' : '#888888',
+                surface: isLight ? '#ffffff' : '#111111',
+                strong: isLight ? '#14161c' : '#ffffff',
+                grid: isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.06)'
+            };
+        }
 
         // Global Chart.js defaults
-        Chart.defaults.color = themeText;
-        Chart.defaults.borderColor = themeGrid;
         Chart.defaults.font.family = "'Inter', sans-serif";
 
         // Initialize charts on mount
@@ -761,6 +763,10 @@
         });
 
         function initCharts() {
+            const tc = getThemeColors();
+            Chart.defaults.color = tc.text;
+            Chart.defaults.borderColor = tc.grid;
+
             // ── Sales by Branch (Horizontal Bar) ──
             const branchCtx = document.getElementById('salesByBranchChart');
             if (branchCtx) {
@@ -785,21 +791,21 @@
                         plugins: {
                             legend: { display: false },
                             tooltip: {
-                                backgroundColor: '#1a1a1a',
-                                titleColor: '#fff',
-                                bodyColor: '#ccc',
-                                borderColor: '#333',
+                                backgroundColor: tc.strong,
+                                titleColor: tc.surface,
+                                bodyColor: tc.surface,
+                                borderColor: tc.grid,
                                 borderWidth: 1,
                                 padding: 12,
                                 cornerRadius: 10,
                                 callbacks: {
-                                    label: ctx => `$${ctx.parsed.x.toLocaleString('es-BO', {minimumFractionDigits:2})}`
+                                    label: ctx => `Bs. ${ctx.parsed.x.toLocaleString('es-BO', {minimumFractionDigits:2})}`
                                 }
                             }
                         },
                         scales: {
                             x: {
-                                grid: { color: themeGrid },
+                                grid: { color: tc.grid },
                                 ticks: {
                                     callback: v => 'Bs. ' + (v >= 1000 ? (v/1000).toFixed(1) + 'K' : v),
                                     font: { size: 11 }
@@ -807,7 +813,7 @@
                             },
                             y: {
                                 grid: { display: false },
-                                ticks: { font: { size: 12, weight: '600' }, color: themeText }
+                                ticks: { font: { size: 12, weight: '600' }, color: tc.text }
                             }
                         }
                     }
@@ -824,9 +830,9 @@
                         datasets: [{
                             data: [],
                             backgroundColor: [COLORS.green, COLORS.blue, COLORS.orange, COLORS.purple, COLORS.pink],
-                            borderColor: themeSurface,
+                            borderColor: tc.surface,
                             borderWidth: 3,
-                            hoverBorderColor: '#333',
+                            hoverBorderColor: tc.grid,
                         }]
                     },
                     options: {
@@ -842,14 +848,14 @@
                                     pointStyleWidth: 10,
                                     font: { size: 13, weight: '700' },
                                     boxWidth: 8,
-                                    color: themeStrong
+                                    color: tc.strong
                                 }
                             },
                             tooltip: {
-                                backgroundColor: '#1a1a1a',
-                                titleColor: '#fff',
-                                bodyColor: '#ccc',
-                                borderColor: '#333',
+                                backgroundColor: tc.strong,
+                                titleColor: tc.surface,
+                                bodyColor: tc.surface,
+                                borderColor: tc.grid,
                                 borderWidth: 1,
                                 padding: 12,
                                 cornerRadius: 10,
@@ -857,7 +863,7 @@
                                     label: ctx => {
                                         const total = ctx.dataset.data.reduce((a,b) => a+b, 0);
                                         const pct = total > 0 ? ((ctx.parsed / total) * 100).toFixed(1) : 0;
-                                        return `$${ctx.parsed.toLocaleString('es-BO', {minimumFractionDigits:2})} (${pct}%)`;
+                                        return `Bs. ${ctx.parsed.toLocaleString('es-BO', {minimumFractionDigits:2})} (${pct}%)`;
                                     }
                                 }
                             }
@@ -893,7 +899,7 @@
                                 pointRadius: 4,
                                 pointHoverRadius: 7,
                                 pointBackgroundColor: COLORS.orange,
-                                pointBorderColor: themeSurface,
+                                pointBorderColor: tc.surface,
                                 pointBorderWidth: 2,
                                 yAxisID: 'y',
                             },
@@ -909,7 +915,7 @@
                                 pointRadius: 3,
                                 pointHoverRadius: 6,
                                 pointBackgroundColor: COLORS.blue,
-                                pointBorderColor: themeSurface,
+                                pointBorderColor: tc.surface,
                                 pointBorderWidth: 2,
                                 yAxisID: 'y1',
                             }
@@ -930,14 +936,14 @@
                                     pointStyleWidth: 10,
                                     font: { size: 13, weight: '700' },
                                     boxWidth: 8,
-                                    color: themeStrong
+                                    color: tc.strong
                                 }
                             },
                             tooltip: {
-                                backgroundColor: '#1a1a1a',
-                                titleColor: '#fff',
-                                bodyColor: '#ccc',
-                                borderColor: '#333',
+                                backgroundColor: tc.strong,
+                                titleColor: tc.surface,
+                                bodyColor: tc.surface,
+                                borderColor: tc.grid,
                                 borderWidth: 1,
                                 padding: 12,
                                 cornerRadius: 10,
@@ -945,17 +951,13 @@
                         },
                         scales: {
                             x: {
-                                grid: { color: themeGrid },
-                                ticks: { font: { size: 11 }, maxRotation: 45 }
+                                grid: { color: tc.grid },
+                                ticks: { font: { size: 11 }, maxRotation: 45, color: tc.text }
                             },
                             y: {
                                 type: 'linear',
+                                display: true,
                                 position: 'left',
-                                grid: { color: themeGrid },
-                                ticks: {
-                                    callback: v => 'Bs. ' + (v >= 1000 ? (v/1000).toFixed(1) + 'K' : v),
-                                    font: { size: 11 }
-                                },
                                 title: {
                                     display: true,
                                     text: 'Ingresos (Bs)',

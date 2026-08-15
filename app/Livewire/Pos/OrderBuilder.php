@@ -62,6 +62,7 @@ class OrderBuilder extends Component
     public $sauceStep = 1;
     public $tempSelectedSauceIds = [];
     public $tempSauceWingCounts = [];
+    public $tempSauceSideCounts = [];
 
     // Modal de Pago (pedidos de cocina: para llevar / delivery, se cobran al momento)
     public $showPaymentModal = false;
@@ -363,7 +364,8 @@ class OrderBuilder extends Component
         if (!empty($item['sauces'])) {
             foreach ($item['sauces'] as $s) {
                 $this->tempSelectedSauceIds[] = $s['id'];
-                $this->tempSauceWingCounts[$s['id']] = $s['qty'];
+                $this->tempSauceWingCounts[$s['id']] = $s['qty'] ?? 0;
+                $this->tempSauceSideCounts[$s['id']] = $s['qty_side'] ?? 0;
             }
         }
         
@@ -385,10 +387,13 @@ class OrderBuilder extends Component
     {
         $this->sauceStep = 2;
         $newCounts = [];
+        $newSideCounts = [];
         foreach ($this->tempSelectedSauceIds as $id) {
             $newCounts[$id] = $this->tempSauceWingCounts[$id] ?? 0;
+            $newSideCounts[$id] = $this->tempSauceSideCounts[$id] ?? 0;
         }
         $this->tempSauceWingCounts = $newCounts;
+        $this->tempSauceSideCounts = $newSideCounts;
     }
     
     public function goToSauceStep1()
@@ -398,7 +403,7 @@ class OrderBuilder extends Component
 
     public function incrementSauceWings($sauceId)
     {
-        $currentSum = array_sum($this->tempSauceWingCounts);
+        $currentSum = array_sum($this->tempSauceWingCounts) + array_sum($this->tempSauceSideCounts);
         if ($currentSum < $this->tempProductWingsCount) {
             $this->tempSauceWingCounts[$sauceId] = ($this->tempSauceWingCounts[$sauceId] ?? 0) + 1;
         }
@@ -408,6 +413,21 @@ class OrderBuilder extends Component
     {
         if (isset($this->tempSauceWingCounts[$sauceId]) && $this->tempSauceWingCounts[$sauceId] > 0) {
             $this->tempSauceWingCounts[$sauceId]--;
+        }
+    }
+
+    public function incrementSauceSide($sauceId)
+    {
+        $currentSum = array_sum($this->tempSauceWingCounts) + array_sum($this->tempSauceSideCounts);
+        if ($currentSum < $this->tempProductWingsCount) {
+            $this->tempSauceSideCounts[$sauceId] = ($this->tempSauceSideCounts[$sauceId] ?? 0) + 1;
+        }
+    }
+
+    public function decrementSauceSide($sauceId)
+    {
+        if (isset($this->tempSauceSideCounts[$sauceId]) && $this->tempSauceSideCounts[$sauceId] > 0) {
+            $this->tempSauceSideCounts[$sauceId]--;
         }
     }
 
@@ -422,6 +442,7 @@ class OrderBuilder extends Component
                     'id' => $sauce->id,
                     'name' => $sauce->name,
                     'qty' => $this->tempSauceWingCounts[$id] ?? 0,
+                    'qty_side' => $this->tempSauceSideCounts[$id] ?? 0,
                 ];
             }
         }
@@ -475,14 +496,20 @@ class OrderBuilder extends Component
             $saucesData = [];
             if (!empty($item['sauces'])) {
                 foreach ($item['sauces'] as $sauce) {
-                    $wingsCount = $sauce['qty'];
-                    $isCoated = $wingsCount > 0;
-                    
-                    $saucesData[] = [
-                        'sauce_id' => $sauce['id'],
-                        'quantity' => $isCoated ? $wingsCount : 1,
-                        'is_coated' => $isCoated,
-                    ];
+                    if (($sauce['qty'] ?? 0) > 0) {
+                        $saucesData[] = [
+                            'sauce_id' => $sauce['id'],
+                            'quantity' => $sauce['qty'],
+                            'is_coated' => true,
+                        ];
+                    }
+                    if (($sauce['qty_side'] ?? 0) > 0) {
+                        $saucesData[] = [
+                            'sauce_id' => $sauce['id'],
+                            'quantity' => $sauce['qty_side'],
+                            'is_coated' => false,
+                        ];
+                    }
                 }
             }
 

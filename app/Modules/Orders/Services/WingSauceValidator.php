@@ -55,32 +55,23 @@ class WingSauceValidator
                 ]);
             }
 
-            // is_coated=true requiere quantity > 0 (piezas bañadas)
-            if (($sauce['is_coated'] ?? true) && ($sauce['quantity'] ?? 0) <= 0) {
+            // La cantidad asignada debe ser mayor a 0 para cualquier tipo de salsa (bañada o aparte)
+            if (($sauce['quantity'] ?? 0) <= 0) {
                 throw ValidationException::withMessages([
-                    "sauces.{$index}.quantity" => "La salsa #{$position} marcada como bañada debe indicar al menos 1 pieza.",
-                ]);
-            }
-
-            // is_coated=false → quantity debe ser 0 (salsa aparte, sin piezas bañadas)
-            if (!($sauce['is_coated'] ?? true) && ($sauce['quantity'] ?? 0) != 0) {
-                throw ValidationException::withMessages([
-                    "sauces.{$index}.quantity" => "La salsa #{$position} servida aparte no debe indicar piezas bañadas (quantity debe ser 0).",
+                    "sauces.{$index}.quantity" => "La salsa #{$position} " . ($sauce['is_coated'] ? 'bañada' : 'aparte') . " debe indicar al menos 1 pieza.",
                 ]);
             }
         }
 
-        // ─── REGLA 3: Piezas bañadas ≤ wings_count ───────────────────
-        $totalCoatedPieces = 0;
+        // ─── REGLA 3: Piezas bañadas/aparte ≤ wings_count ───────────────────
+        $totalAssignedPieces = 0;
         foreach ($sauces as $sauce) {
-            if ($sauce['is_coated'] ?? true) {
-                $totalCoatedPieces += ($sauce['quantity'] ?? 0);
-            }
+            $totalAssignedPieces += ($sauce['quantity'] ?? 0);
         }
 
-        if ($totalCoatedPieces > $wingsCount) {
+        if ($totalAssignedPieces > $wingsCount) {
             throw ValidationException::withMessages([
-                'sauces' => "La cantidad de piezas bañadas ({$totalCoatedPieces}) supera el total de piezas del combo ({$wingsCount}).",
+                'sauces' => "La cantidad de alitas asignadas ({$totalAssignedPieces}) supera el total de piezas del combo ({$wingsCount}).",
             ]);
         }
 

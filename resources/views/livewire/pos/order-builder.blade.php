@@ -726,7 +726,12 @@
                             </button>
                             <div style="display: flex; flex-wrap: wrap; gap: 0.25rem; margin-top: 0.35rem;">
                                 @foreach($item['sauces'] as $sauce)
-                                    <span class="ticket-sauce-tag">{{ $sauce['name'] }}{{ ($sauce['qty'] ?? 0) > 0 ? ' · '.$sauce['qty'].' alitas' : '' }}</span>
+                                    @php
+                                        $str = [];
+                                        if (($sauce['qty'] ?? 0) > 0) $str[] = $sauce['qty'] . ' bañadas';
+                                        if (($sauce['qty_side'] ?? 0) > 0) $str[] = $sauce['qty_side'] . ' aparte';
+                                    @endphp
+                                    <span class="ticket-sauce-tag">{{ $sauce['name'] }}{{ count($str) > 0 ? ' · ' . implode(', ', $str) : '' }}</span>
                                 @endforeach
                             </div>
                         </div>
@@ -882,34 +887,44 @@
                     </div>
                 @else
                     <!-- Paso 2: Asignar alitas -->
-                    @php $currentSum = array_sum($tempSauceWingCounts); @endphp
+                    @php $currentSum = array_sum($tempSauceWingCounts) + array_sum($tempSauceSideCounts); @endphp
                     <div class="sauce-progress">
                       <div class="sauce-progress-bar" style="width: {{ $tempProductWingsCount > 0 ? ($currentSum / $tempProductWingsCount) * 100 : 0 }}%"></div>
                     </div>
                     <div style="text-align: center; margin-bottom: 1rem; font-size: 0.8rem; font-weight: 700; color: #dc2626;">
-                        {{ $currentSum }} de {{ $tempProductWingsCount }} alitas bañadas
+                        {{ $currentSum }} de {{ $tempProductWingsCount }} alitas asignadas
                     </div>
 
                     @foreach($tempSelectedSauceIds as $sauceId)
                         @php $s = $allSauces->firstWhere('id', $sauceId); @endphp
                         @if($s)
-                            <div wire:key="sauce-{{ $s->id }}" class="sauce-row {{ ($tempSauceWingCounts[$s->id] ?? 0) > 0 ? 'sauce-row-active' : '' }}">
+                            <div wire:key="sauce-{{ $s->id }}" class="sauce-row {{ (($tempSauceWingCounts[$s->id] ?? 0) > 0 || ($tempSauceSideCounts[$s->id] ?? 0) > 0) ? 'sauce-row-active' : '' }}" style="flex-direction: column; align-items: stretch; gap: 0.5rem; padding: 0.75rem;">
                                 <div>
-                                    <h4 class="sauce-name">{{ $s->name }}</h4>
-                                    @if(($tempSauceWingCounts[$s->id] ?? 0) == 0)
-                                        <span style="font-size: 0.7rem; color: #f97316;">Se enviará aparte</span>
-                                    @else
-                                        <span style="font-size: 0.7rem; color: var(--text-muted);">Bañadas</span>
-                                    @endif
+                                    <h4 class="sauce-name" style="margin-bottom: 0.25rem;">{{ $s->name }}</h4>
                                 </div>
-                                <div class="sauce-counter">
-                                    <button wire:click="decrementSauceWings({{ $s->id }})" class="sauce-counter-btn" style="{{ empty($tempSauceWingCounts[$s->id]) ? 'opacity:0.3;cursor:not-allowed;' : '' }}">
-                                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path></svg>
-                                    </button>
-                                    <span class="sauce-counter-value">{{ $tempSauceWingCounts[$s->id] ?? 0 }}</span>
-                                    <button wire:click="incrementSauceWings({{ $s->id }})" class="sauce-counter-btn" style="{{ $currentSum >= $tempProductWingsCount ? 'opacity:0.3;cursor:not-allowed;' : '' }}">
-                                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                                    </button>
+                                <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-base); padding: 0.4rem 0.5rem; border-radius: 8px;">
+                                    <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700;">Bañadas</span>
+                                    <div class="sauce-counter">
+                                        <button wire:click="decrementSauceWings({{ $s->id }})" class="sauce-counter-btn" style="{{ empty($tempSauceWingCounts[$s->id]) ? 'opacity:0.3;cursor:not-allowed;' : '' }}">
+                                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path></svg>
+                                        </button>
+                                        <span class="sauce-counter-value">{{ $tempSauceWingCounts[$s->id] ?? 0 }}</span>
+                                        <button wire:click="incrementSauceWings({{ $s->id }})" class="sauce-counter-btn" style="{{ $currentSum >= $tempProductWingsCount ? 'opacity:0.3;cursor:not-allowed;' : '' }}">
+                                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-base); padding: 0.4rem 0.5rem; border-radius: 8px;">
+                                    <span style="font-size: 0.75rem; color: #f97316; font-weight: 700;">Aparte</span>
+                                    <div class="sauce-counter">
+                                        <button wire:click="decrementSauceSide({{ $s->id }})" class="sauce-counter-btn" style="{{ empty($tempSauceSideCounts[$s->id]) ? 'opacity:0.3;cursor:not-allowed;' : '' }}">
+                                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path></svg>
+                                        </button>
+                                        <span class="sauce-counter-value">{{ $tempSauceSideCounts[$s->id] ?? 0 }}</span>
+                                        <button wire:click="incrementSauceSide({{ $s->id }})" class="sauce-counter-btn" style="{{ $currentSum >= $tempProductWingsCount ? 'opacity:0.3;cursor:not-allowed;' : '' }}">
+                                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         @endif

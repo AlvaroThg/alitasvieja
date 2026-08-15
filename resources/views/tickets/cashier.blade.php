@@ -49,6 +49,11 @@
             <td style="width: 55%">
                 {{ $item->productVariant->product->name ?? 'Item' }}<br>
                 <span class="text-xs">{{ $item->productVariant->name ?? '' }}</span>
+                @if($item->sauces && $item->sauces->isNotEmpty())
+                    @foreach($item->sauces as $sauce)
+                        <br><span class="text-xs" style="color: #4b5563;">- {{ $sauce->quantity }}x {{ $sauce->sauce->name ?? 'Salsa' }} [{{ $sauce->is_coated ? 'bañada' : 'aparte' }}]</span>
+                    @endforeach
+                @endif
                 @if($item->notes)
                     <br><span class="text-xs" style="font-style: italic;">* {{ $item->notes }}</span>
                 @endif
@@ -119,9 +124,9 @@
                         <div style="padding-left: 10px; font-size: 12px;">
                             - {{ $sauce->quantity }}pz {{ $sauce->sauce->name ?? 'Salsa' }} [bañada]
                         </div>
-                    @elseif(!$sauce->is_coated)
+                    @elseif(!$sauce->is_coated && $sauce->quantity > 0)
                         <div style="padding-left: 10px; font-size: 12px;">
-                            - {{ $sauce->sauce->name ?? 'Salsa' }} [aparte]
+                            - {{ $sauce->quantity }}pz {{ $sauce->sauce->name ?? 'Salsa' }} [aparte]
                         </div>
                     @endif
                 @endforeach
