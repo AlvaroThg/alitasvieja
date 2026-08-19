@@ -51,13 +51,14 @@ return [
                 'nombre'   => 'Alvaro Baldiviezo',
                 'rol'      => 'Desarrollo full-stack · Arquitectura del sistema',
                 'github'   => 'https://github.com/AlvaroThg',   // ej. https://github.com/usuario
-                'linkedin' => 'www.linkedin.com/in/alvarofabianbaldiviezorodriguez',
+                'linkedin' => 'https://www.linkedin.com/in/alvarofabianbaldiviezorodriguez',
             ],
             [
                 'nombre'   => 'Marcelo Sanguino',
                 'rol'      => 'Desarrollo full-stack · Módulos de POS y menú',
                 'github'   => 'https://github.com/Chelo-sanguino',
-                'linkedin' => '',
+                // Los acentos van codificados para que el enlace no se rompa al copiarse.
+                'linkedin' => 'https://www.linkedin.com/in/sanguino-fern%C3%A1ndez-marcelo-adri%C3%A1n-922849257',
             ],
         ],
         'stack' => ['Laravel 13', 'Livewire 4', 'MySQL', 'Tailwind CSS', 'Docker'],
