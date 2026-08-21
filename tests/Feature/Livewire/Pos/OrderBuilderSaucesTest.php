@@ -78,6 +78,7 @@ class OrderBuilderSaucesTest extends TestCase
                     'quantity' => 2,
                     'max_sauces' => 1,
                     'wings_count' => 6,
+                    'has_sauces' => true,
                     'sauces' => [],
                     'product_name' => 'Alitas',
                     'variant_name' => 'Clasicas',
