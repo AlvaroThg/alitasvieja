@@ -3,6 +3,7 @@
 namespace App\Livewire\Pos;
 
 use Livewire\Component;
+use Livewire\Attributes\On;
 use App\Livewire\Concerns\HandlesSplitPayments;
 use App\Models\Table;
 
@@ -38,6 +39,15 @@ class TableGrid extends Component
 
     // Modal de reimprimir tickets
     public $showReprintModal = false;
+
+    // Modal de cancelar pedido
+    public $showCancelOrderModal = false;
+
+    #[On('order-saved')]
+    public function refreshTables()
+    {
+        // Al escuchar el evento, Livewire re-renderizará y obtendrá los estados de las mesas de BD
+    }
 
     // ─── ACCIONES SOBRE MESA ──────────────────────────────────
 
@@ -83,6 +93,25 @@ class TableGrid extends Component
         }
     }
 
+    public function cancelTableOrder()
+    {
+        $openOrder = \App\Modules\Orders\Models\Order::where('table_id', $this->selectedTableForAction->id)
+            ->where('status', 'open')
+            ->first();
+
+        if ($openOrder) {
+            try {
+                app(\App\Modules\Orders\Services\OrderService::class)->cancelOrder($openOrder);
+                session()->flash('message', 'Pedido cancelado correctamente.');
+            } catch (\Exception $e) {
+                session()->flash('error', 'Error al cancelar el pedido: ' . $e->getMessage());
+            }
+        }
+        $this->showCancelOrderModal = false;
+        $this->showActionModal = false;
+        $this->selectedTableForAction = null;
+    }
+
     public function processCheckout()
     {
         $openOrder = \App\Modules\Orders\Models\Order::where('table_id', $this->selectedTableForAction->id)
@@ -119,6 +148,13 @@ class TableGrid extends Component
         $this->selectedTableForAction->update(['status' => 'available']);
         $this->showCheckoutModal = false;
         $this->checkoutError = '';
+
+        // Imprimir ticket de venta
+        if ($openOrder) {
+            $this->dispatch('order-saved', urls: [
+                route('pos.tickets.cashier', ['order' => $openOrder->id])
+            ]);
+        }
     }
 
     public function createOrder()

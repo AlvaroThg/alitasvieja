@@ -309,8 +309,10 @@
                         <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                         Liberar Mesa (Realizar Pago)
                     </button>
-                    <!-- Opcional si permites añadir a orden existente -->
-                    <!-- <button wire:click="createOrder" class="btn-action btn-primary">Añadir al Pedido Actual</button> -->
+                    <button wire:click="$set('showCancelOrderModal', true)" class="btn-action" style="background: transparent; color: #dc2626; border: 1px solid rgba(220, 38, 38, 0.3);">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        Cancelar Pedido
+                    </button>
                 @endif
 
                 @if($selectedTableForAction->status === 'available')
@@ -489,4 +491,32 @@
     </div>
     @endif
 
+    <!-- Modal Cancelar Pedido Mesa -->
+    @if($showCancelOrderModal)
+    <div class="table-modal-overlay" style="z-index: 100;">
+        <div class="table-modal" style="max-width: 420px;">
+            <div class="table-modal-header" style="border-bottom: none; padding-bottom: 0;">
+                <h3 style="color: #dc2626; display: flex; align-items: center; gap: 0.5rem;">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    Cancelar Pedido
+                </h3>
+            </div>
+            <div class="table-modal-body" style="padding-top: 1rem;">
+                <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5;">
+                    ¿Estás seguro que deseas cancelar el pedido de la mesa <strong>{{ $selectedTableForAction?->name }}</strong>?<br><br>
+                    Esta acción es irreversible y los productos seleccionados serán eliminados de los pendientes de cocina.
+                </p>
+                
+                <div style="display: flex; gap: 0.75rem; margin-top: 1rem;">
+                    <button wire:click="$set('showCancelOrderModal', false)" style="flex: 1; background: var(--bg-elevated); color: var(--text-muted); border: 1px solid var(--border); padding: 0.75rem; border-radius: 12px; font-weight: 700; cursor: pointer;">
+                        Volver
+                    </button>
+                    <button wire:click="cancelTableOrder" style="flex: 1.5; background: #dc2626; color: #fff; border: none; padding: 0.75rem; border-radius: 12px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);">
+                        Sí, Cancelar Pedido
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
 </div>

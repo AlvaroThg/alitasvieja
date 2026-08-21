@@ -908,7 +908,7 @@
                                         <button wire:click="decrementSauceWings({{ $s->id }})" class="sauce-counter-btn" style="{{ empty($tempSauceWingCounts[$s->id]) ? 'opacity:0.3;cursor:not-allowed;' : '' }}">
                                             <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path></svg>
                                         </button>
-                                        <span class="sauce-counter-value">{{ $tempSauceWingCounts[$s->id] ?? 0 }}</span>
+                                        <input type="number" min="0" wire:model.live="tempSauceWingCounts.{{ $s->id }}" class="sauce-counter-input" onclick="this.select()">
                                         <button wire:click="incrementSauceWings({{ $s->id }})" class="sauce-counter-btn" style="{{ $currentSum >= $tempProductWingsCount ? 'opacity:0.3;cursor:not-allowed;' : '' }}">
                                             <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                                         </button>
@@ -920,7 +920,7 @@
                                         <button wire:click="decrementSauceSide({{ $s->id }})" class="sauce-counter-btn" style="{{ empty($tempSauceSideCounts[$s->id]) ? 'opacity:0.3;cursor:not-allowed;' : '' }}">
                                             <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path></svg>
                                         </button>
-                                        <span class="sauce-counter-value">{{ $tempSauceSideCounts[$s->id] ?? 0 }}</span>
+                                        <input type="number" min="0" wire:model.live="tempSauceSideCounts.{{ $s->id }}" class="sauce-counter-input" onclick="this.select()">
                                         <button wire:click="incrementSauceSide({{ $s->id }})" class="sauce-counter-btn" style="{{ $currentSum >= $tempProductWingsCount ? 'opacity:0.3;cursor:not-allowed;' : '' }}">
                                             <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                                         </button>
@@ -1042,8 +1042,32 @@
         </div>
     </div>
     @endif
-
     {{-- ═══ MODAL DE PEDIDOS PENDIENTES ═══ --}}
+    <style>
+        /* ── SAUCE MODAL ── */
+        .sauce-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+        .sauce-modal { background: var(--bg-surface); width: 100%; max-width: 420px; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.2); border: 1px solid var(--border-strong); display: flex; flex-direction: column; max-height: 90vh; }
+        .sauce-modal-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: flex-start; }
+        .sauce-modal-header h3 { font-size: 1.25rem; font-weight: 800; color: var(--text-strong); margin-bottom: 0.25rem; }
+        .sauce-modal-header p { font-size: 0.85rem; color: var(--text-muted); }
+        .sauce-modal-close { background: transparent; border: none; color: var(--text-muted); cursor: pointer; border-radius: 50%; padding: 0.25rem; }
+        .sauce-modal-body { padding: 1.25rem 1.5rem; overflow-y: auto; flex: 1; }
+        .sauce-row { display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--bg-base); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 0.75rem; transition: all 0.2s; }
+        .sauce-row-active { border-color: #dc2626; background: rgba(220,38,38,0.03); }
+        .sauce-name { font-weight: 700; color: var(--text-strong); font-size: 0.95rem; }
+        .sauce-spice { display: flex; align-items: center; margin-top: 0.25rem; }
+        .sauce-counter { display: flex; align-items: center; gap: 0.75rem; }
+        .sauce-counter-btn { width: 28px; height: 28px; border-radius: 8px; border: 1px solid var(--border-strong); background: var(--bg-surface); color: var(--text-strong); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.1s; }
+        .sauce-counter-btn:hover { border-color: #dc2626; color: #dc2626; }
+        .sauce-counter-input { width: 40px; text-align: center; font-weight: 800; font-size: 1.1rem; color: var(--text-strong); background: transparent; border: none; outline: none; appearance: textfield; -moz-appearance: textfield; }
+        .sauce-counter-input::-webkit-outer-spin-button, .sauce-counter-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .sauce-progress { background: var(--bg-base); border-radius: 50px; height: 8px; overflow: hidden; margin-bottom: 1rem; }
+        .sauce-progress-bar { height: 100%; background: linear-gradient(90deg, #f97316, #dc2626); transition: width 0.3s ease; }
+        .sauce-modal-footer { padding: 1.25rem 1.5rem; border-top: 1px solid var(--border); background: var(--bg-base); }
+        .btn-confirm-sauces { width: 100%; padding: 0.8rem; border-radius: 12px; font-weight: 800; font-size: 0.9rem; text-align: center; cursor: pointer; transition: all 0.2s; border: none; }
+        .btn-confirm-sauces-ready { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; box-shadow: 0 4px 12px rgba(220,38,38,0.3); }
+    </style>
+
     @if($showUnpaidOrdersModal)
     <div style="position: fixed; inset: 0; z-index: 90; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.7); backdrop-filter: blur(6px);">
         <div style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: 20px; width: 100%; max-width: 500px; overflow: hidden; display: flex; flex-direction: column; max-height: 80vh;">
@@ -1068,13 +1092,47 @@
                                     {{ $uo->order_type === 'delivery' ? '🛵 Delivery' : '🥡 Recoger' }} • Bs. {{ number_format($uo->total, 2) }}
                                 </div>
                             </div>
-                            <button wire:click="payUnpaidOrder({{ $uo->id }})" style="background: #10b981; color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 700; font-size: 0.8rem; cursor: pointer;">
-                                Cobrar
-                            </button>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button wire:click="confirmCancelPendingOrder({{ $uo->id }})" style="background: transparent; color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); padding: 0.5rem 0.8rem; border-radius: 8px; font-weight: 700; font-size: 0.8rem; cursor: pointer;">
+                                    Cancelar
+                                </button>
+                                <button wire:click="payUnpaidOrder({{ $uo->id }})" style="background: #10b981; color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 700; font-size: 0.8rem; cursor: pointer;">
+                                    Cobrar
+                                </button>
+                            </div>
                         </div>
                         @endforeach
                     </div>
                 @endif
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <!-- Modal Cancelar Pedido Pendiente -->
+    @if($showCancelOrderModal)
+    <div style="position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);">
+        <div style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: 20px; width: 100%; max-width: 420px; overflow: hidden; display: flex; flex-direction: column;">
+            <div style="padding: 1.25rem 1.5rem; background: var(--bg-base); display: flex; align-items: center; gap: 0.5rem;">
+                <h3 style="color: #dc2626; font-size: 1.15rem; font-weight: 800; display: flex; align-items: center; gap: 0.5rem;">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    Cancelar Pedido
+                </h3>
+            </div>
+            <div style="padding: 1.5rem; padding-top: 0.5rem;">
+                <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5;">
+                    ¿Estás seguro que deseas cancelar este pedido?<br><br>
+                    Esta acción es irreversible y se eliminará de la lista de pendientes de cobro.
+                </p>
+                
+                <div style="display: flex; gap: 0.75rem; margin-top: 1.25rem;">
+                    <button wire:click="$set('showCancelOrderModal', false)" style="flex: 1; background: var(--bg-elevated); color: var(--text-muted); border: 1px solid var(--border); padding: 0.75rem; border-radius: 12px; font-weight: 700; cursor: pointer;">
+                        Volver
+                    </button>
+                    <button wire:click="cancelPendingOrder" style="flex: 1.5; background: #dc2626; color: #fff; border: none; padding: 0.75rem; border-radius: 12px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);">
+                        Sí, Cancelar Pedido
+                    </button>
+                </div>
             </div>
         </div>
     </div>

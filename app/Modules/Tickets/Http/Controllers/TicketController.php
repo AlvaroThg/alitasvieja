@@ -22,16 +22,25 @@ class TicketController extends Controller
      */
     public function kitchen(Order $order)
     {
-        $path = $this->ticketService->generateKitchenTicket($order);
+        $order->load([
+            'items.productVariant.product',
+            'items.sauces.sauce',
+            'table',
+            'branch',
+        ]);
 
-        return response(Storage::get($path), 200)
-            ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'inline; filename="kitchen_' . $order->order_number . '.pdf"');
+        // Mismo tamaño de papel que el ticket de venta: 80mm = 226.77pt
+        $customPaper = array(0, 0, 226.77, 1000);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('tickets.kitchen', compact('order'))
+            ->setPaper($customPaper, 'portrait');
+
+        return $pdf->stream('cocina_' . $order->order_number . '.pdf', ['Attachment' => false]);
     }
 
     /**
      * GET /pos/tickets/{order}/cashier
-     * Genera el ticket final para el cliente y activa impresión de 80mm
+     * Genera el ticket final para el cliente (solo venta, sin cocina).
      */
     public function cashier(Order $order)
     {

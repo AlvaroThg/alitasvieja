@@ -73,6 +73,10 @@ class OrderBuilder extends Component
     public $pendingOrderId = null;
     public $pendingOrderTotal = 0;
 
+    // Modal cancelar pedido
+    public $showCancelOrderModal = false;
+    public $orderToCancelId = null;
+
     /** El cobro puede repartirse entre varios métodos (efectivo + QR, etc.). */
     protected function montoACobrar(): float
     {
@@ -267,14 +271,27 @@ class OrderBuilder extends Component
         $branchPriceRecord = $variant->prices->firstWhere('branch_id', $branchId);
         $finalPrice = $branchPriceRecord ? $branchPriceRecord->price : $variant->price;
 
-        // Unir productos idénticos: misma variante, sin salsas y sin nota → acumula cantidad.
-        if (!$variant->product->has_sauces) {
-            foreach ($this->cart as $i => $existing) {
-                if ($existing['variant_id'] === $variant->id && empty($existing['sauces']) && empty($existing['notes'])) {
-                    $this->cart[$i]['quantity']++;
-                    $this->saveCartToSession();
-                    return;
+        // Unir productos idénticos: misma variante y sin notas especiales
+        foreach ($this->cart as $i => $existing) {
+            if ($existing['variant_id'] === $variant->id && empty($existing['notes'])) {
+                // Validar stock antes de sumar
+                if ($stock !== null) {
+                    $inCart = collect($this->cart)->where('variant_id', $variant->id)->sum('quantity');
+                    if ($inCart + 1 > $stock) {
+                        $this->dispatch('stock-alert', message: 'Cantidad de Stock insuficiente.');
+                        return;
+                    }
                 }
+                
+                $this->cart[$i]['quantity']++;
+                $this->saveCartToSession();
+                
+                // Si el producto lleva salsas, abrir el modal para que elijan la nueva salsa
+                if (!empty($this->cart[$i]['has_sauces'])) {
+                    $this->openSauceModal($i);
+                }
+                
+                return;
             }
         }
 
@@ -314,6 +331,10 @@ class OrderBuilder extends Component
             }
             $this->cart[$index]['quantity']++;
             $this->saveCartToSession();
+            
+            if (!empty($this->cart[$index]['has_sauces'])) {
+                $this->openSauceModal($index);
+            }
         }
     }
 
@@ -351,9 +372,9 @@ class OrderBuilder extends Component
     {
         $this->tempCartIndex = $cartIndex;
         $item = $this->cart[$cartIndex];
-        
-        $this->tempProductMaxSauces = (int) ($item['max_sauces'] ?? 0);
-        $this->tempProductWingsCount = (int) ($item['wings_count'] ?? 0);
+        $qty = (int) ($item['quantity'] ?? 1);
+        $this->tempProductMaxSauces = (int) ($item['max_sauces'] ?? 0) * $qty;
+        $this->tempProductWingsCount = (int) ($item['wings_count'] ?? 0) * $qty;
         
         // Reset state
         $this->sauceStep = 1;
@@ -428,6 +449,39 @@ class OrderBuilder extends Component
     {
         if (isset($this->tempSauceSideCounts[$sauceId]) && $this->tempSauceSideCounts[$sauceId] > 0) {
             $this->tempSauceSideCounts[$sauceId]--;
+        }
+    }
+
+    public function updatedTempSauceWingCounts($value, $key)
+    {
+        $this->enforceSauceLimit($key, 'wing');
+    }
+
+    public function updatedTempSauceSideCounts($value, $key)
+    {
+        $this->enforceSauceLimit($key, 'side');
+    }
+
+    private function enforceSauceLimit($changedKey, $type)
+    {
+        // Convert to integers and prevent negative
+        foreach ($this->tempSauceWingCounts as $k => $v) {
+            $this->tempSauceWingCounts[$k] = max(0, (int) $v);
+        }
+        foreach ($this->tempSauceSideCounts as $k => $v) {
+            $this->tempSauceSideCounts[$k] = max(0, (int) $v);
+        }
+
+        $currentSum = array_sum($this->tempSauceWingCounts) + array_sum($this->tempSauceSideCounts);
+
+        if ($currentSum > $this->tempProductWingsCount) {
+            $excess = $currentSum - $this->tempProductWingsCount;
+            // Subtract the excess from the recently changed key
+            if ($type === 'wing') {
+                $this->tempSauceWingCounts[$changedKey] = max(0, $this->tempSauceWingCounts[$changedKey] - $excess);
+            } else {
+                $this->tempSauceSideCounts[$changedKey] = max(0, $this->tempSauceSideCounts[$changedKey] - $excess);
+            }
         }
     }
 
@@ -577,14 +631,13 @@ class OrderBuilder extends Component
             return;
         }
 
-        // Pedido en salón: se envía a cocina; el pago se hace luego en la mesa.
-        // Se imprimen ambos tickets: cocina (para preparar) y caja (comanda de la mesa).
+        // Pedido en salón (mesa): solo ticket de cocina.
+        // El ticket de venta se imprime cuando se cobre la mesa.
         $order = $this->persistOrder();
         $orderId = $order->id;
         $this->resetCartState();
         $this->dispatch('order-saved', urls: [
             route('pos.tickets.kitchen', ['order' => $orderId]),
-            route('pos.tickets.cashier', ['order' => $orderId]),
         ]);
     }
 
@@ -665,14 +718,22 @@ class OrderBuilder extends Component
         $orderId = $order->id;
         $this->showPaymentModal = false;
         
-        $urls = [route('pos.tickets.cashier', ['order' => $orderId])];
         if (!$isPendingOrder) {
-            $urls[] = route('pos.tickets.kitchen', ['order' => $orderId]);
+            // Pago directo (nuevo pedido): imprimir AMBOS tickets
+            $urls = [
+                route('pos.tickets.cashier', ['order' => $orderId]),
+                route('pos.tickets.kitchen', ['order' => $orderId]),
+            ];
             $this->resetCartState();
         } else {
+            // Cobrar pedido pendiente: solo ticket de venta
+            // (el de cocina ya se imprimió cuando se creó el pedido)
+            $urls = [
+                route('pos.tickets.cashier', ['order' => $orderId]),
+            ];
             $this->pendingOrderId = null;
             $this->pendingOrderTotal = 0;
-            $this->loadUnpaidOrders(); // Refrescar lista
+            $this->loadUnpaidOrders();
         }
 
         $this->dispatch('order-saved', urls: $urls);
@@ -704,9 +765,10 @@ class OrderBuilder extends Component
         $this->showPaymentModal = false;
         $this->resetCartState();
 
+        // Por cobrar: solo ticket de cocina
+        // (el de venta se imprimirá cuando se cobre)
         $this->dispatch('order-saved', urls: [
             route('pos.tickets.kitchen', ['order' => $orderId]),
-            // No imprimos ticket de caja todavía, solo cocina
         ]);
     }
 
@@ -736,6 +798,44 @@ class OrderBuilder extends Component
         $this->showUnpaidOrdersModal = false;
         $this->iniciarPagos();
         $this->showPaymentModal = true;
+    }
+
+    public function confirmCancelPendingOrder($orderId)
+    {
+        $this->orderToCancelId = $orderId;
+        $this->showCancelOrderModal = true;
+    }
+
+    public function cancelPendingOrder()
+    {
+        if (!$this->orderToCancelId) return;
+
+        $order = \App\Modules\Orders\Models\Order::find($this->orderToCancelId);
+        if ($order) {
+            try {
+                app(\App\Modules\Orders\Services\OrderService::class)->cancelOrder($order);
+                session()->flash('message', 'Pedido cancelado correctamente.');
+            } catch (\Exception $e) {
+                session()->flash('error', 'Error al cancelar el pedido: ' . $e->getMessage());
+            }
+        }
+        
+        $this->showCancelOrderModal = false;
+        $this->orderToCancelId = null;
+
+        // Refrescar lista de pendientes silenciosamente
+        $branchId = auth()->user()?->activeBranchId() ?? 1;
+        $this->unpaidOrders = \App\Modules\Orders\Models\Order::where('branch_id', $branchId)
+            ->where('status', 'open')
+            ->whereNull('table_id')
+            ->orderBy('id', 'asc')
+            ->get();
+            
+        if ($this->unpaidOrders->isEmpty()) {
+            $this->showUnpaidOrdersModal = false;
+        } else {
+            $this->showUnpaidOrdersModal = true;
+        }
     }
 
     // --- Persistencia Sesión ---

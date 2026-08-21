@@ -100,4 +100,23 @@ class CashSession extends Model
             + $this->total_incomes
             - $this->total_expenses;
     }
+
+    /**
+     * Obtiene el total cobrado por un método de pago específico (ej: 'qr', 'transfer')
+     * durante el tiempo que la caja ha estado/estuvo abierta.
+     */
+    public function getTotalByPaymentMethod(string $method): float
+    {
+        $query = \App\Modules\Orders\Models\OrderPayment::where('method', $method)
+            ->whereHas('order', function($q) {
+                $q->where('branch_id', $this->branch_id);
+            })
+            ->where('created_at', '>=', $this->opened_at);
+
+        if ($this->closed_at) {
+            $query->where('created_at', '<=', $this->closed_at);
+        }
+
+        return (float) $query->sum('amount');
+    }
 }

@@ -80,7 +80,8 @@ class OrderService
                 $extraSauceCharge = $this->sauceValidator->validate(
                     $variant,
                     $order->branch_id,
-                    $saucesData
+                    $saucesData,
+                    $quantity
                 );
             }
 
@@ -153,5 +154,31 @@ class OrderService
         $item->delete(); // cascade elimina order_item_sauces
 
         $this->recalculateOrder($order);
+    }
+
+    // ─── Cancelar Pedido ──────────────────────────────────────
+
+    /**
+     * Cancela un pedido que aún no ha sido pagado.
+     *
+     * @throws ValidationException
+     */
+    public function cancelOrder(Order $order, string $reason = 'Cancelado por el cajero'): void
+    {
+        if ($order->status !== 'open') {
+            throw ValidationException::withMessages([
+                'order' => 'Solo se pueden cancelar pedidos abiertos.',
+            ]);
+        }
+
+        $order->update([
+            'status'    => 'cancelled',
+            'closed_at' => now(),
+            'notes'     => trim($order->notes . ' | ' . $reason),
+        ]);
+
+        if ($order->table_id) {
+            $order->table->update(['status' => 'available']);
+        }
     }
 }

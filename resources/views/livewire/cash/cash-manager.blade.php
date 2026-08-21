@@ -259,9 +259,20 @@
         <div style="position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.7); backdrop-filter: blur(6px);">
             <div style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: 20px; width: 100%; max-width: 440px; padding: 1.5rem;">
                 <h3 style="color: var(--text-strong); font-size: 1.15rem; font-weight: 800; margin-bottom: 0.5rem;">Cerrar Caja</h3>
+                
+                <div style="background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); border-radius: 12px; padding: 1rem; margin-bottom: 1.25rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">Pagos recibidos en QR:</span>
+                        <strong style="color: #60a5fa;">Bs. {{ number_format($session->getTotalByPaymentMethod('qr'), 2) }}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; border-top: 1px solid rgba(34,197,94,0.2); padding-top: 0.5rem;">
+                        <span style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">Efectivo que debe haber:</span>
+                        <strong style="color: #22c55e; font-size: 1.1rem;">Bs. {{ number_format($session->calculateExpected(), 2) }}</strong>
+                    </div>
+                </div>
+
                 <p style="color: var(--text-muted); font-size: 0.82rem; margin-bottom: 1.25rem;">
-                    Cuenta el dinero físico de la Caja de Venta e ingresa el total.
-                    El sistema espera <strong style="color: var(--text);">Bs. {{ number_format($session->calculateExpected(), 2) }}</strong> y calculará la diferencia.
+                    Cuenta el dinero físico (solo efectivo) de la Caja de Venta e ingresa el total a continuación. El sistema calculará automáticamente si hay algún sobrante o faltante.
                 </p>
 
                 <form wire:submit.prevent="closeSession">

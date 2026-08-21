@@ -1,135 +1,108 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        @page { margin: 0; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: 'Courier New', monospace;
-            font-size: 11px;
-            width: 72mm;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 14px;
             margin: 0;
-            padding: 4mm;
-            line-height: 1.4;
+            padding: 6px 6px 6px 10px;
+            color: #000;
+            width: 226.77pt;
+            line-height: 1.3;
         }
-
-        .center {
-            text-align: center;
-        }
-
-        .bold {
-            font-weight: bold;
-        }
-
-        .separator {
-            text-align: center;
-            letter-spacing: 0;
-        }
-
-        .item-block {
-            margin-bottom: 2px;
-        }
-
-        .sauce-line {
-            padding-left: 8px;
-            font-size: 10px;
-        }
-
-        .notes-line {
-            padding-left: 8px;
-            font-size: 10px;
-            font-style: italic;
-        }
-
-        .footer-notes {
-            font-size: 10px;
-            font-style: italic;
-            margin-top: 4px;
-        }
+        .text-center { text-align: center; }
+        .font-bold { font-weight: bold; }
+        .divider { border-bottom: 1px dashed #000; margin: 4px 0; }
+        p { margin: 0; padding: 0; }
+        .text-xs { font-size: 11px; }
     </style>
 </head>
 <body>
     {{-- ═══ ENCABEZADO ═══ --}}
-    <div class="center bold">
-        {{ $order->branch->city ?? $order->branch->name }}
+    <div class="text-center">
+        <p class="font-bold" style="font-size: 14px;">
+            {{ $order->branch->city ?? $order->branch->name }}
+        </p>
+        <p class="font-bold" style="font-size: 18px; margin: 4px 0;">
+            *** COCINA ***
+        </p>
     </div>
-    <div class="center bold" style="font-size: 13px; margin: 4px 0;">
-        *** COCINA ***
-    </div>
-    <div class="separator">--------------------------------</div>
 
-    {{-- MODIFICADO: daily_number prominente para cocina (OBS 1) --}}
-    <div class="center bold" style="font-size: 14px; margin: 2px 0;">
-        Pedido #{{ $order->daily_number }}
+    <div class="divider"></div>
+
+    {{-- ═══ NÚMERO DE PEDIDO ═══ --}}
+    <div class="text-center">
+        <p class="font-bold" style="font-size: 22px; margin: 4px 0;">
+            Pedido #{{ $order->daily_number }}
+        </p>
     </div>
+
     @if($order->order_type !== 'dine_in')
-        <div class="center bold" style="font-size: 14px; margin: 2px 0; border: 1px solid black; padding: 2px;">
-            {{ $order->order_type === 'delivery' ? 'DELIVERY' : 'PARA RECOGER' }}
+        <div class="text-center">
+            <p class="font-bold" style="font-size: 20px; margin: 4px 0; border: 2px solid #000; padding: 4px; display: inline-block;">
+                {{ $order->order_type === 'delivery' ? 'DELIVERY' : 'PARA RECOGER' }}
+            </p>
         </div>
     @endif
-    <div style="font-size: 9px; text-align: center; color: #666;">
-        Ref: {{ $order->order_number }}
+
+    <div class="text-center">
+        <p class="text-xs" style="color: #666;">Ref: {{ $order->order_number }}</p>
     </div>
-    {{-- FIN MODIFICADO --}}
+
     @if($order->table)
-    <div>
-        <span class="bold">Mesa:</span> {{ $order->table->name }}
-    </div>
+        <p><span class="font-bold">Mesa:</span> {{ $order->table->name }}</p>
     @endif
-    <div>
-        <span class="bold">Hora:</span> {{ $order->opened_at->format('H:i') }}
-    </div>
-    <div class="separator">--------------------------------</div>
+    <p><span class="font-bold">Hora:</span> {{ $order->opened_at ? $order->opened_at->format('H:i') : '' }}</p>
+
+    <div class="divider"></div>
 
     {{-- ═══ ÍTEMS ═══ --}}
     @foreach($order->items as $index => $item)
-        <div class="item-block">
-            <div class="bold">
+        <div style="margin-bottom: 4px;">
+            <p class="font-bold" style="font-size: 24px; line-height: 1.2; margin-bottom: 2px;">
                 {{ $item->quantity }}x {{ $item->productVariant->name ?? 'Producto' }}
-            </div>
+            </p>
 
-            {{-- Salsas del ítem (solo si tiene) --}}
-            @if($item->sauces->isNotEmpty())
+            {{-- Salsas del ítem --}}
+            @if($item->sauces && $item->sauces->isNotEmpty())
                 @foreach($item->sauces as $sauce)
                     @if($sauce->is_coated && $sauce->quantity > 0)
-                        <div class="sauce-line">
+                        <p class="font-bold" style="font-size: 22px; padding-left: 10px; line-height: 1.2;">
                             - {{ $sauce->quantity }} {{ $sauce->quantity == 1 ? 'alita' : 'alitas' }} con {{ $sauce->sauce->name ?? 'Salsa' }} [bañada]
-                        </div>
+                        </p>
                     @elseif(!$sauce->is_coated && $sauce->quantity > 0)
-                        <div class="sauce-line">
+                        <p class="font-bold" style="font-size: 22px; padding-left: 10px; line-height: 1.2;">
                             - {{ $sauce->quantity }}pz {{ $sauce->sauce->name ?? 'Salsa' }} [aparte]
-                        </div>
+                        </p>
                     @endif
                 @endforeach
             @endif
 
             {{-- Notas del ítem --}}
             @if($item->notes)
-                <div class="notes-line">
+                <p style="padding-left: 10px; font-style: italic; font-size: 13px;">
                     * {{ $item->notes }}
-                </div>
+                </p>
             @endif
         </div>
 
-        {{-- Separador entre ítems (no después del último) --}}
+        {{-- Separador entre ítems --}}
         @if(!$loop->last)
-            <div class="separator">--------------------------------</div>
+            <div class="divider"></div>
         @endif
     @endforeach
 
     {{-- ═══ PIE ═══ --}}
     @if($order->notes)
-        <div class="separator">--------------------------------</div>
-        <div class="footer-notes">
-            <span class="bold">Obs. pedido:</span> {{ $order->notes }}
-        </div>
+        <div class="divider"></div>
+        <p class="font-bold">Obs. pedido:</p>
+        <p style="font-style: italic; font-size: 13px;">{{ $order->notes }}</p>
     @endif
 
-    <div class="separator" style="margin-top: 6px;">--------------------------------</div>
+    <div class="divider" style="margin-top: 6px;"></div>
 </body>
 </html>

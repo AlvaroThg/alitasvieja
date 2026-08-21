@@ -35,15 +35,15 @@ class WingSauceValidator
      *
      * @throws ValidationException Si alguna regla de negocio es violada
      */
-    public function validate($variant, int $branchId, array $sauces): float
+    public function validate($variant, int $branchId, array $sauces, int $quantity = 1): float
     {
         // Si no hay salsas, no hay nada que validar
         if (empty($sauces)) {
             return 0.0;
         }
 
-        $wingsCount = $variant->wings_count;
-        $maxSauces  = $variant->max_sauces;
+        $wingsCount = $variant->wings_count * $quantity;
+        $maxSauces  = $variant->max_sauces * $quantity;
 
         // ─── REGLA 1: Validar estructura de cada salsa ────────────────
         foreach ($sauces as $index => $sauce) {

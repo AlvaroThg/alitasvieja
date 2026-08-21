@@ -46,6 +46,9 @@ class OrderBuilderSaucesTest extends TestCase
     /**
      * Prueba que se puede decrementar correctamente.
      */
+    /**
+     * Prueba que se puede decrementar correctamente.
+     */
     public function test_sauce_counts_can_decrement()
     {
         Livewire::test(OrderBuilder::class)
@@ -64,5 +67,25 @@ class OrderBuilderSaucesTest extends TestCase
             ->call('decrementSauceWings', 1)
             ->call('decrementSauceWings', 1)
             ->assertSet('tempSauceWingCounts', [1 => 0]);
+    }
+
+    public function test_quantity_multiplies_sauce_limits()
+    {
+        Livewire::test(OrderBuilder::class)
+            ->set('cart', [
+                [
+                    'id' => 1,
+                    'quantity' => 2,
+                    'max_sauces' => 1,
+                    'wings_count' => 6,
+                    'sauces' => [],
+                    'product_name' => 'Alitas',
+                    'variant_name' => 'Clasicas',
+                    'price' => 20,
+                ]
+            ])
+            ->call('openSauceModal', 0)
+            ->assertSet('tempProductMaxSauces', 2)
+            ->assertSet('tempProductWingsCount', 12);
     }
 }

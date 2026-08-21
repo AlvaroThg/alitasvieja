@@ -169,12 +169,27 @@
         view: 'tables', 
         printTickets(payload) { 
             let urls = payload.urls || payload;
-            if(Array.isArray(urls)) {
-                urls.forEach((url, i) => window.open(url, 'PrintTicket' + i, 'width=400,height=600'));
-            } else if (typeof urls === 'string') {
-                window.open(urls, 'PrintTicket', 'width=400,height=600');
-            } else if (payload.url) {
-                window.open(payload.url, 'PrintTicket', 'width=400,height=600');
+            let toOpen = Array.isArray(urls) ? urls : [urls];
+            
+            if (toOpen.length === 1) {
+                // Un solo ticket: abrir directamente
+                window.open(toOpen[0], 'PrintTicket', 'width=420,height=650');
+            } else if (toOpen.length >= 2) {
+                // Dos tickets: abrir el primero en una ventana,
+                // y el segundo en otra ventana inmediatamente (ambos en el mismo click context).
+                let w1 = window.open(toOpen[0], 'PrintTicketA', 'width=420,height=650');
+                let w2 = window.open(toOpen[1], 'PrintTicketB', 'width=420,height=650');
+                
+                // Si Chrome bloqueó el segundo, reintentamos con la primera ventana
+                if (!w2 || w2.closed) {
+                    setTimeout(() => {
+                        if (w1 && !w1.closed) {
+                            w1.location.href = toOpen[1];
+                        } else {
+                            window.open(toOpen[1], 'PrintTicketB', 'width=420,height=650');
+                        }
+                    }, 3000);
+                }
             }
         } 
     }" @table-selected.window="view = 'order'" @order-saved.window="view = 'tables'; printTickets($event.detail[0] || $event.detail)">
