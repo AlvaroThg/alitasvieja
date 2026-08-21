@@ -7,13 +7,15 @@ use Tests\TestCase;
 class ExampleTest extends TestCase
 {
     /**
-     * La raíz del sitio redirige a /login (302).
+     * La raíz es la landing pública del restaurante (200), no el POS:
+     * un cliente que entra al dominio debe ver el menú, no un login.
      */
-    public function test_root_redirects_to_login(): void
+    public function test_root_shows_public_landing(): void
     {
-        $response = $this->get('/');
+        $response = $this->withoutVite()->get('/');
 
-        $response->assertRedirect('/login');
+        $response->assertStatus(200);
+        $response->assertSee(config('restaurante.nombre'), false);
     }
 
     /**

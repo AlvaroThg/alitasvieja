@@ -26,7 +26,7 @@ class CashManagerTest extends TestCase
 
     public function test_opens_session_with_active_branch()
     {
-        $branch = Branch::create(['name' => 'Sucursal Principal', 'address' => '...', 'city' => '...', 'phone' => '...', 'is_active' => true]);
+        $branch = Branch::create(['name' => 'Sucursal Principal', 'slug' => 'sucursal-principal', 'address' => '...', 'city' => '...', 'phone' => '...', 'is_active' => true]);
         $user = User::factory()->create([
             'role' => 'cashier',
             'branch_id' => $branch->id,
@@ -39,7 +39,8 @@ class CashManagerTest extends TestCase
             ->set('opening_amount', 1500)
             ->call('openSession')
             ->assertHasNoErrors()
-            ->assertSee('Caja Activa')
+            ->assertSee('Caja de Venta')
+            ->assertSee('Cerrar Caja')
             ->assertSee('Nuevo Movimiento');
     }
 
