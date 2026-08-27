@@ -23,7 +23,10 @@ class CashManager extends Component
     // Cierre de caja
     public $showCloseModal = false;
     public $closing_amount = '';
+    public $closing_qr = '';
     public $closing_notes = '';
+    public $showSurplusConfirm = false;
+    public $surplusAmount = 0;
 
     public function mount(CashService $cashService)
     {
@@ -115,40 +118,91 @@ class CashManager extends Component
     {
         $this->resetValidation();
         $this->closing_amount = '';
+        $this->closing_qr = '';
         $this->closing_notes = '';
         $this->showCloseModal = true;
+        $this->showSurplusConfirm = false;
+        $this->surplusAmount = 0;
     }
 
     public function closeSession(CashService $cashService)
     {
         $this->validate([
             'closing_amount' => 'required|numeric|min:0',
+            'closing_qr' => 'required|numeric|min:0',
             'closing_notes' => 'nullable|string|max:255',
         ], [
-            'closing_amount.required' => 'Debe ingresar el monto contado en caja.',
-            'closing_amount.numeric' => 'El monto debe ser un número.',
-            'closing_amount.min' => 'El monto no puede ser negativo.',
+            'closing_amount.required' => 'Debe ingresar el monto contado en efectivo.',
+            'closing_amount.numeric' => 'El monto en efectivo debe ser un número.',
+            'closing_amount.min' => 'El monto en efectivo no puede ser negativo.',
+            'closing_qr.required' => 'Debe ingresar el monto verificado en QR.',
+            'closing_qr.numeric' => 'El monto QR debe ser un número.',
+            'closing_qr.min' => 'El monto QR no puede ser negativo.',
         ]);
 
         if (!$this->session) return;
 
-        $closed = $cashService->closeSession(
-            $this->session,
-            Auth::id(),
-            (float) $this->closing_amount,
-            $this->closing_notes ?: null
-        );
+        // Verificar si hay sobrante en efectivo o QR
+        $expectedCash = $this->session->calculateExpected();
+        $expectedQr = $this->session->getTotalByPaymentMethod('qr');
+        $countedCash = (float) $this->closing_amount;
+        $countedQr = (float) $this->closing_qr;
 
-        $this->showCloseModal = false;
-        $this->session = null;
+        $cashSurplus = max(0.0, $countedCash - $expectedCash);
+        $qrSurplus = max(0.0, $countedQr - $expectedQr);
+        $totalSurplus = round($cashSurplus + $qrSurplus, 2);
 
-        $diff = (float) $closed->difference;
-        $resumen = 'Caja cerrada. Esperado: Bs. ' . number_format((float) $closed->expected_amount, 2)
-            . ' | Contado: Bs. ' . number_format((float) $closed->closing_amount, 2)
-            . ' | Diferencia: Bs. ' . number_format($diff, 2)
-            . ($diff == 0.0 ? ' (cuadre exacto)' : ($diff > 0 ? ' (sobrante)' : ' (faltante)'));
+        if ($totalSurplus > 0.01 && !$this->showSurplusConfirm) {
+            $this->surplusAmount = $totalSurplus;
+            $this->showSurplusConfirm = true;
+            return;
+        }
 
-        session()->flash('message', $resumen);
+        $this->doCloseSession($cashService);
+    }
+
+    public function confirmCloseWithSurplus(CashService $cashService)
+    {
+        $this->doCloseSession($cashService);
+    }
+
+    public function cancelSurplusConfirm()
+    {
+        $this->showSurplusConfirm = false;
+        $this->surplusAmount = 0;
+    }
+
+    private function doCloseSession(CashService $cashService)
+    {
+        try {
+            $expectedCash = $this->session->calculateExpected();
+            $expectedQr = $this->session->getTotalByPaymentMethod('qr');
+            $countedCash = (float) $this->closing_amount;
+            $countedQr = (float) $this->closing_qr;
+
+            $qrNote = "QR Verificado: Bs. " . number_format($countedQr, 2) . " (Esperado: Bs. " . number_format($expectedQr, 2) . ")";
+            $finalNotes = trim(($this->closing_notes ? $this->closing_notes . " | " : "") . $qrNote);
+
+            $closed = $cashService->closeSession(
+                $this->session,
+                Auth::id(),
+                $countedCash,
+                $finalNotes
+            );
+
+            $this->showCloseModal = false;
+            $this->showSurplusConfirm = false;
+            $this->surplusAmount = 0;
+            $this->session = null;
+
+            $resumen = 'Caja cerrada. '
+                . 'Efectivo: Bs. ' . number_format($countedCash, 2) . ' (Esperado: Bs. ' . number_format($expectedCash, 2) . ')'
+                . ' | QR: Bs. ' . number_format($countedQr, 2) . ' (Esperado: Bs. ' . number_format($expectedQr, 2) . ')';
+
+            session()->flash('message', $resumen);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->addError('closing_amount', collect($e->errors())->flatten()->first());
+        }
     }
 
     public function render()

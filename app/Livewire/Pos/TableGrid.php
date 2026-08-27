@@ -149,12 +149,9 @@ class TableGrid extends Component
         $this->showCheckoutModal = false;
         $this->checkoutError = '';
 
-        // Imprimir ticket de venta
-        if ($openOrder) {
-            $this->dispatch('order-saved', urls: [
-                route('pos.tickets.cashier', ['order' => $openOrder->id])
-            ]);
-        }
+        // El ticket de venta ya se imprimió al tomar la orden.
+        // Solo disparamos el evento para refrescar las mesas.
+        $this->dispatch('order-saved', urls: []);
     }
 
     public function createOrder()

@@ -53,4 +53,66 @@ class CashManagerTest extends TestCase
             ->assertSee('Gestión de Productos')
             ->assertSee('+ Nuevo Producto');
     }
+
+    public function test_cash_closing_requires_both_cash_and_qr()
+    {
+        $branch = Branch::create(['name' => 'Sucursal Principal', 'slug' => 'sucursal-principal', 'address' => '...', 'city' => '...', 'phone' => '...', 'is_active' => true]);
+        $user = User::factory()->create([
+            'role' => 'cashier',
+            'branch_id' => $branch->id,
+            'is_active' => true
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(\App\Livewire\Cash\CashManager::class)
+            ->set('opening_amount', 500)
+            ->call('openSession')
+            ->call('openCloseModal')
+            ->call('closeSession')
+            ->assertHasErrors(['closing_amount', 'closing_qr']);
+    }
+
+    public function test_cash_closing_with_cash_and_qr_success()
+    {
+        $branch = Branch::create(['name' => 'Sucursal Principal', 'slug' => 'sucursal-principal', 'address' => '...', 'city' => '...', 'phone' => '...', 'is_active' => true]);
+        $user = User::factory()->create([
+            'role' => 'cashier',
+            'branch_id' => $branch->id,
+            'is_active' => true
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(\App\Livewire\Cash\CashManager::class)
+            ->set('opening_amount', 500)
+            ->call('openSession')
+            ->call('openCloseModal')
+            ->set('closing_amount', 500)
+            ->set('closing_qr', 0)
+            ->call('closeSession')
+            ->assertHasNoErrors()
+            ->assertSee('Apertura de Caja');
+    }
+
+    public function test_cash_closing_detects_surplus()
+    {
+        $branch = Branch::create(['name' => 'Sucursal Principal', 'slug' => 'sucursal-principal', 'address' => '...', 'city' => '...', 'phone' => '...', 'is_active' => true]);
+        $user = User::factory()->create([
+            'role' => 'cashier',
+            'branch_id' => $branch->id,
+            'is_active' => true
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(\App\Livewire\Cash\CashManager::class)
+            ->set('opening_amount', 500)
+            ->call('openSession')
+            ->call('openCloseModal')
+            ->set('closing_amount', 600) // 100 surplus
+            ->set('closing_qr', 0)
+            ->call('closeSession')
+            ->assertSet('showSurplusConfirm', true)
+            ->assertSet('surplusAmount', 100)
+            ->call('cancelSurplusConfirm')
+            ->assertSet('showSurplusConfirm', false);
+    }
 }

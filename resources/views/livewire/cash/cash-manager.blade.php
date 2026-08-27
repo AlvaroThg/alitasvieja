@@ -262,24 +262,29 @@
                 
                 <div style="background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); border-radius: 12px; padding: 1rem; margin-bottom: 1.25rem;">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                        <span style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">Pagos recibidos en QR:</span>
-                        <strong style="color: #60a5fa;">Bs. {{ number_format($session->getTotalByPaymentMethod('qr'), 2) }}</strong>
+                        <span style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">Efectivo esperado en caja:</span>
+                        <strong style="color: #22c55e; font-size: 1rem;">Bs. {{ number_format($session->calculateExpected(), 2) }}</strong>
                     </div>
                     <div style="display: flex; justify-content: space-between; border-top: 1px solid rgba(34,197,94,0.2); padding-top: 0.5rem;">
-                        <span style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">Efectivo que debe haber:</span>
-                        <strong style="color: #22c55e; font-size: 1.1rem;">Bs. {{ number_format($session->calculateExpected(), 2) }}</strong>
+                        <span style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">Pagos QR esperados:</span>
+                        <strong style="color: #60a5fa; font-size: 1rem;">Bs. {{ number_format($session->getTotalByPaymentMethod('qr'), 2) }}</strong>
                     </div>
                 </div>
 
                 <p style="color: var(--text-muted); font-size: 0.82rem; margin-bottom: 1.25rem;">
-                    Cuenta el dinero físico (solo efectivo) de la Caja de Venta e ingresa el total a continuación. El sistema calculará automáticamente si hay algún sobrante o faltante.
+                    Ingresa el efectivo contado en caja y verifica el total cobrado por QR para realizar el cierre.
                 </p>
 
                 <form wire:submit.prevent="closeSession">
                     <div class="cash-form-group">
-                        <label class="cash-label">Monto contado (Bs.)</label>
+                        <label class="cash-label">Efectivo contado (Bs.)</label>
                         <input type="number" step="0.01" wire:model="closing_amount" class="cash-input" placeholder="0.00">
                         @error('closing_amount') <span class="error-message">{{ $message }}</span> @enderror
+                    </div>
+                    <div class="cash-form-group">
+                        <label class="cash-label">Monto verificado QR (Bs.)</label>
+                        <input type="number" step="0.01" wire:model="closing_qr" class="cash-input" placeholder="0.00">
+                        @error('closing_qr') <span class="error-message">{{ $message }}</span> @enderror
                     </div>
                     <div class="cash-form-group">
                         <label class="cash-label">Notas (opcional)</label>
@@ -295,6 +300,30 @@
                         <button type="submit" class="btn-submit" style="margin-top: 0; background: #ef4444;">Confirmar Cierre</button>
                     </div>
                 </form>
+
+                {{-- Modal de confirmación de sobrante --}}
+                @if($showSurplusConfirm)
+                <div style="position: fixed; inset: 0; z-index: 1100; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.6); backdrop-filter: blur(6px);">
+                    <div style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: 20px; width: 100%; max-width: 400px; padding: 1.5rem; text-align: center;">
+                        <div style="background: rgba(234,179,8,0.15); border-radius: 50%; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                            <svg width="28" height="28" fill="none" stroke="#eab308" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"></path></svg>
+                        </div>
+                        <h3 style="color: var(--text-strong); font-size: 1.1rem; font-weight: 800; margin-bottom: 0.5rem;">Sobrante Detectado</h3>
+                        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.75rem;">
+                            El monto contado es <strong style="color: #eab308;">Bs. {{ number_format($surplusAmount, 2) }}</strong> más de lo esperado.
+                        </p>
+                        <p style="color: var(--text-muted); font-size: 0.82rem; margin-bottom: 1.25rem;">
+                            Corrige el monto para continuar con el cierre de Caja
+                        </p>
+                        <div style="display: flex; justify-content: center; margin-top: 0.25rem;">
+                            <button wire:click="cancelSurplusConfirm"
+                                    style="background: #eab308; color: #000; border: none; padding: 0.7rem 1.8rem; border-radius: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
+                                Corregir Monto
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                @endif
             </div>
         </div>
         @endif

@@ -64,7 +64,10 @@
     @foreach($order->items as $index => $item)
         <div style="margin-bottom: 4px;">
             <p class="font-bold" style="font-size: 24px; line-height: 1.2; margin-bottom: 2px;">
-                {{ $item->quantity }}x {{ $item->productVariant->name ?? 'Producto' }}
+                {{ $item->quantity }}x {{ $item->productVariant->product->name ?? 'Producto' }}
+            </p>
+            <p style="font-size: 16px; padding-left: 10px; margin-bottom: 2px;">
+                ({{ $item->productVariant->name ?? '' }})
             </p>
 
             {{-- Salsas del ítem --}}
@@ -104,5 +107,14 @@
     @endif
 
     <div class="divider" style="margin-top: 6px;"></div>
+
+    {{-- ═══ TOTAL ═══ --}}
+    <div class="text-center" style="margin-top: 4px;">
+        <p class="font-bold" style="font-size: 20px;">
+            TOTAL: Bs. {{ number_format($order->total, 2) }}
+        </p>
+    </div>
+
+    <div class="divider" style="margin-top: 4px;"></div>
 </body>
 </html>

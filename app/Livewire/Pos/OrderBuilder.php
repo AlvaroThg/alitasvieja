@@ -631,12 +631,12 @@ class OrderBuilder extends Component
             return;
         }
 
-        // Pedido en salón (mesa): solo ticket de cocina.
-        // El ticket de venta se imprime cuando se cobre la mesa.
+        // Pedido en salón (mesa): se cobra al pedir, imprimir ambos tickets.
         $order = $this->persistOrder();
         $orderId = $order->id;
         $this->resetCartState();
         $this->dispatch('order-saved', urls: [
+            route('pos.tickets.cashier', ['order' => $orderId]),
             route('pos.tickets.kitchen', ['order' => $orderId]),
         ]);
     }
