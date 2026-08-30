@@ -137,8 +137,9 @@ class SalesFlowTest extends TestCase
             'quantity' => 2,
         ]);
 
-        // Simular orden antigua desfasada con total en 0 en la BD
+        // Simular orden e ítems antiguos desfasados con total y subtotal en 0 en la BD
         $order->update(['total' => 0.00, 'subtotal' => 0.00]);
+        $order->items()->update(['unit_price' => 0.00, 'subtotal' => 0.00]);
         $this->assertEquals(0.00, (float) $order->fresh()->total);
 
         // Al ejecutar OrderBuilder@loadUnpaidOrders, debe auto-recalcular el total a 70.00

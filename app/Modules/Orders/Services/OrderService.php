@@ -122,9 +122,25 @@ class OrderService
 
     /**
      * Recalcula subtotal y total del pedido a partir de sus ítems.
+     * Si los ítems antiguos guardaban unit_price o subtotal en 0, recupera el precio real de la variante.
      */
     public function recalculateOrder(Order $order): void
     {
+        foreach ($order->items()->with('productVariant')->get() as $item) {
+            if (((float) $item->unit_price <= 0 || (float) $item->subtotal <= 0) && $item->productVariant) {
+                $unitPrice = $item->productVariant->priceForBranch($order->branch_id);
+                if ($unitPrice <= 0) {
+                    $unitPrice = (float) $item->productVariant->price;
+                }
+                $subtotal = ($unitPrice * $item->quantity) + (float) $item->extra_sauce_charge;
+
+                $item->update([
+                    'unit_price' => $unitPrice,
+                    'subtotal'   => $subtotal,
+                ]);
+            }
+        }
+
         $subtotal = $order->items()->sum('subtotal');
         $total    = $subtotal - (float) $order->discount;
 
