@@ -236,6 +236,12 @@
                                             <span style="font-size:0.6rem; font-weight:700; color:#a78bfa; border:1px solid rgba(167,139,250,0.4); border-radius:6px; padding:0.05rem 0.3rem; margin-left:0.25rem;">CAJA CHICA</span>
                                         @elseif($mov->cash_box === 'transfer')
                                             <span style="font-size:0.6rem; font-weight:700; color:#60a5fa; border:1px solid rgba(96,165,250,0.4); border-radius:6px; padding:0.05rem 0.3rem; margin-left:0.25rem;">TRASPASO</span>
+                                        @elseif($mov->cash_box === 'qr')
+                                            <span style="font-size:0.6rem; font-weight:700; color:#3b82f6; border:1px solid rgba(59,130,246,0.4); border-radius:6px; padding:0.05rem 0.3rem; margin-left:0.25rem;">PAGO QR</span>
+                                        @elseif($mov->cash_box === 'card')
+                                            <span style="font-size:0.6rem; font-weight:700; color:#ec4899; border:1px solid rgba(236,72,153,0.4); border-radius:6px; padding:0.05rem 0.3rem; margin-left:0.25rem;">TARJETA</span>
+                                        @elseif($mov->cash_box === 'transfer_bank')
+                                            <span style="font-size:0.6rem; font-weight:700; color:#8b5cf6; border:1px solid rgba(139,92,246,0.4); border-radius:6px; padding:0.05rem 0.3rem; margin-left:0.25rem;">TRANSF.</span>
                                         @endif
                                     </h4>
                                     <p>{{ $mov->created_at->format('H:i') }} - {{ $mov->reference ?? 'Sin ref.' }}</p>

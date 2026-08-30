@@ -775,11 +775,19 @@ class OrderBuilder extends Component
     public function loadUnpaidOrders()
     {
         $branchId = auth()->user()?->activeBranchId() ?? 1;
-        $this->unpaidOrders = \App\Modules\Orders\Models\Order::where('branch_id', $branchId)
+        $orders = \App\Modules\Orders\Models\Order::where('branch_id', $branchId)
             ->where('status', 'open')
             ->whereNull('table_id')
             ->orderBy('id', 'asc')
             ->get();
+
+        foreach ($orders as $order) {
+            if ((float) $order->total <= 0 && $order->items()->count() > 0) {
+                app(\App\Modules\Orders\Services\OrderService::class)->recalculateOrder($order);
+            }
+        }
+
+        $this->unpaidOrders = $orders->fresh();
         $this->showUnpaidOrdersModal = true;
     }
 
@@ -790,6 +798,11 @@ class OrderBuilder extends Component
 
         if (!$this->cashIsOpen()) {
             return;
+        }
+
+        if ((float) $order->total <= 0 && $order->items()->count() > 0) {
+            app(\App\Modules\Orders\Services\OrderService::class)->recalculateOrder($order);
+            $order->refresh();
         }
 
         $this->pendingOrderId = $order->id;

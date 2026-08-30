@@ -153,6 +153,14 @@ class AdminDashboard extends Component
 
     public function render()
     {
+        $recentCashMovements = \App\Modules\Cash\Models\CashMovement::with(['cashSession.branch', 'user'])
+            ->when($this->branchId, function ($q) {
+                $q->whereHas('cashSession', fn ($cs) => $cs->where('branch_id', $this->branchId));
+            })
+            ->latest('id')
+            ->limit(10)
+            ->get();
+
         $recentMovements = \App\Modules\Inventory\Models\InventoryMovement::with(['productVariant.product', 'branch', 'user'])
             ->when($this->branchId, fn ($q) => $q->where('branch_id', $this->branchId))
             ->latest('id')
@@ -160,7 +168,8 @@ class AdminDashboard extends Component
             ->get();
 
         return view('livewire.admin.admin-dashboard', [
-            'recentMovements' => $recentMovements,
+            'recentCashMovements' => $recentCashMovements,
+            'recentMovements'     => $recentMovements,
         ]);
     }
 }

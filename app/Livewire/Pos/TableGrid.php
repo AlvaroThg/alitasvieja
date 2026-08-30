@@ -78,6 +78,11 @@ class TableGrid extends Component
             return;
         }
 
+        if ((float) $openOrder->total <= 0 && $openOrder->items()->count() > 0) {
+            app(\App\Modules\Orders\Services\OrderService::class)->recalculateOrder($openOrder);
+            $openOrder->refresh();
+        }
+
         $this->checkoutError = '';
         $this->checkoutOrderTotal = $openOrder->total;
         $this->iniciarPagos((float) $openOrder->total);
@@ -199,6 +204,44 @@ class TableGrid extends Component
         $this->newTableName = '';
     }
 
+    // ─── EDITAR MESA ─────────────────────────────────────────
+
+    public $showEditTableModal = false;
+    public $editingTableId = null;
+    public $editingTableName = '';
+
+    public function openEditTableModal($tableId)
+    {
+        $table = Table::find($tableId);
+        if (!$table) return;
+
+        $this->editingTableId = $table->id;
+        $this->editingTableName = $table->name;
+        $this->showActionModal = false;
+        $this->showEditTableModal = true;
+    }
+
+    public function updateTable()
+    {
+        $this->validate([
+            'editingTableName' => 'required|string|max:50',
+        ], [
+            'editingTableName.required' => 'El nombre o número de la mesa es obligatorio.',
+        ]);
+
+        if (!$this->editingTableId) return;
+
+        $table = Table::find($this->editingTableId);
+        if ($table) {
+            $table->update(['name' => $this->editingTableName]);
+        }
+
+        $this->showEditTableModal = false;
+        $this->editingTableId = null;
+        $this->editingTableName = '';
+        $this->selectedTableForAction = null;
+    }
+
     // ─── ELIMINAR MESA ───────────────────────────────────────
 
     public function confirmDeleteTable($tableId)
@@ -239,12 +282,19 @@ class TableGrid extends Component
 
         $table = Table::find($this->tableToDeleteId);
         if ($table) {
-            $table->delete();
-        }
+            try {
+                // Desvincular pedidos anteriores de la mesa para evitar conflictos de llave foránea
+                \App\Modules\Orders\Models\Order::where('table_id', $table->id)
+                    ->update(['table_id' => null]);
 
-        $this->showDeleteTableModal = false;
-        $this->tableToDeleteId = null;
-        $this->selectedTableForAction = null;
+                $table->delete();
+                $this->showDeleteTableModal = false;
+                $this->tableToDeleteId = null;
+                $this->selectedTableForAction = null;
+            } catch (\Throwable $e) {
+                $this->deleteErrorMessage = 'No se pudo eliminar la mesa: ' . $e->getMessage();
+            }
+        }
     }
 
     // ─── RENDER ──────────────────────────────────────────────

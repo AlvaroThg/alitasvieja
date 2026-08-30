@@ -239,13 +239,14 @@ class CashService
         float $amount,
         string $concept,
         ?string $reference,
-        int $userId
+        int $userId,
+        string $cashBox = 'sales'
     ): CashMovement {
         return CashMovement::create([
             'cash_session_id' => $session->id,
             'user_id'         => $userId,
             'type'            => 'income',
-            'cash_box'        => 'sales',
+            'cash_box'        => $cashBox,
             'amount'          => $amount,
             'concept'         => $concept,
             'reference'       => $reference,

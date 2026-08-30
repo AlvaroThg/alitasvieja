@@ -23,7 +23,14 @@
 </head>
 <body>
     @php
-        $cajaLabel = ['sales' => 'Caja de Venta', 'petty' => 'Caja Chica', 'transfer' => 'Traspaso'];
+        $cajaLabel = [
+            'sales'         => 'Caja de Venta (Efectivo)',
+            'petty'         => 'Caja Chica',
+            'transfer'      => 'Traspaso',
+            'qr'            => 'Pago QR',
+            'card'          => 'Tarjeta',
+            'transfer_bank' => 'Transferencia Bancaria',
+        ];
     @endphp
     <div class="head">
         <h1>Alitas La Vieja — Movimientos de Caja</h1>

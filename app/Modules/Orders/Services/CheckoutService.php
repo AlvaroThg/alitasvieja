@@ -119,23 +119,36 @@ class CheckoutService
                 'closed_at'      => now(),
             ]);
 
-            // El efectivo cobrado entra a la Caja de Venta para que el arqueo
-            // del cierre incluya las ventas del día, no solo los movimientos
-            // manuales. QR/tarjeta/transferencia no tocan la caja física.
-            $cashAmount = 0.0;
+            // Registrar cada pago en movimientos de caja (con su respectiva etiqueta de caja)
+            // de modo que aparezcan en el historial y reportes de movimientos.
             foreach ($payments as $payment) {
-                if (($payment['method'] ?? null) === 'cash') {
-                    $cashAmount += (float) $payment['amount'];
-                }
-            }
+                $method = $payment['method'] ?? 'cash';
+                $amount = (float) ($payment['amount'] ?? 0);
+                if ($amount <= 0) continue;
 
-            if ($cashAmount > 0) {
+                $cashBox = match ($method) {
+                    'cash'     => 'sales',
+                    'qr'       => 'qr',
+                    'card'     => 'card',
+                    'transfer' => 'transfer_bank',
+                    default    => 'sales',
+                };
+
+                $label = match ($method) {
+                    'cash'     => 'Venta ',
+                    'qr'       => 'Venta QR ',
+                    'card'     => 'Venta Tarjeta ',
+                    'transfer' => 'Venta Transf. ',
+                    default    => 'Venta ',
+                };
+
                 $this->cashService->registerSaleIncome(
                     $session,
-                    $cashAmount,
-                    'Venta ' . $order->order_number,
+                    $amount,
+                    $label . $order->order_number,
                     $order->order_number,
-                    auth()->id() ?? $order->user_id
+                    auth()->id() ?? $order->user_id,
+                    $cashBox
                 );
             }
 

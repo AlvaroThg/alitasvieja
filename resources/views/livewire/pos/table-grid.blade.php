@@ -326,6 +326,12 @@
                     <button wire:click="changeStatus('available')" class="btn-action btn-secondary">Quitar Reserva</button>
                 @endif
 
+                {{-- Botón editar nombre --}}
+                <button wire:click="openEditTableModal({{ $selectedTableForAction->id }})" class="btn-action btn-secondary">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                    Editar Nombre
+                </button>
+
                 {{-- Botón eliminar siempre visible --}}
                 <button wire:click="confirmDeleteTable({{ $selectedTableForAction->id }})" class="btn-action" style="background: transparent; color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); margin-top: 0.5rem;">
                     <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
@@ -399,6 +405,38 @@
                     <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                     Crear Mesa
                 </button>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- Modal: Editar Mesa --}}
+    @if($showEditTableModal)
+    <div class="table-modal-overlay">
+        <div class="table-modal" style="max-width: 380px;">
+            <div class="table-modal-header">
+                <h3>Editar Mesa</h3>
+                <button wire:click="$set('showEditTableModal', false)" class="table-modal-close">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="table-modal-body">
+                <div style="margin-bottom: 1rem;">
+                    <label style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.5rem; display: block;">Nombre o Número de Mesa</label>
+                    <input
+                        type="text"
+                        wire:model="editingTableName"
+                        placeholder="Ej: Mesa 7, Terraza 2, VIP 1..."
+                        style="width: 100%; background: var(--bg-base); border: 1px solid var(--border-strong); color: var(--text-strong); padding: 0.75rem; border-radius: 10px; font-size: 1rem; outline: none;"
+                    >
+                    @error('editingTableName')
+                        <span style="color: #ef4444; font-size: 0.8rem; margin-top: 0.4rem; display: block;">{{ $message }}</span>
+                    @enderror
+                </div>
+                <div style="display: flex; gap: 0.75rem;">
+                    <button wire:click="$set('showEditTableModal', false)" class="btn-action btn-secondary" style="flex: 1;">Cancelar</button>
+                    <button wire:click="updateTable" class="btn-action btn-primary" style="flex: 1.5;">Guardar Cambios</button>
+                </div>
             </div>
         </div>
     </div>

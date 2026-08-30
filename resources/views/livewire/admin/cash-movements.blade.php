@@ -86,7 +86,10 @@
             <label>Caja</label>
             <select wire:model.live="cashBox" class="cm-select">
                 <option value="">Todas</option>
-                <option value="sales">Caja de Venta</option>
+                <option value="sales">Caja de Venta (Efectivo)</option>
+                <option value="qr">Pago QR</option>
+                <option value="card">Tarjeta</option>
+                <option value="transfer_bank">Transferencia</option>
                 <option value="petty">Caja Chica</option>
                 <option value="transfer">Traspasos</option>
             </select>
@@ -187,8 +190,14 @@
                                 <span class="cm-tag" style="color:#a78bfa; border-color:rgba(167,139,250,0.4);">CAJA CHICA</span>
                             @elseif($m->cash_box === 'transfer')
                                 <span class="cm-tag" style="color:#60a5fa; border-color:rgba(96,165,250,0.4);">TRASPASO</span>
+                            @elseif($m->cash_box === 'qr')
+                                <span class="cm-tag" style="color:#3b82f6; border-color:rgba(59,130,246,0.4);">PAGO QR</span>
+                            @elseif($m->cash_box === 'card')
+                                <span class="cm-tag" style="color:#ec4899; border-color:rgba(236,72,153,0.4);">TARJETA</span>
+                            @elseif($m->cash_box === 'transfer_bank')
+                                <span class="cm-tag" style="color:#8b5cf6; border-color:rgba(139,92,246,0.4);">TRANSF.</span>
                             @else
-                                <span class="cm-tag" style="color:var(--text-muted); border-color:var(--border-strong);">VENTA</span>
+                                <span class="cm-tag" style="color:var(--text-muted); border-color:var(--border-strong);">EFECTIVO</span>
                             @endif
                         </td>
                         <td style="font-weight:700; color: {{ $m->type === 'income' ? '#22c55e' : '#ef4444' }};">

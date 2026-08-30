@@ -109,6 +109,69 @@
         </div>
     </div>
 
+    {{-- ═══ ÚLTIMOS MOVIMIENTOS DE CAJA Y VENTAS ═══ --}}
+    <div style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="font-size: 1rem; font-weight: 800; color: var(--text-strong); display: flex; align-items: center; gap: 0.5rem;">
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Últimos movimientos de caja y ventas
+            </h3>
+            <a href="{{ route('admin.reports.cash.movements') }}" style="font-size: 0.8rem; font-weight: 700; color: #f97316; text-decoration: none;">Ver movimientos de caja →</a>
+        </div>
+        @if(!isset($recentCashMovements) || $recentCashMovements->isEmpty())
+            <p style="color: var(--text-muted); font-size: 0.85rem;">Aún no hay movimientos de caja registrados.</p>
+        @else
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem;">
+                    <thead>
+                        <tr style="color: var(--text-muted); text-align: left;">
+                            <th style="padding: 0.4rem 0.6rem; font-weight: 700;">Concepto</th>
+                            <th style="padding: 0.4rem 0.6rem; font-weight: 700;">Caja / Método</th>
+                            <th style="padding: 0.4rem 0.6rem; font-weight: 700;">Tipo</th>
+                            <th style="padding: 0.4rem 0.6rem; font-weight: 700; text-align: right;">Monto</th>
+                            <th style="padding: 0.4rem 0.6rem; font-weight: 700;">Sucursal</th>
+                            <th style="padding: 0.4rem 0.6rem; font-weight: 700;">Usuario</th>
+                            <th style="padding: 0.4rem 0.6rem; font-weight: 700;">Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($recentCashMovements as $m)
+                            <tr style="border-top: 1px solid var(--border); color: var(--text-secondary);">
+                                <td style="padding: 0.5rem 0.6rem; color: var(--text); font-weight: 600;">{{ $m->concept }}</td>
+                                <td style="padding: 0.5rem 0.6rem;">
+                                    @if($m->cash_box === 'petty')
+                                        <span style="font-size: 0.68rem; font-weight: 700; color:#a78bfa; border: 1px solid rgba(167,139,250,0.4); border-radius: 6px; padding: 0.1rem 0.35rem;">CAJA CHICA</span>
+                                    @elseif($m->cash_box === 'transfer')
+                                        <span style="font-size: 0.68rem; font-weight: 700; color:#60a5fa; border: 1px solid rgba(96,165,250,0.4); border-radius: 6px; padding: 0.1rem 0.35rem;">TRASPASO</span>
+                                    @elseif($m->cash_box === 'qr')
+                                        <span style="font-size: 0.68rem; font-weight: 700; color:#3b82f6; border: 1px solid rgba(59,130,246,0.4); border-radius: 6px; padding: 0.1rem 0.35rem;">PAGO QR</span>
+                                    @elseif($m->cash_box === 'card')
+                                        <span style="font-size: 0.68rem; font-weight: 700; color:#ec4899; border: 1px solid rgba(236,72,153,0.4); border-radius: 6px; padding: 0.1rem 0.35rem;">TARJETA</span>
+                                    @elseif($m->cash_box === 'transfer_bank')
+                                        <span style="font-size: 0.68rem; font-weight: 700; color:#8b5cf6; border: 1px solid rgba(139,92,246,0.4); border-radius: 6px; padding: 0.1rem 0.35rem;">TRANSF.</span>
+                                    @else
+                                        <span style="font-size: 0.68rem; font-weight: 700; color:var(--text-muted); border: 1px solid var(--border-strong); border-radius: 6px; padding: 0.1rem 0.35rem;">EFECTIVO</span>
+                                    @endif
+                                </td>
+                                <td style="padding: 0.5rem 0.6rem;">
+                                    <span style="color: {{ $m->type === 'income' ? '#22c55e' : '#ef4444' }}; font-weight: 700;">
+                                        {{ $m->type === 'income' ? 'Ingreso' : 'Egreso' }}
+                                    </span>
+                                </td>
+                                <td style="padding: 0.5rem 0.6rem; text-align: right; font-weight: 800; color: {{ $m->type === 'income' ? '#22c55e' : '#ef4444' }};">
+                                    Bs. {{ number_format($m->amount, 2) }}
+                                </td>
+                                <td style="padding: 0.5rem 0.6rem;">{{ $m->cashSession->branch->name ?? '—' }}</td>
+                                <td style="padding: 0.5rem 0.6rem;">{{ $m->user->name ?? 'Sistema' }}</td>
+                                <td style="padding: 0.5rem 0.6rem; color: var(--text-muted); white-space: nowrap;">{{ $m->created_at->format('d/m H:i') }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
+    </div>
+
     {{-- ═══ ÚLTIMOS MOVIMIENTOS DE INVENTARIO ═══ --}}
     @php
         $tipoMov = ['in' => 'Entrada', 'out' => 'Salida', 'adjustment' => 'Ajuste', 'sale' => 'Venta'];

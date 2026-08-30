@@ -207,6 +207,15 @@ class CashServiceTest extends TestCase
 
         // Transfer total = 40
         $this->assertEquals(40.00, $session->getTotalByPaymentMethod('transfer'));
+
+        // Verificar que los movimientos se registraron en cash_movements con sus etiquetas respectivas
+        $qrMovement = $session->movements()->where('cash_box', 'qr')->first();
+        $this->assertNotNull($qrMovement);
+        $this->assertEquals(60.00, (float) $qrMovement->amount);
+
+        $transferMovement = $session->movements()->where('cash_box', 'transfer_bank')->first();
+        $this->assertNotNull($transferMovement);
+        $this->assertEquals(40.00, (float) $transferMovement->amount);
     }
 
     // ─── CIERRE DE CAJA ──────────────────────────────────────

@@ -78,8 +78,8 @@ class CashSession extends Model
 
     public function getTotalIncomesAttribute(): float
     {
-        // Solo lo que afecta la Caja de Venta (excluye Caja Chica).
-        return (float) $this->movements()->where('type', 'income')->where('cash_box', '!=', 'petty')->sum('amount');
+        // Solo ingresos en efectivo a la Caja de Venta (excluye QR, tarjeta, Caja Chica, etc.).
+        return (float) $this->movements()->where('type', 'income')->where('cash_box', 'sales')->sum('amount');
     }
 
     public function getTotalExpensesAttribute(): float

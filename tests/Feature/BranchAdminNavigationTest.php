@@ -72,6 +72,24 @@ class BranchAdminNavigationTest extends TestCase
         $response->assertDontSee(route('admin.dashboard'));
     }
 
+    public function test_branch_admin_cash_report_movements_back_button_points_to_pos()
+    {
+        $response = $this->actingAs($this->branchAdmin)->get(route('admin.reports.cash.movements'));
+        $response->assertStatus(200);
+        $response->assertSee(route('pos.index'));
+        $response->assertSee('Volver a Mesas');
+        $response->assertDontSee(route('admin.dashboard'));
+    }
+
+    public function test_branch_admin_inventory_movements_back_button_points_to_pos()
+    {
+        $response = $this->actingAs($this->branchAdmin)->get(route('admin.inventory.movements'));
+        $response->assertStatus(200);
+        $response->assertSee(route('pos.index'));
+        $response->assertSee('Volver a Mesas');
+        $response->assertDontSee(route('admin.dashboard'));
+    }
+
     public function test_branch_admin_cannot_access_owner_dashboard()
     {
         $response = $this->actingAs($this->branchAdmin)->get(route('admin.dashboard'));

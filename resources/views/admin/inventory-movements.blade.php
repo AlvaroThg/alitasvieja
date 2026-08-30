@@ -45,9 +45,9 @@
     </nav>
 
     <main class="main-content">
-        <a href="{{ auth()->user()->isOwner() ? route('admin.dashboard') : route('admin.inventory.index') }}" class="btn-back">
+        <a href="{{ auth()->user()->isOwner() ? route('admin.dashboard') : route('pos.index') }}" class="btn-back">
             <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-            {{ auth()->user()->isOwner() ? 'Volver al Dashboard' : 'Volver al Inventario' }}
+            {{ auth()->user()->isOwner() ? 'Volver al Dashboard' : 'Volver a Mesas' }}
         </a>
 
         <livewire:admin.inventory-movements />
