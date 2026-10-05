@@ -30,6 +30,7 @@ class ProductManager extends Component
     public $is_wings = false;
     public $tracks_stock = false;
     public $has_sauces = false;
+    public $charge_coated_sauces = false;
     public $is_active = true;
 
     // Variants
@@ -72,6 +73,7 @@ class ProductManager extends Component
         $this->is_wings = (bool)$product->is_wings;
         $this->tracks_stock = (bool)$product->tracks_stock;
         $this->has_sauces = (bool)$product->has_sauces;
+        $this->charge_coated_sauces = (bool)$product->charge_coated_sauces;
         $this->is_active = (bool)$product->is_active;
 
         foreach ($product->variants as $variant) {
@@ -187,6 +189,7 @@ class ProductManager extends Component
             'is_wings' => $this->is_wings,
             'tracks_stock' => $this->tracks_stock,
             'has_sauces' => $this->has_sauces,
+            'charge_coated_sauces' => $this->charge_coated_sauces,
             'is_active' => $this->is_active,
         ];
 
@@ -262,6 +265,7 @@ class ProductManager extends Component
         $this->is_wings = false;
         $this->tracks_stock = false;
         $this->has_sauces = false;
+        $this->charge_coated_sauces = false;
         $this->is_active = true;
         $this->variants = [];
     }

@@ -23,6 +23,7 @@ class Order extends Model
         'discount',
         'total',
         'notes',
+        'customer_name',
         'payment_method',
         'opened_at',
         'closed_at',

@@ -35,12 +35,15 @@
     <div class="divider"></div>
 
     <p>Fecha: {{ $order->opened_at }}</p>
-    <p>Mesa: {{ $order->table ? $order->table->name : 'N/A' }}</p>
+    <p>Mesa: {{ is_array($order->table->name ?? null) ? implode(', ', $order->table->name) : ($order->table ? $order->table->name : 'N/A') }}</p>
+    @if($order->customer_name)
+        <p><span class="font-bold">Cliente:</span> {{ is_array($order->customer_name) ? implode(', ', $order->customer_name) : $order->customer_name }}</p>
+    @endif
 
     @if($order->notes)
         <div class="divider"></div>
         <p class="font-bold">Observaciones Generales:</p>
-        <p class="text-xs" style="font-style: italic;">{{ $order->notes }}</p>
+        <p class="text-xs" style="font-style: italic;">{{ is_array($order->notes) ? implode(', ', $order->notes) : $order->notes }}</p>
     @endif
 
     <div class="divider"></div>
@@ -51,15 +54,19 @@
         <tr>
             <td style="width: 15%">{{ $item->quantity }}x</td>
             <td style="width: 55%">
-                {{ $item->productVariant->product->name ?? 'Item' }}<br>
-                <span class="text-xs">{{ $item->productVariant->name ?? '' }}</span>
+                {{ is_array($item->productVariant->product->name ?? null) ? implode(', ', $item->productVariant->product->name) : ($item->productVariant->product->name ?? 'Item') }}<br>
+                <span class="text-xs">{{ is_array($item->productVariant->name ?? null) ? implode(', ', $item->productVariant->name) : ($item->productVariant->name ?? '') }}</span>
                 @if($item->sauces && $item->sauces->isNotEmpty())
                     @foreach($item->sauces as $sauce)
-                        <br><span class="text-xs" style="color: #4b5563;">- {{ $sauce->quantity }}x {{ $sauce->sauce->name ?? 'Salsa' }} [{{ $sauce->is_coated ? 'bañada' : 'aparte' }}]</span>
+                        @php 
+                            $isWings = $item->productVariant?->product?->is_wings;
+                            $sName = is_array($sauce->sauce->name ?? null) ? implode(', ', $sauce->sauce->name) : ($sauce->sauce->name ?? 'Salsa');
+                        @endphp
+                        <br><span class="text-xs" style="color: #4b5563;">- {{ $isWings ? $sauce->quantity . 'x ' : '' }}{{ $sName }} [{{ $sauce->is_coated ? 'bañada' : 'aparte' }}]</span>
                     @endforeach
                 @endif
                 @if($item->notes)
-                    <br><span class="text-xs" style="font-style: italic;">* {{ $item->notes }}</span>
+                    <br><span class="text-xs" style="font-style: italic;">* {{ is_array($item->notes) ? implode(', ', $item->notes) : $item->notes }}</span>
                 @endif
             </td>
             <td class="text-right" style="width: 30%">Bs. {{ number_format($item->subtotal, 2) }}</td>
@@ -80,7 +87,8 @@
             <td class="font-bold">
                 Descuento
                 @if($order->appliedPromotion && $order->appliedPromotion->promotion)
-                    <br><span class="text-xs" style="font-weight: normal; font-style: italic;">({{ $order->appliedPromotion->promotion->name }})</span>
+                    @php $pName = $order->appliedPromotion->promotion->name; @endphp
+                    <br><span class="text-xs" style="font-weight: normal; font-style: italic;">({{ is_array($pName) ? implode(', ', $pName) : $pName }})</span>
                 @endif
             </td>
             <td class="text-right">-Bs. {{ number_format($order->discount, 2) }}</td>

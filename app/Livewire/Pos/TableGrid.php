@@ -67,6 +67,44 @@ class TableGrid extends Component
         }
     }
 
+    public function liberateTable($tableId = null)
+    {
+        $id = $tableId ?? $this->selectedTableForAction?->id;
+        if ($id) {
+            Table::where('id', $id)->update(['status' => 'available']);
+            $this->showActionModal = false;
+        }
+    }
+
+    public function occupyTable($tableId = null)
+    {
+        $id = $tableId ?? $this->selectedTableForAction?->id;
+        if ($id) {
+            Table::where('id', $id)->update(['status' => 'occupied']);
+            $this->showActionModal = false;
+        }
+    }
+
+    public function editTableOrder()
+    {
+        if (!$this->selectedTableForAction) return;
+
+        $openOrder = \App\Modules\Orders\Models\Order::where('table_id', $this->selectedTableForAction->id)
+            ->where('status', 'open')
+            ->first();
+
+        if ($openOrder) {
+            $this->showActionModal = false;
+            $this->dispatch('edit-order', orderId: $openOrder->id);
+        }
+    }
+
+    public function editOrderFromModal($orderId)
+    {
+        $this->showReprintModal = false;
+        $this->dispatch('edit-order', orderId: $orderId);
+    }
+
     public function openCheckout()
     {
         $openOrder = \App\Modules\Orders\Models\Order::where('table_id', $this->selectedTableForAction->id)
@@ -312,11 +350,11 @@ class TableGrid extends Component
         $tables = Table::where('branch_id', $branchId)->get();
 
         // Últimos pedidos de la sucursal, para reimprimir un ticket que se cerró
-        // por error. Se cargan siempre (son pocos) para no complicar el modal.
+        // por error. Se cargan ordenados descendentemente por fecha de creación.
         $recentOrders = \App\Modules\Orders\Models\Order::where('branch_id', $branchId)
             ->with('table')
-            ->latest('id')
-            ->limit(15)
+            ->orderBy('created_at', 'desc')
+            ->limit(50)
             ->get();
 
         return view('livewire.pos.table-grid', compact('tables', 'recentOrders'));

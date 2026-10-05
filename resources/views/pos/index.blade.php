@@ -42,15 +42,15 @@
             gap: 0.75rem;
         }
         .nav-brand-icon {
-            width: 36px;
-            height: 36px;
+            width: 38px;
+            height: 38px;
             background: linear-gradient(135deg, #dc2626, #b91c1c);
             border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.1rem;
-            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
+            color: #ffffff;
+            box-shadow: 0 4px 14px rgba(220, 38, 38, 0.3);
         }
         .nav-brand-text {
             color: var(--text-strong);
@@ -119,13 +119,59 @@
         .btn-back:active {
             transform: scale(0.97);
         }
+        /* Tab Bar Segmented Control */
+        .pos-tab-container {
+            display: inline-flex;
+            gap: 0.4rem;
+            margin-bottom: 1.25rem;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-strong);
+            padding: 0.35rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+            max-width: 440px;
+            width: 100%;
+        }
+        .pos-tab-btn {
+            flex: 1;
+            padding: 0.65rem 1.1rem;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 0.88rem;
+            letter-spacing: 0.01em;
+            border: none;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            outline: none;
+        }
+        .pos-tab-btn-active {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35);
+        }
+        .pos-tab-btn-inactive {
+            background: transparent;
+            color: var(--text-muted);
+        }
+        .pos-tab-btn-inactive:hover {
+            background: var(--bg-base);
+            color: var(--text-strong);
+        }
     </style>
 </head>
 <body>
 
     <nav class="pos-navbar">
         <div class="nav-brand">
-            <div class="nav-brand-icon">🍗</div>
+            <div class="nav-brand-icon">
+                <svg width="20" height="20" fill="white" viewBox="0 0 24 24">
+                    <path d="M12 2C9 6 7 9 7 13a5 5 0 0010 0c0-1.5-.5-3-1.5-4.5C15 11 13.5 12 12 12c1-2 1-5 0-10z"/>
+                </svg>
+            </div>
             <div class="nav-brand-text">Alitas <span>La Vieja</span> — POS</div>
         </div>
         <div class="nav-info">
@@ -166,7 +212,7 @@
     </nav>
 
     <main class="pos-main" x-data="{ 
-        view: 'tables', 
+        view: 'order', 
         printTickets(payload) { 
             let urls = payload.urls || payload;
             let toOpen = Array.isArray(urls) ? urls : [urls];
@@ -192,18 +238,33 @@
                 }
             }
         } 
-    }" @table-selected.window="view = 'order'" @order-saved.window="view = 'tables'; printTickets($event.detail[0] || $event.detail)">
+    }" @table-selected.window="view = 'order'" @edit-order.window="view = 'order'" @order-saved.window="view = 'order'; printTickets($event.detail[0] || $event.detail)">
         
-        <div x-show="view === 'tables'" x-transition>
+        <!-- Pestañas Principales POS -->
+        <div class="pos-tab-container">
+            <button @click="view = 'order'"
+                    :class="{ 'pos-tab-btn-active': view === 'order', 'pos-tab-btn-inactive': view !== 'order' }"
+                    class="pos-tab-btn">
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 022 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                </svg>
+                <span>Toma de Pedido</span>
+            </button>
+            <button @click="view = 'tables'"
+                    :class="{ 'pos-tab-btn-active': view === 'tables', 'pos-tab-btn-inactive': view !== 'tables' }"
+                    class="pos-tab-btn">
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+                </svg>
+                <span>Plano de Mesas</span>
+            </button>
+        </div>
+
+        <div x-show="view === 'tables'" x-transition style="display: none;">
             <livewire:pos.table-grid />
         </div>
         
-        <div x-show="view === 'order'" style="display: none;" x-transition>
-            <!-- Botón para regresar a mesas -->
-            <button @click="view = 'tables'" class="btn-back">
-                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                Volver a Mesas
-            </button>
+        <div x-show="view === 'order'" x-transition>
             <livewire:pos.order-builder />
         </div>
         

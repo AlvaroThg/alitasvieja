@@ -268,12 +268,16 @@
                 
                 <div style="background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); border-radius: 12px; padding: 1rem; margin-bottom: 1.25rem;">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                        <span style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">Efectivo esperado en caja:</span>
+                        <span style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">Efectivo (Físico) esperado en caja:</span>
                         <strong style="color: #22c55e; font-size: 1rem;">Bs. {{ number_format($session->calculateExpected(), 2) }}</strong>
                     </div>
-                    <div style="display: flex; justify-content: space-between; border-top: 1px solid rgba(34,197,94,0.2); padding-top: 0.5rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
                         <span style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">Pagos QR esperados:</span>
                         <strong style="color: #60a5fa; font-size: 1rem;">Bs. {{ number_format($session->getTotalByPaymentMethod('qr'), 2) }}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; border-top: 1px solid rgba(34,197,94,0.3); padding-top: 0.65rem; margin-top: 0.5rem;">
+                        <span style="color: var(--text-strong); font-size: 0.95rem; font-weight: 800;">TOTAL ESPERADO (Físico + QR):</span>
+                        <strong style="color: #f59e0b; font-size: 1.2rem; font-weight: 900;">Bs. {{ number_format($session->calculateExpected() + $session->getTotalByPaymentMethod('qr'), 2) }}</strong>
                     </div>
                 </div>
 
@@ -284,14 +288,26 @@
                 <form wire:submit.prevent="closeSession">
                     <div class="cash-form-group">
                         <label class="cash-label">Efectivo contado (Bs.)</label>
-                        <input type="number" step="0.01" wire:model="closing_amount" class="cash-input" placeholder="0.00">
+                        <input type="number" step="0.01" wire:model.live="closing_amount" class="cash-input" placeholder="0.00">
                         @error('closing_amount') <span class="error-message">{{ $message }}</span> @enderror
                     </div>
                     <div class="cash-form-group">
                         <label class="cash-label">Monto verificado QR (Bs.)</label>
-                        <input type="number" step="0.01" wire:model="closing_qr" class="cash-input" placeholder="0.00">
+                        <input type="number" step="0.01" wire:model.live="closing_qr" class="cash-input" placeholder="0.00">
                         @error('closing_qr') <span class="error-message">{{ $message }}</span> @enderror
                     </div>
+
+                    @php
+                        $cCash = (float) ($closing_amount ?: 0);
+                        $cQr = (float) ($closing_qr ?: 0);
+                        $totalCountedInput = $cCash + $cQr;
+                    @endphp
+                    @if($cCash > 0 || $cQr > 0)
+                        <div style="background: var(--bg-base); border: 1px dashed #f59e0b; padding: 0.75rem 1rem; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+                            <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-secondary);">Suma Total Ingresada (Físico + QR):</span>
+                            <span style="font-size: 1.15rem; font-weight: 900; color: #f59e0b;">Bs. {{ number_format($totalCountedInput, 2) }}</span>
+                        </div>
+                    @endif
                     <div class="cash-form-group">
                         <label class="cash-label">Notas (opcional)</label>
                         <input type="text" wire:model="closing_notes" class="cash-input" placeholder="Ej. Faltó cambio de Bs. 5">

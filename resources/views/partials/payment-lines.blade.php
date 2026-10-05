@@ -51,13 +51,13 @@
         @elseif($falta > 0)
             Falta cobrar Bs. {{ number_format($falta, 2) }}
         @else
-            Se cargó Bs. {{ number_format(abs($falta), 2) }} de más
+            Cambio a entregar: Bs. {{ number_format(abs($falta), 2) }}
         @endif
     </div>
 
     @if($paymentError)
         <div style="margin-top: 0.6rem; padding: 0.6rem 0.85rem; border-radius: 10px; font-size: 0.82rem; font-weight: 600; background: rgba(220,38,38,0.1); border: 1px solid rgba(220,38,38,0.35); color: #f87171;">
-            {{ $paymentError }}
+            {{ is_array($paymentError) ? implode(', ', $paymentError) : $paymentError }}
         </div>
     @endif
 </div>

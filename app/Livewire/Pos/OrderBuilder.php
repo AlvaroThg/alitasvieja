@@ -20,10 +20,12 @@ class OrderBuilder extends Component
     public $tableId = null;
     public $tableName = null;
     public $orderType = 'dine_in';
+    public $editingOrderId = null;
 
     #[On('table-selected')]
     public function setTable($id = null)
     {
+        $this->editingOrderId = null;
         $this->tableId = $id;
         $this->tableName = $id ? (\App\Models\Table::find($id)->name ?? null) : null;
         $this->orderType = $id ? 'dine_in' : 'takeaway';
@@ -45,6 +47,8 @@ class OrderBuilder extends Component
     // Carrito de la Orden
     public $cart = []; // Array of items
     public $orderNotes = '';
+    public $customerName = '';
+    public $cashReceived = '';
 
     // Promociones
     public \Illuminate\Database\Eloquent\Collection $availablePromotions;
@@ -59,6 +63,8 @@ class OrderBuilder extends Component
     public $tempCartIndex = null;
     public $tempProductMaxSauces = 0;
     public $tempProductWingsCount = 0;
+    public $tempIsWingsProduct = false;
+    public $tempItemQuantity = 1;
     public $sauceStep = 1;
     public $tempSelectedSauceIds = [];
     public $tempSauceWingCounts = [];
@@ -76,6 +82,38 @@ class OrderBuilder extends Component
     // Modal cancelar pedido
     public $showCancelOrderModal = false;
     public $orderToCancelId = null;
+
+    // Modal seleccionar mesa al enviar
+    public $showTableSelectModal = false;
+
+    public function getAvailableTablesProperty()
+    {
+        $branchId = auth()->user()?->activeBranchId() ?? 1;
+        return \App\Models\Table::where('branch_id', $branchId)->orderBy('name', 'asc')->get();
+    }
+
+    public function selectOrderType($type)
+    {
+        $this->orderType = $type;
+        if ($type !== 'dine_in') {
+            $this->tableId = null;
+            $this->tableName = null;
+        }
+    }
+
+    public function selectTable($id)
+    {
+        if ($id) {
+            $table = \App\Models\Table::find($id);
+            $this->tableId = $table ? $table->id : null;
+            $this->tableName = $table ? $table->name : null;
+            $this->orderType = 'dine_in';
+        } else {
+            $this->tableId = null;
+            $this->tableName = null;
+        }
+        $this->showTableSelectModal = false;
+    }
 
     /** El cobro puede repartirse entre varios métodos (efectivo + QR, etc.). */
     protected function montoACobrar(): float
@@ -271,9 +309,9 @@ class OrderBuilder extends Component
         $branchPriceRecord = $variant->prices->firstWhere('branch_id', $branchId);
         $finalPrice = $branchPriceRecord ? $branchPriceRecord->price : $variant->price;
 
-        // Unir productos idénticos: misma variante y sin notas especiales
+        // Unir productos idénticos: misma variante, sin notas especiales y sin salsas configurables
         foreach ($this->cart as $i => $existing) {
-            if ($existing['variant_id'] === $variant->id && empty($existing['notes'])) {
+            if ($existing['variant_id'] === $variant->id && empty($existing['notes']) && empty($existing['has_sauces'])) {
                 // Validar stock antes de sumar
                 if ($stock !== null) {
                     $inCart = collect($this->cart)->where('variant_id', $variant->id)->sum('quantity');
@@ -285,12 +323,6 @@ class OrderBuilder extends Component
                 
                 $this->cart[$i]['quantity']++;
                 $this->saveCartToSession();
-                
-                // Si el producto lleva salsas, abrir el modal para que elijan la nueva salsa
-                if (!empty($this->cart[$i]['has_sauces'])) {
-                    $this->openSauceModal($i);
-                }
-                
                 return;
             }
         }
@@ -303,7 +335,7 @@ class OrderBuilder extends Component
             'price' => $finalPrice,
             'quantity' => 1,
             'notes' => '',
-            'has_sauces' => $variant->product->has_sauces,
+            'has_sauces' => $variant->product->has_sauces || $variant->product->is_wings,
             'max_sauces' => $variant->max_sauces,
             'wings_count' => (int) $variant->wings_count, // nº de alitas: tope de alitas a bañar
             'sauces' => [], // [ ['id' => 1, 'name' => 'BBQ', 'qty' => 2] ]
@@ -311,10 +343,6 @@ class OrderBuilder extends Component
 
         $this->cart[] = $cartItem;
         $this->saveCartToSession();
-
-        if ($cartItem['has_sauces']) {
-            $this->openSauceModal(count($this->cart) - 1);
-        }
     }
 
     public function incrementQty($index)
@@ -331,10 +359,6 @@ class OrderBuilder extends Component
             }
             $this->cart[$index]['quantity']++;
             $this->saveCartToSession();
-            
-            if (!empty($this->cart[$index]['has_sauces'])) {
-                $this->openSauceModal($index);
-            }
         }
     }
 
@@ -372,25 +396,79 @@ class OrderBuilder extends Component
     {
         $this->tempCartIndex = $cartIndex;
         $item = $this->cart[$cartIndex];
-        $qty = (int) ($item['quantity'] ?? 1);
+        $qty = max(1, (int) ($item['quantity'] ?? 1));
+        $this->tempItemQuantity = $qty;
+
         $this->tempProductMaxSauces = (int) ($item['max_sauces'] ?? 0) * $qty;
         $this->tempProductWingsCount = (int) ($item['wings_count'] ?? 0) * $qty;
         
+        $variantId = $item['variant_id'] ?? null;
+        $variant = $variantId ? \App\Modules\Menu\Models\ProductVariant::with('product')->find($variantId) : null;
+        $this->tempIsWingsProduct = $variant ? (bool) $variant->product?->is_wings : (($item['wings_count'] ?? 0) > 0);
+
         // Reset state
         $this->sauceStep = 1;
         $this->tempSelectedSauceIds = [];
         $this->tempSauceWingCounts = [];
+        $this->tempSauceSideCounts = [];
         
         // Pre-fill si ya tenía salsas
         if (!empty($item['sauces'])) {
             foreach ($item['sauces'] as $s) {
                 $this->tempSelectedSauceIds[] = $s['id'];
-                $this->tempSauceWingCounts[$s['id']] = $s['qty'] ?? 0;
-                $this->tempSauceSideCounts[$s['id']] = $s['qty_side'] ?? 0;
+                $wPerUnit = (int) floor(($s['qty'] ?? 0) / $qty);
+                $sPerUnit = (int) floor(($s['qty_side'] ?? 0) / $qty);
+                for ($u = 0; $u < $qty; $u++) {
+                    $this->tempSauceWingCounts[$u][$s['id']] = $wPerUnit;
+                    $this->tempSauceSideCounts[$u][$s['id']] = $sPerUnit;
+                }
             }
         }
         
         $this->showSauceModal = true;
+    }
+
+    public function updateTempQuantity($newQty)
+    {
+        $newQty = max(1, (int) $newQty);
+        $this->tempItemQuantity = $newQty;
+
+        if (isset($this->tempCartIndex) && isset($this->cart[$this->tempCartIndex])) {
+            $item = $this->cart[$this->tempCartIndex];
+            
+            // Validar stock si se incrementa
+            $stock = $this->availableStock($item['variant_id']);
+            if ($stock !== null && $newQty > $item['quantity']) {
+                $otherInCart = collect($this->cart)->except($this->tempCartIndex)->sum('quantity');
+                if (($otherInCart + $newQty) > $stock) {
+                    $this->dispatch('stock-alert', message: 'Cantidad de Stock de producto insuficiente. Quedan: ' . max(0, $stock) . '.');
+                    return;
+                }
+            }
+
+            $this->cart[$this->tempCartIndex]['quantity'] = $newQty;
+            $this->saveCartToSession();
+
+            $variantId = $item['variant_id'] ?? null;
+            $variant = $variantId ? \App\Modules\Menu\Models\ProductVariant::find($variantId) : null;
+            $maxPerUnit = $variant ? (int) $variant->max_sauces : (int) ($item['max_sauces'] ?? 0);
+            $wingsPerUnit = $variant ? (int) $variant->wings_count : (int) ($item['wings_count'] ?? 0);
+
+            $this->tempProductMaxSauces = $maxPerUnit * $newQty;
+            $this->tempProductWingsCount = $wingsPerUnit * $newQty;
+        }
+    }
+
+    public function incrementTempQuantity()
+    {
+        $this->updateTempQuantity($this->tempItemQuantity + 1);
+    }
+
+    public function decrementTempQuantity()
+    {
+        if ($this->tempItemQuantity > 1) {
+            $this->updateTempQuantity($this->tempItemQuantity - 1);
+        }
     }
 
     public function toggleSauceSelection($sauceId)
@@ -404,17 +482,192 @@ class OrderBuilder extends Component
         }
     }
 
+    public function quickConfirmSingleSauce($sauceId, $isCoated = true)
+    {
+        $this->tempSelectedSauceIds = [$sauceId];
+        $this->setAllUnitsCoated($isCoated);
+        $this->confirmSauces();
+    }
+
+    public function quickConfirmCurrentSauces($isCoated = true)
+    {
+        if (empty($this->tempSelectedSauceIds)) return;
+        $this->setAllUnitsCoated($isCoated);
+        $this->confirmSauces();
+    }
+
+    public function copyUnitOneToAll()
+    {
+        $qty = max(1, (int) $this->tempItemQuantity);
+        if ($qty <= 1) return;
+
+        $unitZeroWings = $this->tempSauceWingCounts[0] ?? ($this->tempSauceWingCounts ?? []);
+        $unitZeroSide = $this->tempSauceSideCounts[0] ?? ($this->tempSauceSideCounts ?? []);
+
+        for ($u = 1; $u < $qty; $u++) {
+            $this->tempSauceWingCounts[$u] = $unitZeroWings;
+            $this->tempSauceSideCounts[$u] = $unitZeroSide;
+        }
+    }
+
+    public function setAllUnitsCoated($isCoated = true)
+    {
+        $qty = max(1, (int) $this->tempItemQuantity);
+        $selectedSauces = array_values($this->tempSelectedSauceIds);
+        $selectedCount = count($selectedSauces);
+        if ($selectedCount === 0) return;
+
+        $cartItem = $this->cart[$this->tempCartIndex] ?? null;
+        $maxPerUnit = max(1, (int) ($cartItem['max_sauces'] ?? 1));
+        $wingsPerUnit = $qty > 0 ? (int) ($this->tempProductWingsCount / $qty) : $this->tempProductWingsCount;
+
+        for ($u = 0; $u < $qty; $u++) {
+            $this->tempSauceWingCounts[$u] = [];
+            $this->tempSauceSideCounts[$u] = [];
+
+            // Determinar qué salsas corresponden a la unidad/porción $u
+            if ($selectedCount >= $qty * $maxPerUnit) {
+                // Hay suficientes salsas para asignar $maxPerUnit salsas distintas por unidad
+                $unitSauceSlice = array_slice($selectedSauces, $u * $maxPerUnit, $maxPerUnit);
+            } elseif ($selectedCount == $qty) {
+                // Exactamente 1 salsa distinta por unidad (ej: 4 unidades, 4 salsas)
+                $unitSauceSlice = isset($selectedSauces[$u]) ? [$selectedSauces[$u]] : [$selectedSauces[0]];
+            } elseif ($selectedCount < $qty) {
+                // Menos salsas que unidades (ej: 4 unidades, 2 salsas): asignación cíclica
+                $unitSauceSlice = [$selectedSauces[$u % $selectedCount]];
+            } else {
+                // Más salsas que unidades pero menos que Q * M: asignar bloque a cada unidad
+                $chunkSize = (int) ceil($selectedCount / $qty);
+                $unitSauceSlice = array_slice($selectedSauces, $u * $chunkSize, $chunkSize);
+            }
+
+            $uSauceCount = count($unitSauceSlice);
+            if ($uSauceCount === 0) continue;
+
+            if ($this->tempIsWingsProduct) {
+                $basePerSauce = (int) floor($wingsPerUnit / $uSauceCount);
+                $remainder = $wingsPerUnit % $uSauceCount;
+
+                foreach ($unitSauceSlice as $idx => $sauceId) {
+                    $amount = $basePerSauce + ($idx < $remainder ? 1 : 0);
+                    if ($isCoated) {
+                        $this->tempSauceWingCounts[$u][$sauceId] = $amount;
+                        $this->tempSauceSideCounts[$u][$sauceId] = 0;
+                    } else {
+                        $this->tempSauceWingCounts[$u][$sauceId] = 0;
+                        $this->tempSauceSideCounts[$u][$sauceId] = $amount;
+                    }
+                }
+            } else {
+                foreach ($unitSauceSlice as $sauceId) {
+                    if ($isCoated) {
+                        $this->tempSauceWingCounts[$u][$sauceId] = 1;
+                        $this->tempSauceSideCounts[$u][$sauceId] = 0;
+                    } else {
+                        $this->tempSauceWingCounts[$u][$sauceId] = 0;
+                        $this->tempSauceSideCounts[$u][$sauceId] = 1;
+                    }
+                }
+            }
+        }
+    }
+
     public function goToSauceStep2()
     {
-        $this->sauceStep = 2;
-        $newCounts = [];
-        $newSideCounts = [];
-        foreach ($this->tempSelectedSauceIds as $id) {
-            $newCounts[$id] = $this->tempSauceWingCounts[$id] ?? 0;
-            $newSideCounts[$id] = $this->tempSauceSideCounts[$id] ?? 0;
+        if (empty($this->tempSelectedSauceIds)) {
+            return;
         }
-        $this->tempSauceWingCounts = $newCounts;
-        $this->tempSauceSideCounts = $newSideCounts;
+
+        $this->sauceStep = 2;
+        $currentSum = $this->sumSauceCounts($this->tempSauceWingCounts) + $this->sumSauceCounts($this->tempSauceSideCounts);
+        if ($currentSum === 0) {
+            $this->setAllUnitsCoated(true);
+        }
+    }
+
+    public function updateSauceWings($sauceId, $unitIndex = 0, $value = 0)
+    {
+        $val = max(0, (int) $value);
+        $qty = max(1, (int) $this->tempItemQuantity);
+
+        if ($qty > 1) {
+            $wingsPerUnit = (int) ($this->tempProductWingsCount / $qty);
+            $otherWings = $this->sumSauceCounts($this->tempSauceWingCounts, $unitIndex)
+                        + $this->sumSauceCounts($this->tempSauceSideCounts, $unitIndex)
+                        - ($this->tempSauceWingCounts[$unitIndex][$sauceId] ?? 0);
+
+            if ($otherWings + $val > $wingsPerUnit && $this->tempIsWingsProduct) {
+                $val = max(0, $wingsPerUnit - $otherWings);
+            }
+            $this->tempSauceWingCounts[$unitIndex][$sauceId] = $val;
+        } else {
+            $otherWings = $this->sumSauceCounts($this->tempSauceWingCounts)
+                        + $this->sumSauceCounts($this->tempSauceSideCounts)
+                        - ($this->tempSauceWingCounts[0][$sauceId] ?? ($this->tempSauceWingCounts[$sauceId] ?? 0));
+
+            if ($otherWings + $val > $this->tempProductWingsCount && $this->tempIsWingsProduct) {
+                $val = max(0, $this->tempProductWingsCount - $otherWings);
+            }
+
+            if (isset($this->tempSauceWingCounts[0]) && is_array($this->tempSauceWingCounts[0])) {
+                $this->tempSauceWingCounts[0][$sauceId] = $val;
+            } else {
+                $this->tempSauceWingCounts[$sauceId] = $val;
+            }
+        }
+    }
+
+    public function updateSauceSide($sauceId, $unitIndex = 0, $value = 0)
+    {
+        $val = max(0, (int) $value);
+        $qty = max(1, (int) $this->tempItemQuantity);
+
+        if ($qty > 1) {
+            $wingsPerUnit = (int) ($this->tempProductWingsCount / $qty);
+            $otherWings = $this->sumSauceCounts($this->tempSauceWingCounts, $unitIndex)
+                        + $this->sumSauceCounts($this->tempSauceSideCounts, $unitIndex)
+                        - ($this->tempSauceSideCounts[$unitIndex][$sauceId] ?? 0);
+
+            if ($otherWings + $val > $wingsPerUnit && $this->tempIsWingsProduct) {
+                $val = max(0, $wingsPerUnit - $otherWings);
+            }
+            $this->tempSauceSideCounts[$unitIndex][$sauceId] = $val;
+        } else {
+            $otherWings = $this->sumSauceCounts($this->tempSauceWingCounts)
+                        + $this->sumSauceCounts($this->tempSauceSideCounts)
+                        - ($this->tempSauceSideCounts[0][$sauceId] ?? ($this->tempSauceSideCounts[$sauceId] ?? 0));
+
+            if ($otherWings + $val > $this->tempProductWingsCount && $this->tempIsWingsProduct) {
+                $val = max(0, $this->tempProductWingsCount - $otherWings);
+            }
+
+            if (isset($this->tempSauceSideCounts[0]) && is_array($this->tempSauceSideCounts[0])) {
+                $this->tempSauceSideCounts[0][$sauceId] = $val;
+            } else {
+                $this->tempSauceSideCounts[$sauceId] = $val;
+            }
+        }
+    }
+
+    public function setSauceCoated($sauceId, $isCoated, $unitIndex = 0)
+    {
+        if ($this->tempItemQuantity > 1) {
+            if ($isCoated) {
+                $this->tempSauceWingCounts[$unitIndex][$sauceId] = 1;
+                $this->tempSauceSideCounts[$unitIndex][$sauceId] = 0;
+            } else {
+                $this->tempSauceWingCounts[$unitIndex][$sauceId] = 0;
+                $this->tempSauceSideCounts[$unitIndex][$sauceId] = 1;
+            }
+        } else {
+            if ($isCoated) {
+                $this->tempSauceWingCounts[$sauceId] = 1;
+                $this->tempSauceSideCounts[$sauceId] = 0;
+            } else {
+                $this->tempSauceWingCounts[$sauceId] = 0;
+                $this->tempSauceSideCounts[$sauceId] = 1;
+            }
+        }
     }
     
     public function goToSauceStep1()
@@ -422,65 +675,110 @@ class OrderBuilder extends Component
         $this->sauceStep = 1;
     }
 
-    public function incrementSauceWings($sauceId)
+    public function sumSauceCounts(array $countsArray, ?int $unitIndex = null): int
     {
-        $currentSum = array_sum($this->tempSauceWingCounts) + array_sum($this->tempSauceSideCounts);
-        if ($currentSum < $this->tempProductWingsCount) {
-            $this->tempSauceWingCounts[$sauceId] = ($this->tempSauceWingCounts[$sauceId] ?? 0) + 1;
-        }
-    }
-
-    public function decrementSauceWings($sauceId)
-    {
-        if (isset($this->tempSauceWingCounts[$sauceId]) && $this->tempSauceWingCounts[$sauceId] > 0) {
-            $this->tempSauceWingCounts[$sauceId]--;
-        }
-    }
-
-    public function incrementSauceSide($sauceId)
-    {
-        $currentSum = array_sum($this->tempSauceWingCounts) + array_sum($this->tempSauceSideCounts);
-        if ($currentSum < $this->tempProductWingsCount) {
-            $this->tempSauceSideCounts[$sauceId] = ($this->tempSauceSideCounts[$sauceId] ?? 0) + 1;
-        }
-    }
-
-    public function decrementSauceSide($sauceId)
-    {
-        if (isset($this->tempSauceSideCounts[$sauceId]) && $this->tempSauceSideCounts[$sauceId] > 0) {
-            $this->tempSauceSideCounts[$sauceId]--;
-        }
-    }
-
-    public function updatedTempSauceWingCounts($value, $key)
-    {
-        $this->enforceSauceLimit($key, 'wing');
-    }
-
-    public function updatedTempSauceSideCounts($value, $key)
-    {
-        $this->enforceSauceLimit($key, 'side');
-    }
-
-    private function enforceSauceLimit($changedKey, $type)
-    {
-        // Convert to integers and prevent negative
-        foreach ($this->tempSauceWingCounts as $k => $v) {
-            $this->tempSauceWingCounts[$k] = max(0, (int) $v);
-        }
-        foreach ($this->tempSauceSideCounts as $k => $v) {
-            $this->tempSauceSideCounts[$k] = max(0, (int) $v);
+        if ($unitIndex !== null) {
+            if (isset($countsArray[$unitIndex])) {
+                return is_array($countsArray[$unitIndex]) ? array_sum($countsArray[$unitIndex]) : (int) $countsArray[$unitIndex];
+            }
+            return 0;
         }
 
-        $currentSum = array_sum($this->tempSauceWingCounts) + array_sum($this->tempSauceSideCounts);
-
-        if ($currentSum > $this->tempProductWingsCount) {
-            $excess = $currentSum - $this->tempProductWingsCount;
-            // Subtract the excess from the recently changed key
-            if ($type === 'wing') {
-                $this->tempSauceWingCounts[$changedKey] = max(0, $this->tempSauceWingCounts[$changedKey] - $excess);
+        $total = 0;
+        foreach ($countsArray as $val) {
+            if (is_array($val)) {
+                $total += array_sum($val);
             } else {
-                $this->tempSauceSideCounts[$changedKey] = max(0, $this->tempSauceSideCounts[$changedKey] - $excess);
+                $total += (int) $val;
+            }
+        }
+        return $total;
+    }
+
+    public function getTotalWingsAssignedProperty(): int
+    {
+        return $this->sumSauceCounts($this->tempSauceWingCounts) + $this->sumSauceCounts($this->tempSauceSideCounts);
+    }
+
+    public function getTempSauceWingsTotalProperty(): int
+    {
+        return $this->sumSauceCounts($this->tempSauceWingCounts);
+    }
+
+    public function incrementSauceWings($sauceId, $unitIndex = 0)
+    {
+        if ($this->tempItemQuantity > 1) {
+            $wingsPerUnit = (int) ($this->tempProductWingsCount / $this->tempItemQuantity);
+            
+            $unitWingsSum = $this->sumSauceCounts($this->tempSauceWingCounts, $unitIndex)
+                          + $this->sumSauceCounts($this->tempSauceSideCounts, $unitIndex);
+
+            if ($unitWingsSum < $wingsPerUnit) {
+                $this->tempSauceWingCounts[$unitIndex][$sauceId] = ($this->tempSauceWingCounts[$unitIndex][$sauceId] ?? 0) + 1;
+            }
+        } else {
+            $currentWingsSum = $this->sumSauceCounts($this->tempSauceWingCounts)
+                             + $this->sumSauceCounts($this->tempSauceSideCounts);
+            if ($currentWingsSum < $this->tempProductWingsCount) {
+                if (isset($this->tempSauceWingCounts[0]) && is_array($this->tempSauceWingCounts[0])) {
+                    $this->tempSauceWingCounts[0][$sauceId] = ($this->tempSauceWingCounts[0][$sauceId] ?? 0) + 1;
+                } else {
+                    $this->tempSauceWingCounts[$sauceId] = ($this->tempSauceWingCounts[$sauceId] ?? 0) + 1;
+                }
+            }
+        }
+    }
+
+    public function decrementSauceWings($sauceId, $unitIndex = 0)
+    {
+        if ($this->tempItemQuantity > 1) {
+            if (isset($this->tempSauceWingCounts[$unitIndex][$sauceId]) && $this->tempSauceWingCounts[$unitIndex][$sauceId] > 0) {
+                $this->tempSauceWingCounts[$unitIndex][$sauceId]--;
+            }
+        } else {
+            if (isset($this->tempSauceWingCounts[0][$sauceId]) && $this->tempSauceWingCounts[0][$sauceId] > 0) {
+                $this->tempSauceWingCounts[0][$sauceId]--;
+            } elseif (isset($this->tempSauceWingCounts[$sauceId]) && $this->tempSauceWingCounts[$sauceId] > 0) {
+                $this->tempSauceWingCounts[$sauceId]--;
+            }
+        }
+    }
+
+    public function incrementSauceSide($sauceId, $unitIndex = 0)
+    {
+        if ($this->tempItemQuantity > 1) {
+            $wingsPerUnit = (int) ($this->tempProductWingsCount / $this->tempItemQuantity);
+
+            $unitWingsSum = $this->sumSauceCounts($this->tempSauceWingCounts, $unitIndex)
+                          + $this->sumSauceCounts($this->tempSauceSideCounts, $unitIndex);
+
+            if ($unitWingsSum < $wingsPerUnit) {
+                $this->tempSauceSideCounts[$unitIndex][$sauceId] = ($this->tempSauceSideCounts[$unitIndex][$sauceId] ?? 0) + 1;
+            }
+        } else {
+            $currentWingsSum = $this->sumSauceCounts($this->tempSauceWingCounts)
+                             + $this->sumSauceCounts($this->tempSauceSideCounts);
+            if ($currentWingsSum < $this->tempProductWingsCount) {
+                if (isset($this->tempSauceSideCounts[0]) && is_array($this->tempSauceSideCounts[0])) {
+                    $this->tempSauceSideCounts[0][$sauceId] = ($this->tempSauceSideCounts[0][$sauceId] ?? 0) + 1;
+                } else {
+                    $this->tempSauceSideCounts[$sauceId] = ($this->tempSauceSideCounts[$sauceId] ?? 0) + 1;
+                }
+            }
+        }
+    }
+
+    public function decrementSauceSide($sauceId, $unitIndex = 0)
+    {
+        if ($this->tempItemQuantity > 1) {
+            if (isset($this->tempSauceSideCounts[$unitIndex][$sauceId]) && $this->tempSauceSideCounts[$unitIndex][$sauceId] > 0) {
+                $this->tempSauceSideCounts[$unitIndex][$sauceId]--;
+            }
+        } else {
+            if (isset($this->tempSauceSideCounts[0][$sauceId]) && $this->tempSauceSideCounts[0][$sauceId] > 0) {
+                $this->tempSauceSideCounts[0][$sauceId]--;
+            } elseif (isset($this->tempSauceSideCounts[$sauceId]) && $this->tempSauceSideCounts[$sauceId] > 0) {
+                $this->tempSauceSideCounts[$sauceId]--;
             }
         }
     }
@@ -488,20 +786,78 @@ class OrderBuilder extends Component
     public function confirmSauces()
     {
         $mappedSauces = [];
-        
+        $unitSauces = [];
+        $qty = max(1, (int) $this->tempItemQuantity);
+
+        for ($u = 0; $u < $qty; $u++) {
+            $unitSauces[$u] = [];
+            foreach ($this->tempSelectedSauceIds as $id) {
+                $sauce = $this->allSauces->firstWhere('id', $id);
+                if ($sauce) {
+                    $w = is_array($this->tempSauceWingCounts[$u] ?? null)
+                        ? ($this->tempSauceWingCounts[$u][$id] ?? 0)
+                        : ($this->tempSauceWingCounts[$id] ?? 0);
+                    $s = is_array($this->tempSauceSideCounts[$u] ?? null)
+                        ? ($this->tempSauceSideCounts[$u][$id] ?? 0)
+                        : ($this->tempSauceSideCounts[$id] ?? 0);
+
+                    if ($w > 0 || $s > 0) {
+                        $unitSauces[$u][] = [
+                            'id' => $sauce->id,
+                            'name' => $sauce->name,
+                            'qty' => $w,
+                            'qty_side' => $s,
+                        ];
+                    }
+                }
+            }
+        }
+
         foreach ($this->tempSelectedSauceIds as $id) {
             $sauce = $this->allSauces->firstWhere('id', $id);
             if ($sauce) {
+                $totalWingQty = 0;
+                $totalSideQty = 0;
+
+                if ($qty > 1) {
+                    for ($u = 0; $u < $qty; $u++) {
+                        if (isset($this->tempSauceWingCounts[$u]) && is_array($this->tempSauceWingCounts[$u])) {
+                            $totalWingQty += $this->tempSauceWingCounts[$u][$id] ?? 0;
+                        } else {
+                            $totalWingQty += $this->tempSauceWingCounts[$id] ?? 0;
+                        }
+
+                        if (isset($this->tempSauceSideCounts[$u]) && is_array($this->tempSauceSideCounts[$u])) {
+                            $totalSideQty += $this->tempSauceSideCounts[$u][$id] ?? 0;
+                        } else {
+                            $totalSideQty += $this->tempSauceSideCounts[$id] ?? 0;
+                        }
+                    }
+                } else {
+                    if (isset($this->tempSauceWingCounts[0]) && is_array($this->tempSauceWingCounts[0])) {
+                        $totalWingQty = $this->tempSauceWingCounts[0][$id] ?? 0;
+                    } else {
+                        $totalWingQty = $this->tempSauceWingCounts[$id] ?? 0;
+                    }
+
+                    if (isset($this->tempSauceSideCounts[0]) && is_array($this->tempSauceSideCounts[0])) {
+                        $totalSideQty = $this->tempSauceSideCounts[0][$id] ?? 0;
+                    } else {
+                        $totalSideQty = $this->tempSauceSideCounts[$id] ?? 0;
+                    }
+                }
+
                 $mappedSauces[] = [
                     'id' => $sauce->id,
                     'name' => $sauce->name,
-                    'qty' => $this->tempSauceWingCounts[$id] ?? 0,
-                    'qty_side' => $this->tempSauceSideCounts[$id] ?? 0,
+                    'qty' => $totalWingQty,
+                    'qty_side' => $totalSideQty,
                 ];
             }
         }
         
         $this->cart[$this->tempCartIndex]['sauces'] = $mappedSauces;
+        $this->cart[$this->tempCartIndex]['unit_sauces'] = $unitSauces;
         $this->showSauceModal = false;
         $this->saveCartToSession();
     }
@@ -509,8 +865,45 @@ class OrderBuilder extends Component
     // --- Totales ---
     public function getSubtotalProperty()
     {
-        $subtotal = collect($this->cart)->sum(function($item) {
-            return $item['price'] * $item['quantity'];
+        $branchId = auth()->user()?->activeBranchId() ?? 1;
+        $validator = app(\App\Modules\Orders\Services\WingSauceValidator::class);
+
+        $subtotal = collect($this->cart)->sum(function($item) use ($branchId, $validator) {
+            $basePrice = $item['price'] * $item['quantity'];
+
+            $extraCharge = 0;
+            if (!empty($item['variant_id']) && !empty($item['sauces'])) {
+                $variant = \App\Modules\Menu\Models\ProductVariant::find($item['variant_id']);
+                if ($variant) {
+                    $saucesData = [];
+                    foreach ($item['sauces'] as $sauce) {
+                        if (($sauce['qty'] ?? 0) > 0) {
+                            $saucesData[] = [
+                                'sauce_id' => $sauce['id'],
+                                'quantity' => $sauce['qty'],
+                                'is_coated' => true,
+                            ];
+                        }
+                        if (($sauce['qty_side'] ?? 0) > 0) {
+                            $saucesData[] = [
+                                'sauce_id' => $sauce['id'],
+                                'quantity' => $sauce['qty_side'],
+                                'is_coated' => false,
+                            ];
+                        }
+                    }
+
+                    if (!empty($saucesData)) {
+                        try {
+                            $extraCharge = $validator->validate($variant, $branchId, $saucesData, (int) ($item['quantity'] ?? 1));
+                        } catch (\Throwable $e) {
+                            $extraCharge = 0;
+                        }
+                    }
+                }
+            }
+
+            return $basePrice + $extraCharge;
         });
 
         $this->recalculateDiscount();
@@ -521,6 +914,35 @@ class OrderBuilder extends Component
     public function getTotalProperty()
     {
         return max(0, $this->subtotal - $this->discountAmount);
+    }
+
+    public function setBillAmount($amount)
+    {
+        if ($amount === 'exact') {
+            $this->cashReceived = (float) $this->total > 0 ? (string) round($this->total, 2) : '';
+        } else {
+            $this->cashReceived = (string) $amount;
+        }
+    }
+
+    public function getCashChangeProperty(): float
+    {
+        $received = (float) $this->cashReceived;
+        $total = (float) $this->total;
+        if ($received > 0 && $received >= $total) {
+            return round($received - $total, 2);
+        }
+        return 0.0;
+    }
+
+    public function getCashMissingProperty(): float
+    {
+        $received = (float) $this->cashReceived;
+        $total = (float) $this->total;
+        if ($received > 0 && $received < $total) {
+            return round($total - $received, 2);
+        }
+        return 0.0;
     }
 
     // --- Persistencia DB ---
@@ -542,7 +964,8 @@ class OrderBuilder extends Component
             $this->tableId,
             $user->id,
             $this->orderNotes,
-            $this->tableId ? 'dine_in' : $this->orderType
+            $this->tableId ? 'dine_in' : $this->orderType,
+            $this->customerName
         );
 
         // Añadir items
@@ -605,8 +1028,11 @@ class OrderBuilder extends Component
 
     protected function resetCartState(): void
     {
+        $this->editingOrderId = null;
         $this->cart = [];
         $this->orderNotes = '';
+        $this->customerName = '';
+        $this->cashReceived = '';
         $this->selectedPromotionId = null;
         $this->selectedPromotionName = '';
         $this->discountAmount = 0;
@@ -614,31 +1040,248 @@ class OrderBuilder extends Component
         $this->saveCartToSession();
     }
 
+    #[On('edit-order')]
+    public function loadOrderForEditing($orderId)
+    {
+        $order = \App\Modules\Orders\Models\Order::with([
+            'items.productVariant.product',
+            'items.sauces.sauce',
+            'table'
+        ])->find($orderId);
+
+        if (!$order || $order->status !== 'open') {
+            $this->dispatch('pos-error', message: 'El pedido no está abierto para edición.');
+            return;
+        }
+
+        $this->editingOrderId = $order->id;
+        $this->tableId = $order->table_id;
+        $this->tableName = $order->table ? $order->table->name : null;
+        $this->orderType = $order->order_type ?? ($order->table_id ? 'dine_in' : 'takeaway');
+        $this->orderNotes = $order->notes ?? '';
+        $this->customerName = $order->customer_name ?? '';
+        $this->selectedPromotionId = $order->promotion_id;
+        if ($order->promotion_id) {
+            $promo = \App\Modules\Promotions\Models\Promotion::find($order->promotion_id);
+            if ($promo) {
+                $this->selectedPromotionName = $promo->name;
+            }
+        } else {
+            $this->selectedPromotionName = '';
+        }
+
+        $newCart = [];
+        foreach ($order->items as $item) {
+            $variant = $item->productVariant;
+            if (!$variant || !$variant->product) continue;
+
+            $mappedSauces = [];
+            foreach ($item->sauces as $sauceRelation) {
+                if (!$sauceRelation->sauce) continue;
+                $mappedSauces[] = [
+                    'id' => $sauceRelation->sauce_id,
+                    'name' => $sauceRelation->sauce->name,
+                    'qty' => $sauceRelation->is_coated ? $sauceRelation->quantity : 0,
+                    'qty_side' => !$sauceRelation->is_coated ? $sauceRelation->quantity : 0,
+                ];
+            }
+
+            $consolidatedSauces = [];
+            foreach ($mappedSauces as $s) {
+                $idx = null;
+                foreach ($consolidatedSauces as $k => $c) {
+                    if ($c['id'] === $s['id']) {
+                        $idx = $k;
+                        break;
+                    }
+                }
+                if ($idx !== null) {
+                    $consolidatedSauces[$idx]['qty'] += $s['qty'];
+                    $consolidatedSauces[$idx]['qty_side'] += $s['qty_side'];
+                } else {
+                    $consolidatedSauces[] = $s;
+                }
+            }
+
+            $newCart[] = [
+                'id' => 'item_' . $item->id,
+                'variant_id' => $item->product_variant_id,
+                'variant_name' => $variant->name,
+                'product_name' => $variant->product->name,
+                'price' => (float) $item->unit_price,
+                'quantity' => (int) $item->quantity,
+                'notes' => $item->notes ?? '',
+                'has_sauces' => (bool) $variant->product->has_sauces,
+                'max_sauces' => (int) $variant->max_sauces,
+                'wings_count' => (int) $variant->wings_count,
+                'sauces' => $consolidatedSauces,
+            ];
+        }
+
+        $this->cart = $newCart;
+        $this->saveCartToSession();
+        $this->showUnpaidOrdersModal = false;
+        $this->recalculateDiscount();
+    }
+
+    public function cancelEditing()
+    {
+        $this->editingOrderId = null;
+        $this->resetCartState();
+        $this->dispatch('order-saved', urls: []);
+    }
+
+    public function updateOrder()
+    {
+        if (!$this->editingOrderId) return;
+
+        $order = \App\Modules\Orders\Models\Order::find($this->editingOrderId);
+        if (!$order || $order->status !== 'open') {
+            $this->dispatch('pos-error', message: 'El pedido no se encuentra disponible para guardar cambios.');
+            $this->cancelEditing();
+            return;
+        }
+
+        if (empty($this->cart)) {
+            $this->dispatch('pos-error', message: 'El pedido debe tener al menos un ítem.');
+            return;
+        }
+
+        $isSuccess = false;
+        $orderId = $order->id;
+
+        try {
+            \Illuminate\Support\Facades\DB::transaction(function () use ($order) {
+                $orderService = app(\App\Modules\Orders\Services\OrderService::class);
+
+                // Eliminar ítems previos
+                foreach ($order->items()->get() as $oldItem) {
+                    $orderService->removeItem($oldItem);
+                }
+
+                // Actualizar encabezado
+                $order->update([
+                    'notes' => $this->orderNotes,
+                    'customer_name' => $this->customerName,
+                    'order_type' => $this->tableId ? 'dine_in' : $this->orderType,
+                ]);
+
+                // Crear nuevos ítems del carrito
+                foreach ($this->cart as $item) {
+                    $saucesData = [];
+                    if (!empty($item['sauces'])) {
+                        foreach ($item['sauces'] as $sauce) {
+                            if (($sauce['qty'] ?? 0) > 0) {
+                                $saucesData[] = [
+                                    'sauce_id' => $sauce['id'],
+                                    'quantity' => $sauce['qty'],
+                                    'is_coated' => true,
+                                ];
+                            }
+                            if (($sauce['qty_side'] ?? 0) > 0) {
+                                $saucesData[] = [
+                                    'sauce_id' => $sauce['id'],
+                                    'quantity' => $sauce['qty_side'],
+                                    'is_coated' => false,
+                                ];
+                            }
+                        }
+                    }
+
+                    $orderService->addItem($order, [
+                        'product_variant_id' => $item['variant_id'],
+                        'quantity' => $item['quantity'],
+                        'notes' => $item['notes'] ?? null,
+                        'sauces' => $saucesData
+                    ]);
+                }
+
+                // Descontar inventario si aplica
+                try {
+                    app(\App\Modules\Inventory\Services\InventoryService::class)
+                        ->decrementOnSale($order->fresh(['items']));
+                } catch (\Throwable $e) {
+                    Log::warning('Inventario no descontado en edición: ' . $e->getMessage());
+                }
+
+                // Promociones
+                if ($this->selectedPromotionId) {
+                    try {
+                        $promotionEngine = app(\App\Modules\Promotions\Services\PromotionEngine::class);
+                        $promotionEngine->apply($order, $this->selectedPromotionId);
+                    } catch (\Exception $e) {
+                        Log::warning('Promoción no aplicada al editar: ' . $e->getMessage());
+                    }
+                } else {
+                    $order->update([
+                        'promotion_id' => null,
+                        'discount' => 0,
+                    ]);
+                    $orderService->recalculateOrder($order);
+                }
+            });
+
+            $isSuccess = true;
+        } catch (\Throwable $e) {
+            Log::error('Error actualizando pedido #' . $orderId . ': ' . $e->getMessage());
+            $this->dispatch('pos-error', message: 'No se pudo guardar la edición del pedido: ' . $e->getMessage());
+            return;
+        }
+
+        if ($isSuccess) {
+            $this->editingOrderId = null;
+            $this->resetCartState();
+            session()->flash('message', 'Pedido #' . ($order->daily_number ?? $orderId) . ' actualizado correctamente.');
+
+            $this->dispatch('order-saved', urls: [
+                route('pos.tickets.cashier', ['order' => $orderId]),
+                route('pos.tickets.kitchen', ['order' => $orderId]),
+            ]);
+        }
+    }
+
     public function submitOrder()
     {
         if (empty($this->cart)) return;
 
-        // Pedido de cocina (para llevar / delivery): se cobra al momento, así que
-        // se exige caja abierta antes de armar el cobro.
-        if (!$this->tableId) {
-            if (!$this->cashIsOpen()) {
-                return;
-            }
-            // Arranca con una sola línea en efectivo por el total: el caso común
-            // se confirma sin tocar nada; si pagaron mixto, se agregan líneas.
-            $this->iniciarPagos();
-            $this->showPaymentModal = true;
+        // Si la opción elegida es "Comer aquí" pero no se seleccionó mesa aún, solicitar la mesa
+        if ($this->orderType === 'dine_in' && !$this->tableId) {
+            $this->showTableSelectModal = true;
             return;
         }
 
-        // Pedido en salón (mesa): se cobra al pedir, imprimir ambos tickets.
-        $order = $this->persistOrder();
-        $orderId = $order->id;
-        $this->resetCartState();
-        $this->dispatch('order-saved', urls: [
-            route('pos.tickets.cashier', ['order' => $orderId]),
-            route('pos.tickets.kitchen', ['order' => $orderId]),
-        ]);
+        // Todos los pedidos se cobran al momento de pedir ("El cliente paga al pedir")
+        if (!$this->cashIsOpen()) {
+            return;
+        }
+        $this->iniciarPagos();
+        $this->showPaymentModal = true;
+    }
+
+    public function confirmTableSelectAndSubmit($tableId)
+    {
+        $this->selectTable($tableId);
+        $this->submitOrder();
+    }
+
+    public function liberateTable($tableId = null)
+    {
+        $id = $tableId ?? $this->tableId;
+        if ($id) {
+            \App\Models\Table::where('id', $id)->update(['status' => 'available']);
+            if ($this->tableId == $id) {
+                $this->tableId = null;
+                $this->tableName = null;
+            }
+        }
+    }
+
+    public function occupyTable($tableId = null)
+    {
+        $id = $tableId ?? $this->tableId;
+        if ($id) {
+            \App\Models\Table::where('id', $id)->update(['status' => 'occupied']);
+        }
     }
 
     /**
@@ -851,11 +1494,17 @@ class OrderBuilder extends Component
         }
     }
 
+    public function updatedCustomerName()
+    {
+        $this->saveCartToSession();
+    }
+
     // --- Persistencia Sesión ---
     protected function saveCartToSession()
     {
         session()->put('pos_cart', $this->cart);
         session()->put('pos_notes', $this->orderNotes);
+        session()->put('pos_customer_name', $this->customerName);
         session()->put('pos_promo_id', $this->selectedPromotionId);
         session()->put('pos_promo_name', $this->selectedPromotionName);
     }
@@ -864,6 +1513,7 @@ class OrderBuilder extends Component
     {
         $this->cart = session()->get('pos_cart', []);
         $this->orderNotes = session()->get('pos_notes', '');
+        $this->customerName = session()->get('pos_customer_name', '');
         $this->selectedPromotionId = session()->get('pos_promo_id');
         $this->selectedPromotionName = session()->get('pos_promo_name', '');
     }

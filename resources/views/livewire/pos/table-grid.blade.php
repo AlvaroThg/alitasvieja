@@ -297,6 +297,21 @@
                 </button>
             </div>
             <div class="table-modal-body">
+                {{-- Botones directos de Liberar u Ocupar Mesa sin requerir pago --}}
+                @if($selectedTableForAction->status === 'occupied' || $selectedTableForAction->status === 'reserved')
+                    <button wire:click="liberateTable" class="btn-action" style="background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.35);">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"></path></svg>
+                        🟢 Liberar Mesa (Marcar Disponible)
+                    </button>
+                @endif
+
+                @if($selectedTableForAction->status === 'available' || $selectedTableForAction->status === 'reserved')
+                    <button wire:click="occupyTable" class="btn-action" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.35);">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"></path></svg>
+                        🔴 Ocupar Mesa (Marcar Ocupada)
+                    </button>
+                @endif
+
                 @if($selectedTableForAction->status !== 'occupied')
                     <button wire:click="createOrder" class="btn-action btn-primary">
                         <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
@@ -305,9 +320,13 @@
                 @endif
                 
                 @if($selectedTableForAction->status === 'occupied')
+                    <button wire:click="editTableOrder" class="btn-action" style="background: rgba(249, 115, 22, 0.15); color: #f97316; border: 1px solid rgba(249, 115, 22, 0.4);">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                        Editar Pedido
+                    </button>
                     <button wire:click="openCheckout" class="btn-action btn-secondary">
                         <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                        Liberar Mesa (Realizar Pago)
+                        Detalle / Cobro Manual
                     </button>
                     <button wire:click="$set('showCancelOrderModal', true)" class="btn-action" style="background: transparent; color: #dc2626; border: 1px solid rgba(220, 38, 38, 0.3);">
                         <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -360,7 +379,7 @@
 
                 @if($checkoutError)
                     <div style="background: rgba(220,38,38,0.1); border: 1px solid rgba(220,38,38,0.35); color: #f87171; padding: 0.75rem 0.9rem; border-radius: 10px; font-size: 0.82rem; font-weight: 600; margin-bottom: 1rem;">
-                        {{ $checkoutError }}
+                        {{ is_array($checkoutError) ? implode(', ', $checkoutError) : $checkoutError }}
                     </div>
                 @endif
 
@@ -457,7 +476,7 @@
             <div class="table-modal-body">
                 @if($deleteErrorMessage)
                     <div style="background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.3); border-radius: 10px; padding: 1rem; color: #ef4444; font-size: 0.9rem;">
-                        {{ $deleteErrorMessage }}
+                        {{ is_array($deleteErrorMessage) ? implode(', ', $deleteErrorMessage) : $deleteErrorMessage }}
                     </div>
                     <button wire:click="$set('showDeleteTableModal', false)" class="btn-action btn-secondary" style="margin-top: 0.5rem;">Entendido</button>
                 @else
@@ -489,29 +508,47 @@
                     Últimos pedidos de esta sucursal. Elige si quieres el ticket de caja o el de cocina.
                 </p>
 
+                <div style="max-height: 420px; overflow-y: auto; padding-right: 0.35rem; display: flex; flex-direction: column; gap: 0.25rem;">
                 @forelse($recentOrders as $order)
                     @php
+                        $tName = $order->table->name ?? 'Mesa';
+                        $tNameStr = is_array($tName) ? implode(', ', $tName) : $tName;
                         $tipo = match($order->order_type ?? 'dine_in') {
                             'delivery' => 'Delivery',
                             'takeaway' => 'Para llevar',
-                            default    => $order->table->name ?? 'Mesa',
+                            default    => $tNameStr,
                         };
                     @endphp
-                    <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.7rem 0.5rem; border-bottom: 1px solid var(--border);">
+                    <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 0.6rem; border-bottom: 1px solid var(--border); border-radius: 8px;">
                         <div style="min-width: 0; flex: 1;">
-                            <div style="font-weight: 700; color: var(--text-strong); font-size: 0.9rem;">
-                                #{{ $order->daily_number ?? $order->id }} · {{ $tipo }}
+                            <div style="font-weight: 700; color: var(--text-strong); font-size: 0.9rem; display: flex; align-items: center; flex-wrap: wrap; gap: 0.35rem;">
+                                <span>#{{ $order->daily_number ?? $order->id }} · {{ $tipo }}</span>
+                                @if($order->customer_name)
+                                    <span style="color: #dc2626; font-weight: 800; background: rgba(220,38,38,0.08); padding: 0.1rem 0.4rem; border-radius: 6px; font-size: 0.82rem;">
+                                        👤 {{ is_array($order->customer_name) ? implode(', ', $order->customer_name) : $order->customer_name }}
+                                    </span>
+                                @endif
                                 @if($order->status === 'paid')
-                                    <span style="font-size: 0.62rem; font-weight: 700; color: #22c55e; border: 1px solid rgba(34,197,94,0.4); border-radius: 6px; padding: 0.05rem 0.3rem; margin-left: 0.25rem;">PAGADO</span>
+                                    <span style="font-size: 0.62rem; font-weight: 700; color: #22c55e; border: 1px solid rgba(34,197,94,0.4); border-radius: 6px; padding: 0.05rem 0.3rem;">PAGADO</span>
                                 @elseif($order->status === 'open')
-                                    <span style="font-size: 0.62rem; font-weight: 700; color: #f97316; border: 1px solid rgba(249,115,22,0.4); border-radius: 6px; padding: 0.05rem 0.3rem; margin-left: 0.25rem;">ABIERTO</span>
+                                    <span style="font-size: 0.62rem; font-weight: 700; color: #f97316; border: 1px solid rgba(249,115,22,0.4); border-radius: 6px; padding: 0.05rem 0.3rem;">ABIERTO</span>
+                                @elseif($order->status === 'cancelled')
+                                    <span style="font-size: 0.62rem; font-weight: 700; color: #ef4444; border: 1px solid rgba(239,68,68,0.4); border-radius: 6px; padding: 0.05rem 0.3rem;">CANCELADO</span>
                                 @endif
                             </div>
-                            <div style="color: var(--text-muted); font-size: 0.75rem;">
-                                {{ $order->opened_at ? $order->opened_at->format('d/m H:i') : $order->created_at->format('d/m H:i') }}
+                            <div style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.2rem;">
+                                {{ $order->created_at ? $order->created_at->format('d/m H:i') : ($order->opened_at ? $order->opened_at->format('d/m H:i') : '') }}
+                                @if($order->order_number)
+                                    · Ref: <span style="font-weight: 600; color: var(--text-secondary);">{{ $order->order_number }}</span>
+                                @endif
                                 · Bs. {{ number_format($order->total, 2) }}
                             </div>
                         </div>
+                        @if($order->status === 'open')
+                            <button wire:click="editOrderFromModal({{ $order->id }})" class="btn-action" style="width: auto; padding: 0.4rem 0.75rem; font-size: 0.75rem; background: rgba(249,115,22,0.15); color: #f97316; border: 1px solid rgba(249,115,22,0.4);">
+                                Editar
+                            </button>
+                        @endif
                         <button onclick="window.open('{{ route('pos.tickets.cashier', ['order' => $order->id]) }}', 'PrintTicketCaja', 'width=400,height=600')"
                                 class="btn-action" style="width: auto; padding: 0.4rem 0.75rem; font-size: 0.75rem; background: var(--bg-elevated); color: var(--text-secondary); border: 1px solid var(--border-strong);">
                             Caja
@@ -524,6 +561,7 @@
                 @empty
                     <p style="text-align: center; color: var(--text-muted); padding: 2rem 0;">Aún no hay pedidos en esta sucursal.</p>
                 @endforelse
+                </div>
             </div>
         </div>
     </div>
@@ -541,7 +579,7 @@
             </div>
             <div class="table-modal-body" style="padding-top: 1rem;">
                 <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5;">
-                    ¿Estás seguro que deseas cancelar el pedido de la mesa <strong>{{ $selectedTableForAction?->name }}</strong>?<br><br>
+                    ¿Estás seguro que deseas cancelar el pedido de la mesa <strong>{{ is_array($selectedTableForAction?->name ?? null) ? implode(', ', $selectedTableForAction->name) : $selectedTableForAction?->name }}</strong>?<br><br>
                     Esta acción es irreversible y los productos seleccionados serán eliminados de los pendientes de cocina.
                 </p>
                 

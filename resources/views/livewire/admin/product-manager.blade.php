@@ -116,8 +116,12 @@
                         Llevar control de stock
                     </label>
                     <label class="form-checkbox" style="margin-bottom: 0.75rem;">
-                        <input type="checkbox" wire:model="has_sauces">
+                        <input type="checkbox" wire:model.live="has_sauces">
                         Permite elegir salsas
+                    </label>
+                    <label class="form-checkbox" style="margin-bottom: 0.75rem;">
+                        <input type="checkbox" wire:model="charge_coated_sauces">
+                        Cobrar +5 Bs. si piden bañadas (Cochabamba)
                     </label>
                     <label class="form-checkbox">
                         <input type="checkbox" wire:model="is_active">
@@ -137,8 +141,8 @@
                 </p>
                 
                 @php
-                    // Las columnas Piezas y Max Salsas solo aplican a productos de alitas.
-                    $gridCols = $is_wings
+                    $showSauceCols = $is_wings || $has_sauces;
+                    $gridCols = $showSauceCols
                         ? '2fr 1fr 1fr 1fr' . str_repeat(' 1fr', count($branches)) . ' auto'
                         : '2fr 1fr' . str_repeat(' 1fr', count($branches)) . ' auto';
                 @endphp
@@ -146,7 +150,7 @@
                     @if(count($variants) > 0)
                     <div style="display: grid; grid-template-columns: {{ $gridCols }}; gap: 0.5rem; margin-bottom: 0.5rem;">
                         <span class="form-label">Nombre</span>
-                        @if($is_wings)
+                        @if($showSauceCols)
                             <span class="form-label">Piezas</span>
                             <span class="form-label">Max Salsas</span>
                         @endif
@@ -168,7 +172,7 @@
                     @foreach($variants as $index => $variant)
                     <div wire:key="variant-{{ $variant['id'] ?? 'new-'.$index }}" style="display: grid; grid-template-columns: {{ $gridCols }}; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem; background: var(--bg-elevated); padding: 0.5rem; border-radius: 10px;">
                         <input type="text" wire:model="variants.{{ $index }}.name" class="form-input" placeholder="Opcional (ej. 10 Piezas)">
-                        @if($is_wings)
+                        @if($showSauceCols)
                             <input type="number" wire:model="variants.{{ $index }}.wings_count" class="form-input" placeholder="0">
                             <input type="number" wire:model="variants.{{ $index }}.max_sauces" class="form-input" placeholder="0">
                         @endif

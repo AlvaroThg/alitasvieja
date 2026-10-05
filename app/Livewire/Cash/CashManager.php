@@ -195,8 +195,12 @@ class CashManager extends Component
             $this->surplusAmount = 0;
             $this->session = null;
 
+            $totalCountedSum = $countedCash + $countedQr;
+            $totalExpectedSum = $expectedCash + $expectedQr;
+
             $resumen = 'Caja cerrada. '
-                . 'Efectivo: Bs. ' . number_format($countedCash, 2) . ' (Esperado: Bs. ' . number_format($expectedCash, 2) . ')'
+                . 'TOTAL VENDIDO (Físico + QR): Bs. ' . number_format($totalCountedSum, 2) . ' (Esperado: Bs. ' . number_format($totalExpectedSum, 2) . ')'
+                . ' | Efectivo: Bs. ' . number_format($countedCash, 2) . ' (Esperado: Bs. ' . number_format($expectedCash, 2) . ')'
                 . ' | QR: Bs. ' . number_format($countedQr, 2) . ' (Esperado: Bs. ' . number_format($expectedQr, 2) . ')';
 
             session()->flash('message', $resumen);
