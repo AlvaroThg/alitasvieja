@@ -196,11 +196,12 @@
             .ticket-panel {
                 width: 100%;
                 max-width: 100%;
-                height: 480px;
+                height: auto;
+                min-height: 480px;
             }
         }
         .ticket-header {
-            padding: 1rem 1.25rem;
+            padding: 0.65rem 0.85rem;
             background: linear-gradient(135deg, var(--bg-base), var(--bg-surface));
             border-bottom: 1px solid var(--border);
             display: flex;
@@ -209,21 +210,22 @@
         }
         .ticket-title {
             font-weight: 800;
-            font-size: 1.05rem;
+            font-size: 0.95rem;
             color: var(--text-strong);
         }
         .ticket-count {
             background: linear-gradient(135deg, #dc2626, #b91c1c);
             color: var(--text-strong);
-            padding: 0.25rem 0.7rem;
+            padding: 0.2rem 0.55rem;
             border-radius: 50px;
-            font-size: 0.7rem;
+            font-size: 0.68rem;
             font-weight: 700;
         }
         .ticket-items {
-            flex: 1;
+            flex: 1 1 0%;
+            min-height: 180px;
             overflow-y: auto;
-            padding: 1rem;
+            padding: 0.65rem 0.75rem;
         }
         .ticket-items::-webkit-scrollbar { width: 4px; }
         .ticket-items::-webkit-scrollbar-track { background: transparent; }
@@ -231,40 +233,40 @@
         .ticket-item {
             background: var(--bg-base);
             border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 0.85rem;
-            margin-bottom: 0.75rem;
+            border-radius: 12px;
+            padding: 0.65rem 0.75rem;
+            margin-bottom: 0.5rem;
         }
         .ticket-item-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.35rem;
         }
         .ticket-item-name {
             font-weight: 700;
             color: var(--text);
-            font-size: 0.85rem;
-            line-height: 1;
+            font-size: 0.82rem;
+            line-height: 1.1;
         }
         .ticket-item-variant {
-            font-size: 0.7rem;
+            font-size: 0.68rem;
             color: var(--text-faint);
-            margin-top: 0.15rem;
+            margin-top: 0.1rem;
         }
         .ticket-item-price {
             font-weight: 900;
             color: #f97316;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
         .ticket-sauce-btn {
-            font-size: 0.7rem;
+            font-size: 0.68rem;
             font-weight: 700;
             color: #dc2626;
             background: rgba(220, 38, 38, 0.08);
             border: 1px solid rgba(220, 38, 38, 0.15);
-            padding: 0.2rem 0.5rem;
-            border-radius: 8px;
+            padding: 0.18rem 0.45rem;
+            border-radius: 6px;
             cursor: pointer;
             transition: all 0.2s ease;
         }
@@ -275,14 +277,14 @@
             font-size: 0.6rem;
             background: var(--bg-elevated);
             color: var(--text-muted);
-            padding: 0.15rem 0.4rem;
+            padding: 0.12rem 0.35rem;
             border-radius: 4px;
         }
         .ticket-item-controls {
             display: flex;
-            gap: 0.5rem;
+            gap: 0.4rem;
             align-items: center;
-            margin-top: 0.5rem;
+            margin-top: 0.35rem;
         }
         .ticket-note-input {
             flex: 1;
@@ -291,13 +293,13 @@
             background: var(--bg-surface);
             border: 1px solid var(--border);
             border-radius: 8px;
-            padding: 0 0.5rem;
-            height: 32px;
+            padding: 0 0.4rem;
+            height: 28px;
         }
-        .ticket-note-input span { color: var(--text-faint); font-size: 0.7rem; margin-right: 0.25rem; }
+        .ticket-note-input span { color: var(--text-faint); font-size: 0.68rem; margin-right: 0.2rem; }
         .ticket-note-input input {
             width: 100%;
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             background: transparent;
             border: none;
             color: var(--text-secondary);
@@ -309,10 +311,10 @@
             border: 1px solid var(--border);
             border-radius: 8px;
             overflow: hidden;
-            height: 32px;
+            height: 28px;
         }
         .qty-btn {
-            width: 28px;
+            width: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -325,12 +327,12 @@
         .qty-btn:first-child:hover { background: rgba(220, 38, 38, 0.1); color: #dc2626; }
         .qty-btn:last-child:hover { background: rgba(34, 197, 94, 0.1); color: #22c55e; }
         .qty-value {
-            padding: 0 0.5rem;
+            padding: 0 0.4rem;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 800;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             color: var(--text-strong);
             border-left: 1px solid var(--border);
             border-right: 1px solid var(--border);
@@ -343,24 +345,31 @@
             align-items: center;
             justify-content: center;
             color: var(--border-strong);
+            padding: 1.5rem 0;
         }
-        .ticket-empty span { font-size: 3rem; margin-bottom: 0.75rem; opacity: 0.3; }
-        .ticket-empty p { font-weight: 500; color: var(--text-faint); font-size: 0.85rem; }
+        .ticket-empty span { font-size: 2.5rem; margin-bottom: 0.5rem; opacity: 0.3; }
+        .ticket-empty p { font-weight: 500; color: var(--text-faint); font-size: 0.8rem; }
         /* Footer */
         .ticket-footer {
-            padding: 1rem 1.25rem;
+            padding: 0.65rem 0.75rem;
             border-top: 1px solid var(--border);
             background: var(--bg-base);
+            overflow-y: auto;
+            max-height: 55%;
+            flex-shrink: 0;
         }
+        .ticket-footer::-webkit-scrollbar { width: 4px; }
+        .ticket-footer::-webkit-scrollbar-track { background: transparent; }
+        .ticket-footer::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
         .ticket-notes-area {
             width: 100%;
-            border-radius: 12px;
+            border-radius: 10px;
             border: 1px solid var(--border);
             background: var(--bg-surface);
             color: var(--text-secondary);
-            font-size: 0.8rem;
-            padding: 0.65rem;
-            margin-bottom: 1rem;
+            font-size: 0.78rem;
+            padding: 0.5rem;
+            margin-bottom: 0.65rem;
             resize: vertical;
             outline: none;
             font-family: inherit;
@@ -371,18 +380,18 @@
         .ticket-total-row {
             display: flex;
             justify-content: space-between;
-            align-items: flex-end;
-            margin-bottom: 1rem;
+            align-items: center;
+            margin-bottom: 0.4rem;
         }
         .ticket-total-label {
             color: var(--text-faint);
             font-weight: 700;
             text-transform: uppercase;
-            font-size: 0.7rem;
-            letter-spacing: 0.08em;
+            font-size: 0.68rem;
+            letter-spacing: 0.06em;
         }
         .ticket-total-value {
-            font-size: 1.75rem;
+            font-size: 1.4rem;
             font-weight: 900;
             background: linear-gradient(135deg, #f97316, #dc2626);
             -webkit-background-clip: text;
@@ -391,22 +400,22 @@
         }
         .btn-send-kitchen {
             width: 100%;
-            padding: 1rem;
+            padding: 0.65rem 0.85rem;
             background: linear-gradient(135deg, #dc2626, #b91c1c);
             color: var(--text-strong);
             font-weight: 800;
-            font-size: 0.9rem;
-            letter-spacing: 0.03em;
+            font-size: 0.82rem;
+            letter-spacing: 0.02em;
             text-transform: uppercase;
             border: none;
-            border-radius: 14px;
+            border-radius: 12px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 0.5rem;
+            gap: 0.4rem;
             transition: all 0.2s ease;
-            box-shadow: 0 4px 16px rgba(220, 38, 38, 0.2);
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
         }
         .btn-send-kitchen:hover {
             background: linear-gradient(135deg, #ef4444, #dc2626);
@@ -418,13 +427,13 @@
         }
         /* ─── Promo Section ──────────────────────────────────── */
         .promo-section {
-            margin-bottom: 0.75rem;
+            margin-bottom: 0.4rem;
         }
         .btn-add-promo {
-            width: 100%; padding: 0.6rem; background: rgba(139, 92, 246, 0.08);
-            border: 1px dashed rgba(139, 92, 246, 0.3); border-radius: 12px;
-            color: #a78bfa; font-weight: 700; font-size: 0.8rem; cursor: pointer;
-            transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+            width: 100%; padding: 0.45rem 0.6rem; background: rgba(139, 92, 246, 0.08);
+            border: 1px dashed rgba(139, 92, 246, 0.3); border-radius: 10px;
+            color: #a78bfa; font-weight: 700; font-size: 0.78rem; cursor: pointer;
+            transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.35rem;
         }
         .btn-add-promo:hover {
             background: rgba(139, 92, 246, 0.12); border-color: #a78bfa;
@@ -432,7 +441,7 @@
         .promo-applied {
             display: flex; align-items: center; justify-content: space-between;
             background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.2);
-            border-radius: 12px; padding: 0.6rem 0.85rem;
+            border-radius: 10px; padding: 0.45rem 0.65rem;
         }
         .promo-applied-info { display: flex; align-items: center; gap: 0.4rem; }
         .promo-applied-name { font-size: 0.75rem; font-weight: 700; color: #a78bfa; }
@@ -723,7 +732,7 @@
 
     <!-- Ticket/Carrito (Derecha 40%) -->
     <div class="ticket-panel">
-        <div class="ticket-header" style="flex-direction: column; align-items: stretch; gap: 0.65rem;">
+        <div class="ticket-header" style="flex-direction: column; align-items: stretch; gap: 0.45rem; padding: 0.65rem 0.85rem;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <h2 class="ticket-title">
                     {{ $tableId ? 'Ticket — '.$tableName : ($orderType === 'delivery' ? 'Ticket — Delivery' : ($orderType === 'takeaway' ? 'Ticket — Para Llevar' : 'Ticket de Venta')) }}
@@ -732,26 +741,26 @@
             </div>
             
             {{-- Selector de Tipo de Pedido (Comer aquí / Para llevar / Delivery) --}}
-            <div style="display: flex; background: var(--bg-base); border-radius: 10px; padding: 0.25rem; border: 1px solid var(--border); gap: 0.2rem;">
+            <div style="display: flex; background: var(--bg-base); border-radius: 10px; padding: 0.2rem; border: 1px solid var(--border); gap: 0.15rem;">
                 <button type="button" wire:click="selectOrderType('dine_in')"
-                        style="flex: 1; padding: 0.45rem 0.3rem; font-size: 0.73rem; font-weight: 800; border-radius: 8px; border: none; cursor: pointer; transition: all 0.2s; background: {{ $orderType === 'dine_in' ? 'linear-gradient(135deg, #dc2626, #b91c1c)' : 'transparent' }}; color: {{ $orderType === 'dine_in' ? '#fff' : 'var(--text-muted)' }}; box-shadow: {{ $orderType === 'dine_in' ? '0 2px 6px rgba(220,38,38,0.3)' : 'none' }}; display: flex; align-items: center; justify-content: center; gap: 0.25rem;">
+                        style="flex: 1; padding: 0.35rem 0.25rem; font-size: 0.72rem; font-weight: 800; border-radius: 8px; border: none; cursor: pointer; transition: all 0.2s; background: {{ $orderType === 'dine_in' ? 'linear-gradient(135deg, #dc2626, #b91c1c)' : 'transparent' }}; color: {{ $orderType === 'dine_in' ? '#fff' : 'var(--text-muted)' }}; box-shadow: {{ $orderType === 'dine_in' ? '0 2px 6px rgba(220,38,38,0.3)' : 'none' }}; display: flex; align-items: center; justify-content: center; gap: 0.2rem;">
                     <span>🛋️</span> Comer aquí
                 </button>
                 <button type="button" wire:click="selectOrderType('takeaway')"
-                        style="flex: 1; padding: 0.45rem 0.3rem; font-size: 0.73rem; font-weight: 800; border-radius: 8px; border: none; cursor: pointer; transition: all 0.2s; background: {{ $orderType === 'takeaway' ? 'linear-gradient(135deg, #f97316, #ea580c)' : 'transparent' }}; color: {{ $orderType === 'takeaway' ? '#fff' : 'var(--text-muted)' }}; box-shadow: {{ $orderType === 'takeaway' ? '0 2px 6px rgba(249,115,22,0.3)' : 'none' }}; display: flex; align-items: center; justify-content: center; gap: 0.25rem;">
+                        style="flex: 1; padding: 0.35rem 0.25rem; font-size: 0.72rem; font-weight: 800; border-radius: 8px; border: none; cursor: pointer; transition: all 0.2s; background: {{ $orderType === 'takeaway' ? 'linear-gradient(135deg, #f97316, #ea580c)' : 'transparent' }}; color: {{ $orderType === 'takeaway' ? '#fff' : 'var(--text-muted)' }}; box-shadow: {{ $orderType === 'takeaway' ? '0 2px 6px rgba(249,115,22,0.3)' : 'none' }}; display: flex; align-items: center; justify-content: center; gap: 0.2rem;">
                     <span>🥡</span> Llevar
                 </button>
                 <button type="button" wire:click="selectOrderType('delivery')"
-                        style="flex: 1; padding: 0.45rem 0.3rem; font-size: 0.73rem; font-weight: 800; border-radius: 8px; border: none; cursor: pointer; transition: all 0.2s; background: {{ $orderType === 'delivery' ? 'linear-gradient(135deg, #3b82f6, #2563eb)' : 'transparent' }}; color: {{ $orderType === 'delivery' ? '#fff' : 'var(--text-muted)' }}; box-shadow: {{ $orderType === 'delivery' ? '0 2px 6px rgba(59,130,246,0.3)' : 'none' }}; display: flex; align-items: center; justify-content: center; gap: 0.25rem;">
+                        style="flex: 1; padding: 0.35rem 0.25rem; font-size: 0.72rem; font-weight: 800; border-radius: 8px; border: none; cursor: pointer; transition: all 0.2s; background: {{ $orderType === 'delivery' ? 'linear-gradient(135deg, #3b82f6, #2563eb)' : 'transparent' }}; color: {{ $orderType === 'delivery' ? '#fff' : 'var(--text-muted)' }}; box-shadow: {{ $orderType === 'delivery' ? '0 2px 6px rgba(59,130,246,0.3)' : 'none' }}; display: flex; align-items: center; justify-content: center; gap: 0.2rem;">
                     <span>🛵</span> Delivery
                 </button>
             </div>
 
             {{-- Selector de Mesa cuando se elige "Comer aquí" --}}
             @if($orderType === 'dine_in')
-                <div style="display: flex; align-items: center; gap: 0.4rem; background: rgba(220, 38, 38, 0.05); border: 1px solid rgba(220, 38, 38, 0.2); padding: 0.4rem 0.6rem; border-radius: 10px;">
-                    <span style="font-size: 0.75rem; font-weight: 700; color: #dc2626; white-space: nowrap;">Mesa:</span>
-                    <select wire:change="selectTable($event.target.value)" style="flex: 1; background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-strong); font-size: 0.8rem; font-weight: 700; padding: 0.3rem 0.5rem; border-radius: 8px; outline: none; font-family: inherit;">
+                <div style="display: flex; align-items: center; gap: 0.35rem; background: rgba(220, 38, 38, 0.05); border: 1px solid rgba(220, 38, 38, 0.2); padding: 0.3rem 0.5rem; border-radius: 8px;">
+                    <span style="font-size: 0.72rem; font-weight: 700; color: #dc2626; white-space: nowrap;">Mesa:</span>
+                    <select wire:change="selectTable($event.target.value)" style="flex: 1; background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-strong); font-size: 0.78rem; font-weight: 700; padding: 0.25rem 0.4rem; border-radius: 6px; outline: none; font-family: inherit;">
                         <option value="">-- Elegir Mesa --</option>
                         @foreach($this->availableTables as $tbl)
                             <option value="{{ $tbl->id }}" {{ $tableId == $tbl->id ? 'selected' : '' }}>
@@ -763,12 +772,12 @@
                         @php $currentTbl = $this->availableTables->firstWhere('id', $tableId); @endphp
                         @if($currentTbl && $currentTbl->status === 'occupied')
                             <button type="button" wire:click="liberateTable({{ $tableId }})" title="Liberar esta mesa (marcar disponible)"
-                                    style="padding: 0.3rem 0.5rem; font-size: 0.7rem; font-weight: 700; background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 6px; cursor: pointer; white-space: nowrap;">
+                                    style="padding: 0.25rem 0.45rem; font-size: 0.68rem; font-weight: 700; background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 6px; cursor: pointer; white-space: nowrap;">
                                 🟢 Liberar
                             </button>
                         @elseif($currentTbl)
                             <button type="button" wire:click="occupyTable({{ $tableId }})" title="Ocupar esta mesa"
-                                    style="padding: 0.3rem 0.5rem; font-size: 0.7rem; font-weight: 700; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px; cursor: pointer; white-space: nowrap;">
+                                    style="padding: 0.25rem 0.45rem; font-size: 0.68rem; font-weight: 700; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px; cursor: pointer; white-space: nowrap;">
                                 🔴 Ocupar
                             </button>
                         @endif
@@ -778,12 +787,12 @@
         </div>
 
         @if($editingOrderId)
-            <div style="background: rgba(249, 115, 22, 0.15); border: 1px solid rgba(249, 115, 22, 0.4); border-radius: 12px; padding: 0.65rem 0.85rem; margin: 0.75rem 1rem 0; display: flex; align-items: center; justify-content: space-between;">
-                <div style="color: #f97316; font-weight: 700; font-size: 0.85rem; display: flex; align-items: center; gap: 0.4rem;">
-                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+            <div style="background: rgba(249, 115, 22, 0.15); border: 1px solid rgba(249, 115, 22, 0.4); border-radius: 12px; padding: 0.5rem 0.75rem; margin: 0.5rem 0.75rem 0; display: flex; align-items: center; justify-content: space-between;">
+                <div style="color: #f97316; font-weight: 700; font-size: 0.8rem; display: flex; align-items: center; gap: 0.35rem;">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                     Editando Pedido #{{ $editingOrderId }} {{ $tableName ? '('.$tableName.')' : '(Para llevar)' }}
                 </div>
-                <button wire:click="cancelEditing" style="background: transparent; border: 1px solid rgba(249, 115, 22, 0.4); color: #f97316; padding: 0.25rem 0.5rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer;">
+                <button wire:click="cancelEditing" style="background: transparent; border: 1px solid rgba(249, 115, 22, 0.4); color: #f97316; padding: 0.2rem 0.45rem; border-radius: 6px; font-size: 0.72rem; font-weight: 600; cursor: pointer;">
                     Cancelar
                 </button>
             </div>
@@ -807,17 +816,17 @@
                     </div>
 
                     @if($item['has_sauces'])
-                        <div style="margin-bottom: 0.5rem;">
+                        <div style="margin-bottom: 0.4rem;">
                             @if(empty($item['sauces']))
-                                <button wire:click="openSauceModal({{ $index }})" class="ticket-sauce-btn" style="background: rgba(249, 115, 22, 0.12); color: #ea580c; border: 1px solid rgba(249, 115, 22, 0.35); font-weight: 800; padding: 0.25rem 0.6rem; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
+                                <button wire:click="openSauceModal({{ $index }})" class="ticket-sauce-btn" style="background: rgba(249, 115, 22, 0.12); color: #ea580c; border: 1px solid rgba(249, 115, 22, 0.35); font-weight: 800; padding: 0.2rem 0.5rem; border-radius: 6px; cursor: pointer; transition: all 0.2s;">
                                     🌶️ Elegir Salsas
                                 </button>
                             @else
-                                <button wire:click="openSauceModal({{ $index }})" class="ticket-sauce-btn" style="background: rgba(34, 197, 94, 0.1); color: #16a34a; border: 1px solid rgba(34, 197, 94, 0.3); font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
+                                <button wire:click="openSauceModal({{ $index }})" class="ticket-sauce-btn" style="background: rgba(34, 197, 94, 0.1); color: #16a34a; border: 1px solid rgba(34, 197, 94, 0.3); font-weight: 700; padding: 0.18rem 0.45rem; border-radius: 6px; cursor: pointer; transition: all 0.2s;">
                                     ✓ Salsas (Editar)
                                 </button>
                             @endif
-                            <div style="display: flex; flex-wrap: wrap; gap: 0.25rem; margin-top: 0.35rem;">
+                            <div style="display: flex; flex-wrap: wrap; gap: 0.2rem; margin-top: 0.25rem;">
                                 @foreach($item['sauces'] as $sauce)
                                     @php
                                         $str = [];
@@ -863,9 +872,9 @@
 
         <div class="ticket-footer">
             {{-- Nombre del Cliente / Datos de entrega --}}
-            <div style="margin-bottom: 0.75rem;">
+            <div style="margin-bottom: 0.4rem;">
                 <input wire:model.live.debounce.300ms="customerName" type="text" placeholder="Cliente / Entregar a (Nombre o dato)..."
-                       style="width: 100%; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-surface); color: var(--text-strong); font-size: 0.85rem; padding: 0.6rem 0.8rem; font-weight: 600; outline: none;">
+                       style="width: 100%; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-surface); color: var(--text-strong); font-size: 0.8rem; padding: 0.45rem 0.65rem; font-weight: 600; outline: none;">
             </div>
 
             {{-- Sección de Promociones --}}
@@ -887,7 +896,7 @@
 
             {{-- Aviso: promoción no aplicable por pedido mínimo --}}
             @if($promotionWarning)
-                <div style="background: rgba(220,38,38,0.1); border: 1px solid rgba(220,38,38,0.3); color: #f87171; padding: 0.6rem 0.8rem; border-radius: 10px; font-size: 0.78rem; font-weight: 600; margin-bottom: 0.75rem;">
+                <div style="background: rgba(220,38,38,0.1); border: 1px solid rgba(220,38,38,0.3); color: #f87171; padding: 0.45rem 0.65rem; border-radius: 8px; font-size: 0.75rem; font-weight: 600; margin-bottom: 0.4rem;">
                     {{ $promotionWarning }}
                 </div>
             @endif
@@ -896,7 +905,7 @@
             @if($discountAmount > 0)
                 <div class="promo-discount-row">
                     <span class="ticket-total-label">Subtotal</span>
-                    <span style="font-size: 0.9rem; font-weight: 700; color: var(--text-muted);">Bs. {{ number_format($this->subtotal, 2) }}</span>
+                    <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted);">Bs. {{ number_format($this->subtotal, 2) }}</span>
                 </div>
                 <div class="promo-discount-row">
                     <span class="promo-discount-label">Descuento</span>
@@ -910,38 +919,38 @@
             </div>
 
             {{-- Sección de Calculadora de Cambio / Billete --}}
-            <div style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: 14px; padding: 0.75rem 0.85rem; margin-bottom: 0.85rem;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
-                    <label style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); display: flex; align-items: center; gap: 0.3rem;">
+            <div style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: 12px; padding: 0.5rem 0.65rem; margin-bottom: 0.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                    <label style="font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); display: flex; align-items: center; gap: 0.25rem;">
                         💵 Monto del Billete (Efectivo)
                     </label>
                     @if($cashReceived !== '' && (float)$cashReceived > 0)
-                        <button type="button" wire:click="$set('cashReceived', '')" style="background: transparent; border: none; color: var(--text-muted); font-size: 0.68rem; font-weight: 700; cursor: pointer; text-decoration: underline;">
+                        <button type="button" wire:click="$set('cashReceived', '')" style="background: transparent; border: none; color: var(--text-muted); font-size: 0.65rem; font-weight: 700; cursor: pointer; text-decoration: underline;">
                             Limpiar
                         </button>
                     @endif
                 </div>
 
                 {{-- Input y Botón Exacto --}}
-                <div style="display: flex; gap: 0.4rem; margin-bottom: 0.45rem;">
+                <div style="display: flex; gap: 0.35rem; margin-bottom: 0.35rem;">
                     <div style="position: relative; flex: 1;">
-                        <span style="position: absolute; left: 0.65rem; top: 50%; transform: translateY(-50%); font-weight: 800; font-size: 0.8rem; color: var(--text-muted);">Bs.</span>
+                        <span style="position: absolute; left: 0.6rem; top: 50%; transform: translateY(-50%); font-weight: 800; font-size: 0.78rem; color: var(--text-muted);">Bs.</span>
                         <input type="number" step="0.5" min="0" inputmode="decimal"
                                wire:model.live.debounce.150ms="cashReceived"
                                placeholder="0.00"
-                               style="width: 100%; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-base); color: var(--text-strong); font-size: 0.95rem; font-weight: 800; padding: 0.45rem 0.6rem 0.45rem 2.2rem; outline: none; font-family: inherit;">
+                               style="width: 100%; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-base); color: var(--text-strong); font-size: 0.88rem; font-weight: 800; padding: 0.35rem 0.5rem 0.35rem 2rem; outline: none; font-family: inherit;">
                     </div>
                     <button type="button" wire:click="setBillAmount('exact')"
-                            style="padding: 0.45rem 0.65rem; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); color: #60a5fa; border-radius: 10px; font-weight: 700; font-size: 0.75rem; cursor: pointer; white-space: nowrap; transition: all 0.2s;">
+                            style="padding: 0.35rem 0.55rem; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); color: #60a5fa; border-radius: 8px; font-weight: 700; font-size: 0.72rem; cursor: pointer; white-space: nowrap; transition: all 0.2s;">
                         Exacto
                     </button>
                 </div>
 
                 {{-- Billetes Rápidos (Bolivia) --}}
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.3rem; margin-bottom: 0.45rem;">
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.25rem; margin-bottom: 0.35rem;">
                     @foreach([20, 50, 100, 200] as $bill)
                         <button type="button" wire:click="setBillAmount({{ $bill }})"
-                                style="padding: 0.3rem 0.2rem; background: {{ (float)$cashReceived === (float)$bill ? 'linear-gradient(135deg, #dc2626, #b91c1c)' : 'var(--bg-base)' }}; color: {{ (float)$cashReceived === (float)$bill ? '#fff' : 'var(--text-strong)' }}; border: 1px solid {{ (float)$cashReceived === (float)$bill ? '#dc2626' : 'var(--border)' }}; border-radius: 8px; font-weight: 700; font-size: 0.72rem; cursor: pointer; transition: all 0.15s; text-align: center;">
+                                style="padding: 0.25rem 0.1rem; background: {{ (float)$cashReceived === (float)$bill ? 'linear-gradient(135deg, #dc2626, #b91c1c)' : 'var(--bg-base)' }}; color: {{ (float)$cashReceived === (float)$bill ? '#fff' : 'var(--text-strong)' }}; border: 1px solid {{ (float)$cashReceived === (float)$bill ? '#dc2626' : 'var(--border)' }}; border-radius: 6px; font-weight: 700; font-size: 0.7rem; cursor: pointer; transition: all 0.15s; text-align: center;">
                             Bs. {{ $bill }}
                         </button>
                     @endforeach
@@ -950,20 +959,20 @@
                 {{-- Display del Cambio --}}
                 @if($cashReceived !== '' && (float)$cashReceived > 0)
                     @if((float)$cashReceived >= (float)$this->total)
-                        <div style="background: rgba(34, 197, 94, 0.12); border: 1px solid rgba(34, 197, 94, 0.35); border-radius: 10px; padding: 0.5rem 0.75rem; display: flex; justify-content: space-between; align-items: center;">
-                            <span style="font-size: 0.75rem; font-weight: 800; color: #22c55e; text-transform: uppercase; letter-spacing: 0.04em;">
+                        <div style="background: rgba(34, 197, 94, 0.12); border: 1px solid rgba(34, 197, 94, 0.35); border-radius: 8px; padding: 0.4rem 0.6rem; display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 0.7rem; font-weight: 800; color: #22c55e; text-transform: uppercase; letter-spacing: 0.04em;">
                                 Cambio a entregar
                             </span>
-                            <span style="font-size: 1.2rem; font-weight: 900; color: #22c55e;">
+                            <span style="font-size: 1.05rem; font-weight: 900; color: #22c55e;">
                                 Bs. {{ number_format($this->cashChange, 2) }}
                             </span>
                         </div>
                     @else
-                        <div style="background: rgba(249, 115, 22, 0.12); border: 1px solid rgba(249, 115, 22, 0.35); border-radius: 10px; padding: 0.5rem 0.75rem; display: flex; justify-content: space-between; align-items: center;">
-                            <span style="font-size: 0.72rem; font-weight: 800; color: #f97316; text-transform: uppercase; letter-spacing: 0.04em;">
+                        <div style="background: rgba(249, 115, 22, 0.12); border: 1px solid rgba(249, 115, 22, 0.35); border-radius: 8px; padding: 0.4rem 0.6rem; display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 0.7rem; font-weight: 800; color: #f97316; text-transform: uppercase; letter-spacing: 0.04em;">
                                 Falta para completar
                             </span>
-                            <span style="font-size: 1.05rem; font-weight: 900; color: #f97316;">
+                            <span style="font-size: 0.95rem; font-weight: 900; color: #f97316;">
                                 Bs. {{ number_format($this->cashMissing, 2) }}
                             </span>
                         </div>
@@ -972,25 +981,25 @@
             </div>
             
             @if($editingOrderId)
-                <div style="display: flex; gap: 0.5rem;">
-                    <button wire:click="cancelEditing" style="flex: 1; background: var(--bg-elevated); color: var(--text-muted); border: 1px solid var(--border); padding: 1rem; border-radius: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
+                <div style="display: flex; gap: 0.4rem;">
+                    <button wire:click="cancelEditing" style="flex: 1; background: var(--bg-elevated); color: var(--text-muted); border: 1px solid var(--border); padding: 0.65rem; border-radius: 10px; font-weight: 700; font-size: 0.8rem; cursor: pointer;">
                         CANCELAR
                     </button>
                     <button wire:click="updateOrder" class="btn-send-kitchen" style="flex: 2; background: linear-gradient(135deg, #10b981, #059669);">
-                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                         GUARDAR CAMBIOS
                     </button>
                 </div>
             @else
-                <div style="display: flex; gap: 0.5rem;">
+                <div style="display: flex; gap: 0.4rem;">
                     @if(!$tableId)
-                        <button wire:click="loadUnpaidOrders" style="flex: 1; background: #3b82f6; color: white; border: none; padding: 1rem; border-radius: 12px; font-weight: 800; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.4rem;">
-                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <button wire:click="loadUnpaidOrders" style="flex: 1; background: #3b82f6; color: white; border: none; padding: 0.65rem 0.5rem; border-radius: 10px; font-weight: 800; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.3rem;">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                             PENDIENTES
                         </button>
                     @endif
                     <button wire:click="submitOrder" class="btn-send-kitchen" style="{{ !$tableId ? 'flex: 2;' : 'width: 100%;' }}">
-                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         ENVIAR A COCINA
                     </button>
                 </div>
