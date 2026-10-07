@@ -17,6 +17,10 @@ class SauceManager extends Component
     public $spice_level = 0;
     public $is_active = true;
 
+    // Sucursales y recargos
+    public $branches = [];
+    public $branchCoatedPrices = [];
+
     public function mount()
     {
         $this->loadData();
@@ -25,6 +29,24 @@ class SauceManager extends Component
     public function loadData()
     {
         $this->sauces = Sauce::all();
+        $this->branches = \App\Models\Branch::orderBy('name')->get();
+        foreach ($this->branches as $branch) {
+            $this->branchCoatedPrices[$branch->id] = (float) ($branch->sauce_coated_price ?? 0);
+        }
+    }
+
+    public function saveBranchCoatedPrice($branchId)
+    {
+        $price = (float) ($this->branchCoatedPrices[$branchId] ?? 0);
+        if ($price < 0) {
+            $price = 0;
+        }
+
+        $branch = \App\Models\Branch::find($branchId);
+        if ($branch) {
+            $branch->update(['sauce_coated_price' => $price]);
+            session()->flash('success_branch', "Recargo por alitas bañadas actualizado para {$branch->name}: Bs. " . number_format($price, 2));
+        }
     }
 
     public function create()

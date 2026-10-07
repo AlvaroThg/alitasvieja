@@ -12,12 +12,14 @@ class ProductPrice extends Model
         'product_variant_id',
         'branch_id',
         'price',
+        'coated_price',
     ];
 
     protected function casts(): array
     {
         return [
             'price' => 'decimal:2',
+            'coated_price' => 'decimal:2',
         ];
     }
 

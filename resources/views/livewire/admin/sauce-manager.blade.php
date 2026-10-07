@@ -31,10 +31,54 @@
         <div>
             <h2 class="cm-title">Salsas</h2>
             <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.35rem; max-width: 560px;">
-                Gestiona las salsas disponibles en el restaurante. Las salsas <strong>Inactivas</strong> no aparecerán al momento de tomar pedidos en el POS.
+                Gestiona las salsas disponibles en el restaurante y configura el precio de recargo por bañadas para cada sucursal.
             </p>
         </div>
         <button wire:click="create" class="btn-add">+ Nueva Salsa</button>
+    </div>
+
+    {{-- Configuración de Recargos por Sucursal --}}
+    <div style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.25rem 1.5rem; margin-bottom: 2rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+            <div style="width: 38px; height: 38px; background: rgba(220, 38, 38, 0.15); border: 1px solid rgba(220, 38, 38, 0.3); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                🌶️
+            </div>
+            <div>
+                <h3 style="font-size: 1.1rem; font-weight: 800; color: var(--text-strong);">Recargo por Salsas Bañadas por Sucursal</h3>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.15rem;">
+                    Configura el monto (Bs.) que se adicionará automáticamente a cada porción cuando el cliente elija alitas o picadas <strong>bañadas</strong>.
+                </p>
+            </div>
+        </div>
+
+        @if(session()->has('success_branch'))
+            <div style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981; padding: 0.65rem 1rem; border-radius: 10px; font-size: 0.85rem; font-weight: 700; margin-bottom: 1rem;">
+                ✓ {{ session('success_branch') }}
+            </div>
+        @endif
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1rem;">
+            @foreach($branches as $b)
+                <div style="background: var(--bg-base); border: 1px solid var(--border-strong); border-radius: 12px; padding: 1rem; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;">
+                    <div>
+                        <div style="font-weight: 800; font-size: 0.95rem; color: var(--text-strong);">{{ $b->name }}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">{{ $b->city ?? 'Sucursal' }}</div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <div style="position: relative; width: 110px;">
+                            <span style="position: absolute; left: 0.6rem; top: 50%; transform: translateY(-50%); font-weight: 800; font-size: 0.78rem; color: var(--text-muted);">Bs.</span>
+                            <input type="number" step="0.5" min="0" 
+                                   wire:model.live="branchCoatedPrices.{{ $b->id }}"
+                                   style="width: 100%; background: var(--bg-surface); border: 1px solid var(--border-strong); color: var(--text-strong); font-weight: 800; font-size: 0.9rem; padding: 0.45rem 0.5rem 0.45rem 2.1rem; border-radius: 8px; outline: none;">
+                        </div>
+                        <button type="button" wire:click="saveBranchCoatedPrice({{ $b->id }})"
+                                style="background: linear-gradient(135deg, #dc2626, #b91c1c); color: #fff; font-weight: 800; font-size: 0.78rem; padding: 0.45rem 0.75rem; border-radius: 8px; border: none; cursor: pointer; white-space: nowrap; transition: all 0.2s;">
+                            Guardar
+                        </button>
+                    </div>
+                </div>
+            @endforeach
+        </div>
     </div>
 
     <table class="cm-table">

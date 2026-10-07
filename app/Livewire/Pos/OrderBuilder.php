@@ -572,6 +572,17 @@ class OrderBuilder extends Component
         }
     }
 
+    public function getPortionSauceLimit(): int
+    {
+        $qty = max(1, (int) $this->tempItemQuantity);
+        if ($this->tempProductWingsCount > 0) {
+            return max(1, (int) ($this->tempProductWingsCount / $qty));
+        }
+
+        $cartItem = $this->cart[$this->tempCartIndex] ?? null;
+        return max(1, (int) ($cartItem['max_sauces'] ?? 1));
+    }
+
     public function goToSauceStep2()
     {
         if (empty($this->tempSelectedSauceIds)) {
@@ -579,40 +590,89 @@ class OrderBuilder extends Component
         }
 
         $this->sauceStep = 2;
-        $currentSum = $this->sumSauceCounts($this->tempSauceWingCounts) + $this->sumSauceCounts($this->tempSauceSideCounts);
-        if ($currentSum === 0) {
-            $this->setAllUnitsCoated(true);
-        }
     }
 
     public function updateSauceWings($sauceId, $unitIndex = 0, $value = 0)
     {
         $val = max(0, (int) $value);
         $qty = max(1, (int) $this->tempItemQuantity);
+        $portionLimit = $this->getPortionSauceLimit();
+
+        $val = min($val, $portionLimit);
 
         if ($qty > 1) {
-            $wingsPerUnit = (int) ($this->tempProductWingsCount / $qty);
-            $otherWings = $this->sumSauceCounts($this->tempSauceWingCounts, $unitIndex)
-                        + $this->sumSauceCounts($this->tempSauceSideCounts, $unitIndex)
-                        - ($this->tempSauceWingCounts[$unitIndex][$sauceId] ?? 0);
+            $u = $unitIndex;
+            $this->tempSauceWingCounts[$u][$sauceId] = $val;
 
-            if ($otherWings + $val > $wingsPerUnit && $this->tempIsWingsProduct) {
-                $val = max(0, $wingsPerUnit - $otherWings);
+            $wingSum = $this->sumSauceCounts($this->tempSauceWingCounts, $u);
+            $sideSum = $this->sumSauceCounts($this->tempSauceSideCounts, $u);
+            $totalSum = $wingSum + $sideSum;
+
+            if ($totalSum > $portionLimit) {
+                $excess = $totalSum - $portionLimit;
+
+                if (isset($this->tempSauceSideCounts[$u]) && is_array($this->tempSauceSideCounts[$u])) {
+                    foreach ($this->tempSauceSideCounts[$u] as $sId => $sCount) {
+                        if ($excess <= 0) break;
+                        $reduce = min($excess, (int)$sCount);
+                        $this->tempSauceSideCounts[$u][$sId] = max(0, (int)$sCount - $reduce);
+                        $excess -= $reduce;
+                    }
+                }
+
+                if ($excess > 0 && isset($this->tempSauceWingCounts[$u]) && is_array($this->tempSauceWingCounts[$u])) {
+                    foreach ($this->tempSauceWingCounts[$u] as $sId => $wCount) {
+                        if ($sId == $sauceId) continue;
+                        if ($excess <= 0) break;
+                        $reduce = min($excess, (int)$wCount);
+                        $this->tempSauceWingCounts[$u][$sId] = max(0, (int)$wCount - $reduce);
+                        $excess -= $reduce;
+                    }
+                }
             }
-            $this->tempSauceWingCounts[$unitIndex][$sauceId] = $val;
         } else {
-            $otherWings = $this->sumSauceCounts($this->tempSauceWingCounts)
-                        + $this->sumSauceCounts($this->tempSauceSideCounts)
-                        - ($this->tempSauceWingCounts[0][$sauceId] ?? ($this->tempSauceWingCounts[$sauceId] ?? 0));
-
-            if ($otherWings + $val > $this->tempProductWingsCount && $this->tempIsWingsProduct) {
-                $val = max(0, $this->tempProductWingsCount - $otherWings);
+            if (!isset($this->tempSauceWingCounts[0]) || !is_array($this->tempSauceWingCounts[0])) {
+                $oldWing = $this->tempSauceWingCounts;
+                $this->tempSauceWingCounts = [0 => is_array($oldWing) ? $oldWing : []];
+            }
+            if (!isset($this->tempSauceSideCounts[0]) || !is_array($this->tempSauceSideCounts[0])) {
+                $oldSide = $this->tempSauceSideCounts;
+                $this->tempSauceSideCounts = [0 => is_array($oldSide) ? $oldSide : []];
             }
 
-            if (isset($this->tempSauceWingCounts[0]) && is_array($this->tempSauceWingCounts[0])) {
-                $this->tempSauceWingCounts[0][$sauceId] = $val;
-            } else {
-                $this->tempSauceWingCounts[$sauceId] = $val;
+            $this->tempSauceWingCounts[0][$sauceId] = $val;
+
+            $wingSum = array_sum($this->tempSauceWingCounts[0]);
+            $sideSum = array_sum($this->tempSauceSideCounts[0]);
+            $totalSum = $wingSum + $sideSum;
+
+            if ($totalSum > $portionLimit) {
+                $excess = $totalSum - $portionLimit;
+
+                if (isset($this->tempSauceSideCounts[0][$sauceId]) && (int)$this->tempSauceSideCounts[0][$sauceId] > 0) {
+                    $reduce = min($excess, (int)$this->tempSauceSideCounts[0][$sauceId]);
+                    $this->tempSauceSideCounts[0][$sauceId] -= $reduce;
+                    $excess -= $reduce;
+                }
+
+                if ($excess > 0) {
+                    foreach ($this->tempSauceSideCounts[0] as $sId => $sCount) {
+                        if ($excess <= 0) break;
+                        $reduce = min($excess, (int)$sCount);
+                        $this->tempSauceSideCounts[0][$sId] -= $reduce;
+                        $excess -= $reduce;
+                    }
+                }
+
+                if ($excess > 0) {
+                    foreach ($this->tempSauceWingCounts[0] as $sId => $wCount) {
+                        if ($sId == $sauceId) continue;
+                        if ($excess <= 0) break;
+                        $reduce = min($excess, (int)$wCount);
+                        $this->tempSauceWingCounts[0][$sId] -= $reduce;
+                        $excess -= $reduce;
+                    }
+                }
             }
         }
     }
@@ -621,30 +681,83 @@ class OrderBuilder extends Component
     {
         $val = max(0, (int) $value);
         $qty = max(1, (int) $this->tempItemQuantity);
+        $portionLimit = $this->getPortionSauceLimit();
+
+        $val = min($val, $portionLimit);
 
         if ($qty > 1) {
-            $wingsPerUnit = (int) ($this->tempProductWingsCount / $qty);
-            $otherWings = $this->sumSauceCounts($this->tempSauceWingCounts, $unitIndex)
-                        + $this->sumSauceCounts($this->tempSauceSideCounts, $unitIndex)
-                        - ($this->tempSauceSideCounts[$unitIndex][$sauceId] ?? 0);
+            $u = $unitIndex;
+            $this->tempSauceSideCounts[$u][$sauceId] = $val;
 
-            if ($otherWings + $val > $wingsPerUnit && $this->tempIsWingsProduct) {
-                $val = max(0, $wingsPerUnit - $otherWings);
+            $wingSum = $this->sumSauceCounts($this->tempSauceWingCounts, $u);
+            $sideSum = $this->sumSauceCounts($this->tempSauceSideCounts, $u);
+            $totalSum = $wingSum + $sideSum;
+
+            if ($totalSum > $portionLimit) {
+                $excess = $totalSum - $portionLimit;
+
+                if (isset($this->tempSauceWingCounts[$u]) && is_array($this->tempSauceWingCounts[$u])) {
+                    foreach ($this->tempSauceWingCounts[$u] as $sId => $wCount) {
+                        if ($excess <= 0) break;
+                        $reduce = min($excess, (int)$wCount);
+                        $this->tempSauceWingCounts[$u][$sId] = max(0, (int)$wCount - $reduce);
+                        $excess -= $reduce;
+                    }
+                }
+
+                if ($excess > 0 && isset($this->tempSauceSideCounts[$u]) && is_array($this->tempSauceSideCounts[$u])) {
+                    foreach ($this->tempSauceSideCounts[$u] as $sId => $sCount) {
+                        if ($sId == $sauceId) continue;
+                        if ($excess <= 0) break;
+                        $reduce = min($excess, (int)$sCount);
+                        $this->tempSauceSideCounts[$u][$sId] = max(0, (int)$sCount - $reduce);
+                        $excess -= $reduce;
+                    }
+                }
             }
-            $this->tempSauceSideCounts[$unitIndex][$sauceId] = $val;
         } else {
-            $otherWings = $this->sumSauceCounts($this->tempSauceWingCounts)
-                        + $this->sumSauceCounts($this->tempSauceSideCounts)
-                        - ($this->tempSauceSideCounts[0][$sauceId] ?? ($this->tempSauceSideCounts[$sauceId] ?? 0));
-
-            if ($otherWings + $val > $this->tempProductWingsCount && $this->tempIsWingsProduct) {
-                $val = max(0, $this->tempProductWingsCount - $otherWings);
+            if (!isset($this->tempSauceWingCounts[0]) || !is_array($this->tempSauceWingCounts[0])) {
+                $oldWing = $this->tempSauceWingCounts;
+                $this->tempSauceWingCounts = [0 => is_array($oldWing) ? $oldWing : []];
+            }
+            if (!isset($this->tempSauceSideCounts[0]) || !is_array($this->tempSauceSideCounts[0])) {
+                $oldSide = $this->tempSauceSideCounts;
+                $this->tempSauceSideCounts = [0 => is_array($oldSide) ? $oldSide : []];
             }
 
-            if (isset($this->tempSauceSideCounts[0]) && is_array($this->tempSauceSideCounts[0])) {
-                $this->tempSauceSideCounts[0][$sauceId] = $val;
-            } else {
-                $this->tempSauceSideCounts[$sauceId] = $val;
+            $this->tempSauceSideCounts[0][$sauceId] = $val;
+
+            $wingSum = array_sum($this->tempSauceWingCounts[0]);
+            $sideSum = array_sum($this->tempSauceSideCounts[0]);
+            $totalSum = $wingSum + $sideSum;
+
+            if ($totalSum > $portionLimit) {
+                $excess = $totalSum - $portionLimit;
+
+                if (isset($this->tempSauceWingCounts[0][$sauceId]) && (int)$this->tempSauceWingCounts[0][$sauceId] > 0) {
+                    $reduce = min($excess, (int)$this->tempSauceWingCounts[0][$sauceId]);
+                    $this->tempSauceWingCounts[0][$sauceId] -= $reduce;
+                    $excess -= $reduce;
+                }
+
+                if ($excess > 0) {
+                    foreach ($this->tempSauceWingCounts[0] as $sId => $wCount) {
+                        if ($excess <= 0) break;
+                        $reduce = min($excess, (int)$wCount);
+                        $this->tempSauceWingCounts[0][$sId] -= $reduce;
+                        $excess -= $reduce;
+                    }
+                }
+
+                if ($excess > 0) {
+                    foreach ($this->tempSauceSideCounts[0] as $sId => $sCount) {
+                        if ($sId == $sauceId) continue;
+                        if ($excess <= 0) break;
+                        $reduce = min($excess, (int)$sCount);
+                        $this->tempSauceSideCounts[0][$sId] -= $reduce;
+                        $excess -= $reduce;
+                    }
+                }
             }
         }
     }
@@ -707,19 +820,22 @@ class OrderBuilder extends Component
 
     public function incrementSauceWings($sauceId, $unitIndex = 0)
     {
-        if ($this->tempItemQuantity > 1) {
-            $wingsPerUnit = (int) ($this->tempProductWingsCount / $this->tempItemQuantity);
-            
+        $qty = max(1, (int) $this->tempItemQuantity);
+        $portionLimit = $this->getPortionSauceLimit();
+
+        if ($qty > 1) {
             $unitWingsSum = $this->sumSauceCounts($this->tempSauceWingCounts, $unitIndex)
                           + $this->sumSauceCounts($this->tempSauceSideCounts, $unitIndex);
 
-            if ($unitWingsSum < $wingsPerUnit) {
+            if ($unitWingsSum < $portionLimit) {
                 $this->tempSauceWingCounts[$unitIndex][$sauceId] = ($this->tempSauceWingCounts[$unitIndex][$sauceId] ?? 0) + 1;
             }
         } else {
             $currentWingsSum = $this->sumSauceCounts($this->tempSauceWingCounts)
                              + $this->sumSauceCounts($this->tempSauceSideCounts);
-            if ($currentWingsSum < $this->tempProductWingsCount) {
+            $totalLimit = $this->tempProductWingsCount > 0 ? $this->tempProductWingsCount : $portionLimit;
+
+            if ($currentWingsSum < $totalLimit) {
                 if (isset($this->tempSauceWingCounts[0]) && is_array($this->tempSauceWingCounts[0])) {
                     $this->tempSauceWingCounts[0][$sauceId] = ($this->tempSauceWingCounts[0][$sauceId] ?? 0) + 1;
                 } else {
@@ -746,19 +862,22 @@ class OrderBuilder extends Component
 
     public function incrementSauceSide($sauceId, $unitIndex = 0)
     {
-        if ($this->tempItemQuantity > 1) {
-            $wingsPerUnit = (int) ($this->tempProductWingsCount / $this->tempItemQuantity);
+        $qty = max(1, (int) $this->tempItemQuantity);
+        $portionLimit = $this->getPortionSauceLimit();
 
+        if ($qty > 1) {
             $unitWingsSum = $this->sumSauceCounts($this->tempSauceWingCounts, $unitIndex)
                           + $this->sumSauceCounts($this->tempSauceSideCounts, $unitIndex);
 
-            if ($unitWingsSum < $wingsPerUnit) {
+            if ($unitWingsSum < $portionLimit) {
                 $this->tempSauceSideCounts[$unitIndex][$sauceId] = ($this->tempSauceSideCounts[$unitIndex][$sauceId] ?? 0) + 1;
             }
         } else {
             $currentWingsSum = $this->sumSauceCounts($this->tempSauceWingCounts)
                              + $this->sumSauceCounts($this->tempSauceSideCounts);
-            if ($currentWingsSum < $this->tempProductWingsCount) {
+            $totalLimit = $this->tempProductWingsCount > 0 ? $this->tempProductWingsCount : $portionLimit;
+
+            if ($currentWingsSum < $totalLimit) {
                 if (isset($this->tempSauceSideCounts[0]) && is_array($this->tempSauceSideCounts[0])) {
                     $this->tempSauceSideCounts[0][$sauceId] = ($this->tempSauceSideCounts[0][$sauceId] ?? 0) + 1;
                 } else {

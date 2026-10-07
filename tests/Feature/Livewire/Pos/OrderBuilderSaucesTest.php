@@ -219,7 +219,7 @@ class OrderBuilderSaucesTest extends TestCase
             ->set('tempSelectedSauceIds', [1, 2])
             ->call('goToSauceStep2')
             ->assertSet('sauceStep', 2)
-            ->assertSet('tempSauceWingCounts', [0 => [1 => 6]])
+            ->assertSet('tempSauceWingCounts', [])
             ->call('updateSauceWings', 1, 0, 4)
             ->assertSet('tempSauceWingCounts', [0 => [1 => 4]]);
     }

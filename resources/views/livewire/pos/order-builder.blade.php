@@ -1,9 +1,18 @@
-<div style="height: calc(100vh - 100px); display: flex; gap: 1rem; font-family: 'Inter', sans-serif;">
+<div class="pos-order-builder-layout">
 
     <style>
+        .pos-order-builder-layout {
+            height: calc(100vh - 100px);
+            min-height: 560px;
+            display: flex;
+            gap: 1rem;
+            width: 100%;
+            font-family: 'Inter', sans-serif;
+        }
         /* ─── Catálogo Panel ──────────────────────────────────── */
         .catalog-panel {
-            flex: 1;
+            flex: 1 1 0%;
+            min-width: 0;
             background: var(--bg-surface);
             border: 1px solid var(--border);
             border-radius: 20px;
@@ -61,11 +70,10 @@
         .products-area::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
         .products-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
             gap: 0.75rem;
             margin-bottom: 1.5rem;
         }
-        @media (min-width: 1024px) { .products-grid { grid-template-columns: repeat(3, 1fr); } }
 
         .prod-card {
             cursor: pointer;
@@ -130,7 +138,7 @@
         }
         .variants-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
             gap: 0.5rem;
         }
         .variant-btn {
@@ -166,12 +174,30 @@
         /* ─── Ticket/Cart Panel ─────────────────────────────── */
         .ticket-panel {
             width: 380px;
+            min-width: 320px;
+            max-width: 400px;
+            flex-shrink: 0;
             background: var(--bg-surface);
             border: 1px solid var(--border);
             border-radius: 20px;
             display: flex;
             flex-direction: column;
             overflow: hidden;
+        }
+        @media (max-width: 900px) {
+            .pos-order-builder-layout {
+                flex-direction: column;
+                height: auto;
+                min-height: 0;
+            }
+            .catalog-panel {
+                height: 520px;
+            }
+            .ticket-panel {
+                width: 100%;
+                max-width: 100%;
+                height: 480px;
+            }
         }
         .ticket-header {
             padding: 1rem 1.25rem;
@@ -617,15 +643,9 @@
             transition: all 0.2s;
             border: none;
         }
-            font-weight: 800;
-            font-size: 0.85rem;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
         .btn-confirm-sauces-ready {
             background: linear-gradient(135deg, #dc2626, #b91c1c);
-            color: var(--text-strong);
+            color: #ffffff;
             box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
         }
         .btn-confirm-sauces-ready:hover {
@@ -1110,6 +1130,7 @@
                                                     <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path></svg>
                                                 </button>
                                                 <input type="number" min="0" max="{{ $tempProductWingsCount }}"
+                                                       wire:key="input-wings-s1-{{ $onlySauce->id }}-{{ $wValSingle }}-{{ $sValSingle }}"
                                                        value="{{ $wValSingle }}"
                                                        onfocus="this.select()"
                                                        wire:change="updateSauceWings({{ $onlySauce->id }}, 0, $event.target.value)"
@@ -1126,6 +1147,7 @@
                                                     <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path></svg>
                                                 </button>
                                                 <input type="number" min="0" max="{{ $tempProductWingsCount }}"
+                                                       wire:key="input-side-s1-{{ $onlySauce->id }}-{{ $wValSingle }}-{{ $sValSingle }}"
                                                        value="{{ $sValSingle }}"
                                                        onfocus="this.select()"
                                                        wire:change="updateSauceSide({{ $onlySauce->id }}, 0, $event.target.value)"
@@ -1220,6 +1242,7 @@
                                                             <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path></svg>
                                                         </button>
                                                         <input type="number" min="0" max="{{ $wingsPerUnit }}"
+                                                               wire:key="input-wings-m-{{ $u }}-{{ $s->id }}-{{ $wVal }}-{{ $sVal }}"
                                                                value="{{ $wVal }}"
                                                                onfocus="this.select()"
                                                                wire:change="updateSauceWings({{ $s->id }}, {{ $u }}, $event.target.value)"
@@ -1236,6 +1259,7 @@
                                                             <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path></svg>
                                                         </button>
                                                         <input type="number" min="0" max="{{ $wingsPerUnit }}"
+                                                               wire:key="input-side-m-{{ $u }}-{{ $s->id }}-{{ $wVal }}-{{ $sVal }}"
                                                                value="{{ $sVal }}"
                                                                onfocus="this.select()"
                                                                wire:change="updateSauceSide({{ $s->id }}, {{ $u }}, $event.target.value)"

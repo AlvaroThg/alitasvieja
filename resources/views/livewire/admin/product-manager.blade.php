@@ -64,6 +64,7 @@
                     @if($product->is_wings) <span class="badge wings">Alitas</span> @endif
                     @if($product->tracks_stock) <span class="badge stock">Inventario</span> @endif
                     @if($product->has_sauces) <span class="badge sauces">Salsas</span> @endif
+                    @if($product->charge_coated_sauces) <span class="badge" style="background: rgba(220, 38, 38, 0.2); color: #f87171; border: 1px solid rgba(220, 38, 38, 0.4);">+Recargo Bañadas</span> @endif
                 </td>
                 <td>{{ $product->variants->count() }}</td>
                 <td>
@@ -121,7 +122,7 @@
                     </label>
                     <label class="form-checkbox" style="margin-bottom: 0.75rem;">
                         <input type="checkbox" wire:model="charge_coated_sauces">
-                        Cobrar +5 Bs. si piden bañadas (Cochabamba)
+                        Cobrar recargo de sucursal si piden bañadas
                     </label>
                     <label class="form-checkbox">
                         <input type="checkbox" wire:model="is_active">
@@ -142,28 +143,51 @@
                 
                 @php
                     $showSauceCols = $is_wings || $has_sauces;
-                    $gridCols = $showSauceCols
-                        ? '2fr 1fr 1fr 1fr' . str_repeat(' 1fr', count($branches)) . ' auto'
-                        : '2fr 1fr' . str_repeat(' 1fr', count($branches)) . ' auto';
+                    $showCoatedCols = $charge_coated_sauces || $is_wings || $has_sauces;
+
+                    $cols = [];
+                    $cols[] = 'minmax(130px, 1.8fr)'; // Nombre
+                    if ($showSauceCols) {
+                        $cols[] = 'minmax(65px, 0.7fr)'; // Piezas
+                        $cols[] = 'minmax(65px, 0.7fr)'; // Max Salsas
+                    }
+                    $cols[] = 'minmax(90px, 1fr)'; // Precio base
+
+                    foreach ($branches as $b) {
+                        $cols[] = 'minmax(100px, 1.1fr)'; // Precio Sucursal
+                        if ($showCoatedCols) {
+                            $cols[] = 'minmax(100px, 1.1fr)'; // Extra Bañada Sucursal
+                        }
+                    }
+                    $cols[] = 'auto'; // Acciones
+
+                    $gridCols = implode(' ', $cols);
                 @endphp
                 <div style="overflow-x: auto;">
                     @if(count($variants) > 0)
-                    <div style="display: grid; grid-template-columns: {{ $gridCols }}; gap: 0.5rem; margin-bottom: 0.5rem;">
+                    <div style="display: grid; grid-template-columns: {{ $gridCols }}; gap: 0.5rem; margin-bottom: 0.5rem; align-items: end;">
                         <span class="form-label">Nombre</span>
                         @if($showSauceCols)
                             <span class="form-label">Piezas</span>
                             <span class="form-label">Max Salsas</span>
                         @endif
                         <span class="form-label" style="color: #f97316; position: relative; display: inline-flex; align-items: center; gap: 4px;" x-data="{ open: false }">
-                            Precio general
+                            Precio base
                             <button type="button" @click="open = !open" style="background: var(--border-strong); color: var(--text-strong); border: none; width: 15px; height: 15px; border-radius: 50%; font-size: 0.6rem; font-weight: 700; cursor: pointer; line-height: 1; flex-shrink: 0;">?</button>
                             <div x-show="open" x-cloak @click.outside="open = false"
                                  style="position: absolute; top: 130%; left: 0; z-index: 70; background: var(--bg-elevated); border: 1px solid var(--border-strong); border-radius: 10px; padding: 0.65rem 0.8rem; width: 240px; font-size: 0.72rem; color: var(--text-secondary); font-weight: 400; text-transform: none; letter-spacing: normal; line-height: 1.4; box-shadow: 0 8px 24px rgba(0,0,0,0.35);">
-                                Es el precio que se usa cuando una sucursal <strong>no tiene precio propio</strong>. Si pones un precio por sucursal, ese manda.
+                                Es el precio que se usa si una sucursal <strong>no tiene precio propio</strong>. Si ingresas precio en la sucursal, ese se usará.
                             </div>
                         </span>
                         @foreach($branches as $b)
-                            <span class="form-label" style="color: #38bdf8;">{{ $b->name }}</span>
+                            <span class="form-label" style="color: #38bdf8; text-align: center;">
+                                Precio {{ $b->name }}
+                            </span>
+                            @if($showCoatedCols)
+                                <span class="form-label" style="color: #f87171; text-align: center;" title="Extra por bañada en {{ $b->name }}">
+                                    Extra Bañada {{ $b->name }}
+                                </span>
+                            @endif
                         @endforeach
                         <span></span>
                     </div>
@@ -176,10 +200,13 @@
                             <input type="number" wire:model="variants.{{ $index }}.wings_count" class="form-input" placeholder="0">
                             <input type="number" wire:model="variants.{{ $index }}.max_sauces" class="form-input" placeholder="0">
                         @endif
-                        <input type="number" step="0.01" wire:model="variants.{{ $index }}.price" class="form-input" placeholder="0.00" style="border-color: #f97316;">
+                        <input type="number" step="0.01" wire:model="variants.{{ $index }}.price" class="form-input" placeholder="0.00" style="border-color: #f97316;" title="Precio base variante (Bs.)">
 
                         @foreach($branches as $b)
-                            <input type="number" step="0.01" wire:model="variants.{{ $index }}.branch_prices.{{ $b->id }}" class="form-input" placeholder="0.00" style="border-color: #38bdf8;">
+                            <input type="number" step="0.01" wire:model="variants.{{ $index }}.branch_prices.{{ $b->id }}" class="form-input" placeholder="0.00" style="border-color: #38bdf8;" title="Precio de venta en {{ $b->name }} (Bs.)">
+                            @if($showCoatedCols)
+                                <input type="number" step="0.5" min="0" wire:model="variants.{{ $index }}.branch_coated_prices.{{ $b->id }}" class="form-input" placeholder="0.00" style="border-color: #f87171;" title="Extra si piden esta variante bañada en {{ $b->name }} (Bs.)">
+                            @endif
                         @endforeach
 
                         <button wire:click="removeVariant({{ $index }})" class="btn-remove">X</button>

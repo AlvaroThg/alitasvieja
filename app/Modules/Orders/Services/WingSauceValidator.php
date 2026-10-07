@@ -85,64 +85,60 @@ class WingSauceValidator
         // ─── REGLA 2 y 4: Conteo de salsas distintas y cobro extra ───
         $distinctSauceIds = collect($sauces)->pluck('sauce_id')->unique()->count();
 
-        // ─── REGLA 4: Cobro de salsas extra según sucursal ────────────
-        $branchSlug = $this->getBranchSlug($branchId);
+        // ─── REGLA 4: Cobro de recargo por bañadas configurado por variante y sucursal ────────────
+        $product = $variant->product ?? null;
 
-        if ($branchSlug === 'tja') {
-            // TARIJA: nunca se cobra por salsas extra ni bañadas
-            return 0.0;
-        }
-
-        if ($this->isCochabamba($branchId, $branchSlug)) {
-            $charge = 0.0;
-
-            // ¿Hay alitas / picadas bañadas?
-            $hasCoated = collect($sauces)->contains(function ($s) {
-                return !empty($s['is_coated']) && ($s['quantity'] ?? 0) > 0;
-            });
-
-            // Cobrar por bañadas en Cochabamba si el producto es de alitas o el dueño activó el cobro (ej. Picadas)
-            $product = $variant->product ?? null;
-            $shouldChargeCoated = true;
-            if ($product) {
-                $shouldChargeCoated = (bool) ($product->is_wings || $product->charge_coated_sauces);
-            }
-
-            if ($hasCoated && $shouldChargeCoated) {
-                $wingsPerPortion = (int) ($variant->wings_count ?? 0);
-
-                if ($wingsPerPortion > 0) {
-                    $totalCoatedPieces = collect($sauces)
-                        ->filter(fn($s) => !empty($s['is_coated']))
-                        ->sum('quantity');
-
-                    $coatedPortions = (int) ceil($totalCoatedPieces / $wingsPerPortion);
-                    $coatedPortions = max(1, min($coatedPortions, $quantity));
-                } else {
-                    $totalCoatedCount = collect($sauces)
-                        ->filter(fn($s) => !empty($s['is_coated']))
-                        ->count();
-                    $coatedPortions = max(1, min($totalCoatedCount, $quantity));
+        if ($variant instanceof \App\Modules\Menu\Models\ProductVariant) {
+            $coatedPrice = $variant->coatedPriceForBranch($branchId);
+        } else {
+            $variantCoatedPrice = isset($variant->coated_price) && $variant->coated_price !== null ? (float) $variant->coated_price : null;
+            if ($variantCoatedPrice !== null) {
+                $coatedPrice = $variantCoatedPrice;
+            } else {
+                $branchSlug = $this->getBranchSlug($branchId);
+                $branch = Branch::find($branchId);
+                $coatedPrice = $branch ? (float) ($branch->sauce_coated_price ?? 0.0) : 0.0;
+                if ($coatedPrice <= 0.0 && $this->isCochabamba($branchId, $branchSlug)) {
+                    $coatedPrice = self::EXTRA_SAUCE_PRICE;
                 }
-
-                $charge += self::EXTRA_SAUCE_PRICE * $coatedPortions;
             }
-
-            // Salsas extra que excedan max_sauces (5 Bs por cada salsa extra)
-            $extraSaucesCount = max(0, $distinctSauceIds - $maxSauces);
-            if ($extraSaucesCount > 0) {
-                $charge += $extraSaucesCount * self::EXTRA_SAUCE_PRICE;
-            }
-
-            return (float) $charge;
         }
 
-        \Illuminate\Support\Facades\Log::warning(
-            "WingSauceValidator: sucursal con slug '{$branchSlug}' no tiene regla de cobro definida. Se asume sin cargo extra.",
-            ['branch_id' => $branchId]
-        );
+        $charge = 0.0;
 
-        return 0.0;
+        // ¿Hay alitas / picadas bañadas?
+        $hasCoated = collect($sauces)->contains(function ($s) {
+            return !empty($s['is_coated']) && ($s['quantity'] ?? 0) > 0;
+        });
+
+        if ($hasCoated && $coatedPrice > 0) {
+            $wingsPerPortion = (int) ($variant->wings_count ?? 0);
+
+            if ($wingsPerPortion > 0) {
+                $totalCoatedPieces = collect($sauces)
+                    ->filter(fn($s) => !empty($s['is_coated']))
+                    ->sum('quantity');
+
+                $coatedPortions = (int) ceil($totalCoatedPieces / $wingsPerPortion);
+                $coatedPortions = max(1, min($coatedPortions, $quantity));
+            } else {
+                $totalCoatedCount = collect($sauces)
+                    ->filter(fn($s) => !empty($s['is_coated']))
+                    ->count();
+                $coatedPortions = max(1, min($totalCoatedCount, $quantity));
+            }
+
+            $charge += $coatedPrice * $coatedPortions;
+        }
+
+        // Salsas extra que excedan max_sauces (precio configurado por variante o por defecto 5.00)
+        $extraSaucesCount = max(0, $distinctSauceIds - $maxSauces);
+        if ($extraSaucesCount > 0) {
+            $extraPrice = $coatedPrice > 0 ? $coatedPrice : self::EXTRA_SAUCE_PRICE;
+            $charge += $extraSaucesCount * $extraPrice;
+        }
+
+        return (float) $charge;
     }
 
     private function isCochabamba(int $branchId, string $slug): bool

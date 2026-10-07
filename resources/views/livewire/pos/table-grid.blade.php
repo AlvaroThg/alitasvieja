@@ -23,11 +23,9 @@
         }
         .table-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
             gap: 1rem;
         }
-        @media (min-width: 768px) { .table-grid { grid-template-columns: repeat(4, 1fr); } }
-        @media (min-width: 1024px) { .table-grid { grid-template-columns: repeat(5, 1fr); } }
 
         .table-card {
             position: relative;

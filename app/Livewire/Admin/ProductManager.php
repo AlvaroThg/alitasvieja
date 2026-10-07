@@ -50,6 +50,14 @@ class ProductManager extends Component
         $this->products = Product::with(['category', 'variants.prices'])->get();
     }
 
+    public function updatedIsWings($value)
+    {
+        if ($value) {
+            $this->has_sauces = true;
+            $this->charge_coated_sauces = true;
+        }
+    }
+
     public function create()
     {
         $this->resetFields();
@@ -78,8 +86,10 @@ class ProductManager extends Component
 
         foreach ($product->variants as $variant) {
             $prices = [];
+            $coatedPrices = [];
             foreach ($variant->prices as $p) {
                 $prices[$p->branch_id] = $p->price;
+                $coatedPrices[$p->branch_id] = $p->coated_price;
             }
 
             $this->variants[] = [
@@ -89,6 +99,7 @@ class ProductManager extends Component
                 'max_sauces' => $variant->max_sauces,
                 'price' => $variant->price,
                 'branch_prices' => $prices,
+                'branch_coated_prices' => $coatedPrices,
             ];
         }
 
@@ -104,6 +115,7 @@ class ProductManager extends Component
             'max_sauces' => 0,
             'price' => 0,
             'branch_prices' => [],
+            'branch_coated_prices' => [],
         ];
     }
 
@@ -209,13 +221,13 @@ class ProductManager extends Component
                 } else {
                     $variant = $product->variants()->create($clean);
                 }
-                $this->saveBranchPrices($variant, $variantData['branch_prices'] ?? []);
+                $this->saveBranchPrices($variant, $variantData['branch_prices'] ?? [], $variantData['branch_coated_prices'] ?? []);
             }
         } else {
             $product = Product::create($productData);
             foreach ($this->variants as $variantData) {
                 $variant = $product->variants()->create($this->cleanVariant($variantData));
-                $this->saveBranchPrices($variant, $variantData['branch_prices'] ?? []);
+                $this->saveBranchPrices($variant, $variantData['branch_prices'] ?? [], $variantData['branch_coated_prices'] ?? []);
             }
         }
 
@@ -233,20 +245,33 @@ class ProductManager extends Component
         $price = $variantData['price'];
 
         return [
-            'name'        => $name !== '' ? $name : 'Único',
-            'wings_count' => (int) ($variantData['wings_count'] ?? 0),
-            'max_sauces'  => (int) ($variantData['max_sauces'] ?? 0),
-            'price'       => ($price === '' || $price === null) ? 0 : (float) $price,
+            'name'         => $name !== '' ? $name : 'Único',
+            'wings_count'  => (int) ($variantData['wings_count'] ?? 0),
+            'max_sauces'   => (int) ($variantData['max_sauces'] ?? 0),
+            'price'        => ($price === '' || $price === null) ? 0 : (float) $price,
         ];
     }
 
-    private function saveBranchPrices($variant, $branchPrices)
+    private function saveBranchPrices($variant, $branchPrices, $branchCoatedPrices = [])
     {
-        foreach ($branchPrices as $branchId => $price) {
-            if ($price !== null && $price !== '') {
+        $allBranchIds = collect(array_keys($branchPrices))
+            ->merge(array_keys($branchCoatedPrices))
+            ->unique();
+
+        foreach ($allBranchIds as $branchId) {
+            $price = $branchPrices[$branchId] ?? null;
+            $coatedPrice = $branchCoatedPrices[$branchId] ?? null;
+
+            $hasPrice = $price !== null && $price !== '';
+            $hasCoatedPrice = $coatedPrice !== null && $coatedPrice !== '';
+
+            if ($hasPrice || $hasCoatedPrice) {
                 ProductPrice::updateOrCreate(
                     ['product_variant_id' => $variant->id, 'branch_id' => $branchId],
-                    ['price' => $price]
+                    [
+                        'price' => $hasPrice ? (float)$price : 0,
+                        'coated_price' => $hasCoatedPrice ? (float)$coatedPrice : null,
+                    ]
                 );
             } else {
                 ProductPrice::where('product_variant_id', $variant->id)

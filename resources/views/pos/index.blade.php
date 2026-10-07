@@ -93,6 +93,9 @@
         }
         .pos-main {
             padding: 1.25rem 1.5rem;
+            max-width: 1800px;
+            margin: 0 auto;
+            width: 100%;
         }
         /* Back button */
         .btn-back {
