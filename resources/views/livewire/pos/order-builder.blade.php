@@ -1173,13 +1173,11 @@
                 </div>
             @else
                 <div style="display: flex; gap: 0.4rem;">
-                    @if(!$tableId)
-                        <button wire:click="loadUnpaidOrders" style="flex: 1; background: #3b82f6; color: white; border: none; padding: 0.65rem 0.5rem; border-radius: 10px; font-weight: 800; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.3rem;">
-                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            PENDIENTES
-                        </button>
-                    @endif
-                    <button wire:click="submitOrder" class="btn-send-kitchen" style="{{ !$tableId ? 'flex: 2;' : 'width: 100%;' }}">
+                    <button wire:click="loadUnpaidOrders" style="flex: 1; background: #3b82f6; color: white; border: none; padding: 0.65rem 0.5rem; border-radius: 10px; font-weight: 800; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.3rem;">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        PENDIENTES
+                    </button>
+                    <button wire:click="submitOrder" class="btn-send-kitchen" style="flex: 2;">
                         <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         ENVIAR A COCINA
                     </button>
