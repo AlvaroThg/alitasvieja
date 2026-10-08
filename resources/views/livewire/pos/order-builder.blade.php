@@ -171,11 +171,177 @@
             transition: color 0.2s ease;
         }
 
+        /* ─── Cash Calculator Panel (A la izquierda del Carrito) ─── */
+        .cash-calc-panel {
+            width: 220px;
+            min-width: 200px;
+            max-width: 240px;
+            flex-shrink: 0;
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            padding: 0.85rem;
+            gap: 0.65rem;
+            overflow-y: auto;
+        }
+        .cash-calc-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+        }
+        .cash-calc-title {
+            font-weight: 800;
+            font-size: 0.85rem;
+            color: var(--text-strong);
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+        .cash-calc-clean {
+            background: transparent;
+            border: none;
+            color: #ef4444;
+            font-size: 0.7rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        .cash-calc-total {
+            background: var(--bg-base);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 0.5rem 0.65rem;
+            text-align: center;
+        }
+        .cash-calc-total-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            display: block;
+            margin-bottom: 0.15rem;
+        }
+        .cash-calc-total-val {
+            font-size: 1.2rem;
+            font-weight: 900;
+            color: #f97316;
+        }
+        .cash-calc-label {
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--text-muted);
+            display: block;
+            margin-bottom: 0.3rem;
+        }
+        .cash-calc-input {
+            width: 100%;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--bg-base);
+            color: var(--text-strong);
+            font-size: 0.88rem;
+            font-weight: 800;
+            padding: 0.35rem 0.5rem 0.35rem 2rem;
+            outline: none;
+            font-family: inherit;
+        }
+        .btn-exact {
+            padding: 0.35rem 0.55rem;
+            background: rgba(59, 130, 246, 0.12);
+            border: 1px solid rgba(59, 130, 246, 0.35);
+            color: #60a5fa;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 0.72rem;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        .btn-exact:hover {
+            background: rgba(59, 130, 246, 0.2);
+        }
+        .cash-calc-bills-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.35rem;
+        }
+        .bill-btn {
+            padding: 0.45rem 0.2rem;
+            background: var(--bg-base);
+            color: var(--text-strong);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 0.78rem;
+            cursor: pointer;
+            transition: all 0.15s;
+            text-align: center;
+        }
+        .bill-btn:hover {
+            border-color: #dc2626;
+            color: #dc2626;
+        }
+        .bill-btn-active {
+            background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+            color: #ffffff !important;
+            border-color: #dc2626 !important;
+            box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+        }
+        .cash-calc-result {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            margin-top: auto;
+        }
+        .change-box {
+            border-radius: 12px;
+            padding: 0.65rem 0.75rem;
+            text-align: center;
+        }
+        .change-box-success {
+            background: rgba(34, 197, 94, 0.12);
+            border: 1px solid rgba(34, 197, 94, 0.35);
+        }
+        .change-box-warning {
+            background: rgba(249, 115, 22, 0.12);
+            border: 1px solid rgba(249, 115, 22, 0.35);
+        }
+        .change-box-empty {
+            background: var(--bg-base);
+            border: 1px dashed var(--border);
+            color: var(--text-faint);
+            font-size: 0.7rem;
+        }
+        .change-box-label {
+            font-size: 0.65rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: block;
+            margin-bottom: 0.15rem;
+        }
+        .change-box-success .change-box-label { color: #22c55e; }
+        .change-box-warning .change-box-label { color: #f97316; }
+        .change-box-val {
+            font-size: 1.15rem;
+            font-weight: 900;
+        }
+        .change-box-success .change-box-val { color: #22c55e; }
+        .change-box-warning .change-box-val { color: #f97316; }
+
         /* ─── Ticket/Cart Panel ─────────────────────────────── */
         .ticket-panel {
-            width: 380px;
-            min-width: 320px;
-            max-width: 400px;
+            width: 360px;
+            min-width: 300px;
+            max-width: 380px;
             flex-shrink: 0;
             background: var(--bg-surface);
             border: 1px solid var(--border);
@@ -184,6 +350,13 @@
             flex-direction: column;
             overflow: hidden;
         }
+        @media (max-width: 1100px) {
+            .cash-calc-panel {
+                width: 200px;
+                min-width: 180px;
+                padding: 0.65rem;
+            }
+        }
         @media (max-width: 900px) {
             .pos-order-builder-layout {
                 flex-direction: column;
@@ -191,13 +364,18 @@
                 min-height: 0;
             }
             .catalog-panel {
-                height: 520px;
+                height: 480px;
+            }
+            .cash-calc-panel {
+                width: 100%;
+                max-width: 100%;
+                height: auto;
             }
             .ticket-panel {
                 width: 100%;
                 max-width: 100%;
                 height: auto;
-                min-height: 480px;
+                min-height: 400px;
             }
         }
         .ticket-header {
@@ -730,7 +908,72 @@
         </div>
     </div>
 
-    <!-- Ticket/Carrito (Derecha 40%) -->
+    <!-- Panel Calculadora de Cambio (Separado a la izquierda del Carrito) -->
+    <div class="cash-calc-panel">
+        <div class="cash-calc-header">
+            <span class="cash-calc-title">💵 Calculadora Cambio</span>
+            @if($cashReceived !== '' && (float)$cashReceived > 0)
+                <button type="button" wire:click="$set('cashReceived', '')" class="cash-calc-clean">
+                    Limpiar
+                </button>
+            @endif
+        </div>
+
+        <div class="cash-calc-total">
+            <span class="cash-calc-total-label">Total del Pedido</span>
+            <span class="cash-calc-total-val">Bs. {{ number_format($this->total, 2) }}</span>
+        </div>
+
+        <div>
+            <span class="cash-calc-label">Monto Recibido</span>
+            <div style="display: flex; gap: 0.35rem;">
+                <div style="position: relative; flex: 1;">
+                    <span style="position: absolute; left: 0.6rem; top: 50%; transform: translateY(-50%); font-weight: 800; font-size: 0.78rem; color: var(--text-muted);">Bs.</span>
+                    <input type="number" step="0.5" min="0" inputmode="decimal"
+                           wire:model.live.debounce.150ms="cashReceived"
+                           placeholder="0.00"
+                           class="cash-calc-input">
+                </div>
+                <button type="button" wire:click="setBillAmount('exact')" class="btn-exact">
+                    Exacto
+                </button>
+            </div>
+        </div>
+
+        <div>
+            <span class="cash-calc-label">Billetes Rápidos</span>
+            <div class="cash-calc-bills-grid">
+                @foreach([20, 50, 100, 200] as $bill)
+                    <button type="button" wire:click="setBillAmount({{ $bill }})"
+                            class="bill-btn {{ (float)$cashReceived === (float)$bill ? 'bill-btn-active' : '' }}">
+                        Bs. {{ $bill }}
+                    </button>
+                @endforeach
+            </div>
+        </div>
+
+        <div class="cash-calc-result">
+            @if($cashReceived !== '' && (float)$cashReceived > 0)
+                @if((float)$cashReceived >= (float)$this->total)
+                    <div class="change-box change-box-success">
+                        <span class="change-box-label">Cambio a Entregar</span>
+                        <span class="change-box-val">Bs. {{ number_format($this->cashChange, 2) }}</span>
+                    </div>
+                @else
+                    <div class="change-box change-box-warning">
+                        <span class="change-box-label">Falta por Pagar</span>
+                        <span class="change-box-val">Bs. {{ number_format($this->cashMissing, 2) }}</span>
+                    </div>
+                @endif
+            @else
+                <div class="change-box change-box-empty">
+                    <span>Ingresa el billete para calcular el cambio</span>
+                </div>
+            @endif
+        </div>
+    </div>
+
+    <!-- Ticket/Carrito (Derecha) -->
     <div class="ticket-panel">
         <div class="ticket-header" style="flex-direction: column; align-items: stretch; gap: 0.45rem; padding: 0.65rem 0.85rem;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -916,68 +1159,6 @@
             <div class="ticket-total-row">
                 <span class="ticket-total-label">Total a Pagar</span>
                 <span class="ticket-total-value">Bs. {{ number_format($this->total, 2) }}</span>
-            </div>
-
-            {{-- Sección de Calculadora de Cambio / Billete --}}
-            <div style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: 12px; padding: 0.5rem 0.65rem; margin-bottom: 0.5rem;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
-                    <label style="font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); display: flex; align-items: center; gap: 0.25rem;">
-                        💵 Monto del Billete (Efectivo)
-                    </label>
-                    @if($cashReceived !== '' && (float)$cashReceived > 0)
-                        <button type="button" wire:click="$set('cashReceived', '')" style="background: transparent; border: none; color: var(--text-muted); font-size: 0.65rem; font-weight: 700; cursor: pointer; text-decoration: underline;">
-                            Limpiar
-                        </button>
-                    @endif
-                </div>
-
-                {{-- Input y Botón Exacto --}}
-                <div style="display: flex; gap: 0.35rem; margin-bottom: 0.35rem;">
-                    <div style="position: relative; flex: 1;">
-                        <span style="position: absolute; left: 0.6rem; top: 50%; transform: translateY(-50%); font-weight: 800; font-size: 0.78rem; color: var(--text-muted);">Bs.</span>
-                        <input type="number" step="0.5" min="0" inputmode="decimal"
-                               wire:model.live.debounce.150ms="cashReceived"
-                               placeholder="0.00"
-                               style="width: 100%; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-base); color: var(--text-strong); font-size: 0.88rem; font-weight: 800; padding: 0.35rem 0.5rem 0.35rem 2rem; outline: none; font-family: inherit;">
-                    </div>
-                    <button type="button" wire:click="setBillAmount('exact')"
-                            style="padding: 0.35rem 0.55rem; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); color: #60a5fa; border-radius: 8px; font-weight: 700; font-size: 0.72rem; cursor: pointer; white-space: nowrap; transition: all 0.2s;">
-                        Exacto
-                    </button>
-                </div>
-
-                {{-- Billetes Rápidos (Bolivia) --}}
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.25rem; margin-bottom: 0.35rem;">
-                    @foreach([20, 50, 100, 200] as $bill)
-                        <button type="button" wire:click="setBillAmount({{ $bill }})"
-                                style="padding: 0.25rem 0.1rem; background: {{ (float)$cashReceived === (float)$bill ? 'linear-gradient(135deg, #dc2626, #b91c1c)' : 'var(--bg-base)' }}; color: {{ (float)$cashReceived === (float)$bill ? '#fff' : 'var(--text-strong)' }}; border: 1px solid {{ (float)$cashReceived === (float)$bill ? '#dc2626' : 'var(--border)' }}; border-radius: 6px; font-weight: 700; font-size: 0.7rem; cursor: pointer; transition: all 0.15s; text-align: center;">
-                            Bs. {{ $bill }}
-                        </button>
-                    @endforeach
-                </div>
-
-                {{-- Display del Cambio --}}
-                @if($cashReceived !== '' && (float)$cashReceived > 0)
-                    @if((float)$cashReceived >= (float)$this->total)
-                        <div style="background: rgba(34, 197, 94, 0.12); border: 1px solid rgba(34, 197, 94, 0.35); border-radius: 8px; padding: 0.4rem 0.6rem; display: flex; justify-content: space-between; align-items: center;">
-                            <span style="font-size: 0.7rem; font-weight: 800; color: #22c55e; text-transform: uppercase; letter-spacing: 0.04em;">
-                                Cambio a entregar
-                            </span>
-                            <span style="font-size: 1.05rem; font-weight: 900; color: #22c55e;">
-                                Bs. {{ number_format($this->cashChange, 2) }}
-                            </span>
-                        </div>
-                    @else
-                        <div style="background: rgba(249, 115, 22, 0.12); border: 1px solid rgba(249, 115, 22, 0.35); border-radius: 8px; padding: 0.4rem 0.6rem; display: flex; justify-content: space-between; align-items: center;">
-                            <span style="font-size: 0.7rem; font-weight: 800; color: #f97316; text-transform: uppercase; letter-spacing: 0.04em;">
-                                Falta para completar
-                            </span>
-                            <span style="font-size: 0.95rem; font-weight: 900; color: #f97316;">
-                                Bs. {{ number_format($this->cashMissing, 2) }}
-                            </span>
-                        </div>
-                    @endif
-                @endif
             </div>
             
             @if($editingOrderId)
