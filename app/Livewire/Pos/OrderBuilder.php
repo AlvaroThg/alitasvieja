@@ -1539,7 +1539,7 @@ class OrderBuilder extends Component
         $branchId = auth()->user()?->activeBranchId() ?? 1;
         $orders = \App\Modules\Orders\Models\Order::where('branch_id', $branchId)
             ->where('status', 'open')
-            ->whereNull('table_id')
+            ->with('table')
             ->orderBy('id', 'asc')
             ->get();
 
@@ -1549,7 +1549,7 @@ class OrderBuilder extends Component
             }
         }
 
-        $this->unpaidOrders = $orders->fresh();
+        $this->unpaidOrders = $orders->fresh(['table']);
         $this->showUnpaidOrdersModal = true;
     }
 
@@ -1602,7 +1602,7 @@ class OrderBuilder extends Component
         $branchId = auth()->user()?->activeBranchId() ?? 1;
         $this->unpaidOrders = \App\Modules\Orders\Models\Order::where('branch_id', $branchId)
             ->where('status', 'open')
-            ->whereNull('table_id')
+            ->with('table')
             ->orderBy('id', 'asc')
             ->get();
             

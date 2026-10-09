@@ -119,6 +119,18 @@ class CheckoutService
                 'closed_at'      => now(),
             ]);
 
+            // Si el pedido pertenecía a una mesa, liberarla si no existen otros pedidos abiertos para ella
+            if ($order->table_id && $order->table) {
+                $hasOtherOpen = Order::where('table_id', $order->table_id)
+                    ->where('status', 'open')
+                    ->where('id', '!=', $order->id)
+                    ->exists();
+
+                if (!$hasOtherOpen) {
+                    $order->table->update(['status' => 'available']);
+                }
+            }
+
             // Registrar cada pago en movimientos de caja (con su respectiva etiqueta de caja)
             // de modo que aparezcan en el historial y reportes de movimientos.
             foreach ($payments as $payment) {

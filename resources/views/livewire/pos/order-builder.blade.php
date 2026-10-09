@@ -1609,7 +1609,7 @@
             <div style="padding: 1.5rem; overflow-y: auto;">
                 @if(count($unpaidOrders) === 0)
                     <div style="text-align: center; color: var(--text-muted); padding: 2rem 0;">
-                        No hay pedidos de delivery o local pendientes de cobro.
+                        No hay ningún pedido pendiente de cobro en esta sucursal.
                     </div>
                 @else
                     <div style="display: flex; flex-direction: column; gap: 0.75rem;">
@@ -1617,18 +1617,28 @@
                         <div style="background: var(--bg-base); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; display: flex; justify-content: space-between; align-items: center;">
                             <div>
                                 <div style="font-weight: 800; color: var(--text-strong);">{{ $uo->daily_label }}</div>
-                                <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.15rem;">
-                                    {{ $uo->order_type === 'delivery' ? '🛵 Delivery' : '🥡 Recoger' }} • Bs. {{ number_format($uo->total, 2) }}
+                                <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.15rem; display: flex; align-items: center; flex-wrap: wrap; gap: 0.35rem;">
+                                    @if($uo->table_id && $uo->table)
+                                        <span style="color: #f97316; font-weight: 800;">🛋️ {{ $uo->table->name }}</span>
+                                    @elseif($uo->order_type === 'delivery')
+                                        <span style="color: #3b82f6; font-weight: 800;">🛵 Delivery</span>
+                                    @else
+                                        <span style="color: #eab308; font-weight: 800;">🥡 Llevar</span>
+                                    @endif
+                                    @if($uo->customer_name)
+                                        • <span style="color: var(--text);">{{ $uo->customer_name }}</span>
+                                    @endif
+                                    • <span style="color: #10b981; font-weight: 900;">Bs. {{ number_format($uo->total, 2) }}</span>
                                 </div>
                             </div>
-                            <div style="display: flex; gap: 0.5rem;">
-                                <button wire:click="loadOrderForEditing({{ $uo->id }})" style="background: rgba(249, 115, 22, 0.15); color: #f97316; border: 1px solid rgba(249, 115, 22, 0.4); padding: 0.5rem 0.8rem; border-radius: 8px; font-weight: 700; font-size: 0.8rem; cursor: pointer;">
+                            <div style="display: flex; gap: 0.4rem;">
+                                <button wire:click="loadOrderForEditing({{ $uo->id }})" style="background: rgba(249, 115, 22, 0.15); color: #f97316; border: 1px solid rgba(249, 115, 22, 0.4); padding: 0.45rem 0.75rem; border-radius: 8px; font-weight: 700; font-size: 0.78rem; cursor: pointer;">
                                     Editar
                                 </button>
-                                <button wire:click="confirmCancelPendingOrder({{ $uo->id }})" style="background: transparent; color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); padding: 0.5rem 0.8rem; border-radius: 8px; font-weight: 700; font-size: 0.8rem; cursor: pointer;">
+                                <button wire:click="confirmCancelPendingOrder({{ $uo->id }})" style="background: transparent; color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); padding: 0.45rem 0.75rem; border-radius: 8px; font-weight: 700; font-size: 0.78rem; cursor: pointer;">
                                     Cancelar
                                 </button>
-                                <button wire:click="payUnpaidOrder({{ $uo->id }})" style="background: #10b981; color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 700; font-size: 0.8rem; cursor: pointer;">
+                                <button wire:click="payUnpaidOrder({{ $uo->id }})" style="background: #10b981; color: white; border: none; padding: 0.45rem 0.85rem; border-radius: 8px; font-weight: 800; font-size: 0.78rem; cursor: pointer;">
                                     Cobrar
                                 </button>
                             </div>
